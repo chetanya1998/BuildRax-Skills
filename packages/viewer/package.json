@@ -20,6 +20,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@buildrax/graph": "workspace:*",
     "@buildrax/ir": "workspace:*"
+  },
+  "devDependencies": {
+    "elkjs": "^0.12.1",
+    "vite": "^8.3.8",
+    "vite-plugin-singlefile": "^2.3.4"
   }
 }
