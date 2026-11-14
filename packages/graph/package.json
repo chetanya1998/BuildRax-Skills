@@ -1,0 +1,25 @@
+{
+  "name": "@buildrax/graph",
+  "version": "0.0.0",
+  "description": "Graph construction, traversal and structural analysis over the IR",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@buildrax/ir": "workspace:*"
+  }
+}

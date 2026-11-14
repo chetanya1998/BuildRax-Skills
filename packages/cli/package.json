@@ -1,0 +1,31 @@
+{
+  "name": "buildrax",
+  "version": "0.0.0",
+  "description": "BuildRAX command line interface",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "bin": {
+    "buildrax": "./dist/index.js"
+  },
+  "dependencies": {
+    "@buildrax/ir": "workspace:*",
+    "@buildrax/ingest": "workspace:*",
+    "@buildrax/graph": "workspace:*",
+    "@buildrax/viewer": "workspace:*"
+  }
+}
