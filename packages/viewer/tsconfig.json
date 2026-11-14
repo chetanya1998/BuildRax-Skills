@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "test"],
-  "compilerOptions": { "noEmit": true }
+  "include": ["src", "app", "test", "vite.config.ts"],
+  "compilerOptions": { "noEmit": true, "lib": ["ES2022", "DOM", "DOM.Iterable"] }
 }

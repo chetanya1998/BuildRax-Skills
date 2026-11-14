@@ -16,8 +16,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
-    "typecheck": "tsc --noEmit"
+    "build": "vite build && tsup",
+    "typecheck": "tsc --noEmit",
+    "dev": "vite"
   },
   "dependencies": {
     "@buildrax/graph": "workspace:*",

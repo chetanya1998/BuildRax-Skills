@@ -12,3 +12,11 @@ viewer; P2 simulation, editing, SaaS). Viewer is read-only; users may add sticky
 5. Notes: shared vs private default; agent-created notes.
 
 Package names (`@buildrax/*`, `buildrax`) are placeholders; npm availability is unverified.
+
+## Decisions taken for the first slice (revisit if wrong)
+
+- Parser: web-tree-sitter 0.25.10 with tree-sitter-wasms 0.1.13 (newer web-tree-sitter versions cannot
+  load these grammars, older ones fail too). tree-sitter-wasms is ~50 MB installed; consider shipping
+  only the four needed grammars later.
+- Viewer: vanilla TS + SVG + elkjs, single file. No benchmark spike yet; revisit before large graphs.
+- Package names remain placeholders.

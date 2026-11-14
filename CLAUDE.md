@@ -12,7 +12,8 @@ pnpm workspaces, Node >= 20, TypeScript strict, ESM only. tsup (packages), vites
 
 ## Package dependency rules (no cycles)
 
-ir ← ingest ← graph ← cli ; viewer depends on ir only ; cli may depend on all.
+ir ← ingest ; ir ← graph ← viewer ; cli depends on ir, ingest, graph, viewer.
+graph must stay pure and browser-safe (no node: APIs). Viewer never extracts from source.
 Add context / research / skills only when their milestone starts.
 
 ## Hard rules

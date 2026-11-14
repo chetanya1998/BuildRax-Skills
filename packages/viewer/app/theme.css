@@ -1,0 +1,365 @@
+:root {
+  --paper: #f6f8fb;
+  --ink: #1d3f73;
+  --ink-soft: #5a7399;
+  --panel: #ffffff;
+  --line: rgba(30, 80, 160, 0.18);
+  --grid-minor: rgba(30, 80, 160, 0.06);
+  --grid-major: rgba(30, 80, 160, 0.12);
+  --up: #c26a10;
+  --down: #1b6ef3;
+  --warn: #c2362b;
+  --accent: #1b6ef3;
+  --font: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0e2a4d;
+    --ink: #dbe8ff;
+    --ink-soft: #8fb0e0;
+    --panel: #12335d;
+    --line: rgba(255, 255, 255, 0.2);
+    --grid-minor: rgba(255, 255, 255, 0.05);
+    --grid-major: rgba(255, 255, 255, 0.1);
+    --up: #ffb15c;
+    --down: #6cb0ff;
+    --warn: #ff7a6b;
+    --accent: #6cb0ff;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0e2a4d;
+  --ink: #dbe8ff;
+  --ink-soft: #8fb0e0;
+  --panel: #12335d;
+  --line: rgba(255, 255, 255, 0.2);
+  --grid-minor: rgba(255, 255, 255, 0.05);
+  --grid-major: rgba(255, 255, 255, 0.1);
+  --up: #ffb15c;
+  --down: #6cb0ff;
+  --warn: #ff7a6b;
+  --accent: #6cb0ff;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font: 13px/1.45 var(--font);
+}
+#app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+}
+button {
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 3px 9px;
+  cursor: pointer;
+}
+button:hover,
+button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+button.link {
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  text-decoration: underline;
+}
+input,
+select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 4px 8px;
+}
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.top h1 {
+  font-size: 14px;
+  margin: 0 8px 0 0;
+  letter-spacing: 0.08em;
+}
+.top label {
+  color: var(--ink-soft);
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.search {
+  position: relative;
+}
+.results {
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  left: 0;
+  min-width: 280px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  display: none;
+}
+.results.open {
+  display: block;
+}
+.results button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 0;
+}
+.body {
+  display: grid;
+  grid-template-columns: 240px 1fr 320px;
+  min-height: 0;
+}
+aside {
+  overflow: auto;
+  background: var(--panel);
+  padding: 10px 12px;
+}
+.left {
+  border-right: 1px solid var(--line);
+}
+.right {
+  border-left: 1px solid var(--line);
+}
+aside h2 {
+  font-size: 15px;
+  margin: 0 0 2px;
+  word-break: break-all;
+}
+aside h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  margin: 14px 0 4px;
+}
+aside ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+aside li {
+  margin: 3px 0;
+  word-break: break-all;
+}
+.muted {
+  color: var(--ink-soft);
+}
+.pad {
+  padding: 8px 0;
+}
+.warn {
+  color: var(--warn);
+  margin: 2px 0;
+}
+.badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0 4px;
+  color: var(--ink-soft);
+}
+.badge.ev-unresolved {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.canvas {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+svg.stage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  cursor: grab;
+}
+.grid-minor {
+  stroke: var(--grid-minor);
+  fill: none;
+  stroke-width: 1;
+}
+.grid-major {
+  stroke: var(--grid-major);
+  fill: none;
+  stroke-width: 1;
+}
+.node .box {
+  fill: var(--panel);
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+.node .tick {
+  stroke: var(--ink);
+  fill: none;
+  stroke-width: 2;
+}
+.node .label {
+  fill: var(--ink);
+  font-size: 13px;
+}
+.node .sub {
+  fill: var(--ink-soft);
+  font-size: 10px;
+}
+.node {
+  cursor: pointer;
+}
+.node:focus-visible .box {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.node.kind-external .box,
+.node.kind-unresolved .box {
+  stroke-dasharray: 4 3;
+}
+.node.kind-unresolved .box {
+  stroke: var(--warn);
+}
+.node.cycle .box {
+  stroke: var(--warn);
+  stroke-width: 2;
+}
+.node.upstream .box {
+  stroke: var(--up);
+  stroke-width: 2;
+}
+.node.downstream .box {
+  stroke: var(--down);
+  stroke-width: 2;
+}
+.node.selected .box {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.node.dim,
+.edge.dim {
+  opacity: 0.15;
+}
+.edge .line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+.edge .hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 10;
+  cursor: pointer;
+}
+.edge.cycle .line {
+  stroke: var(--warn);
+  stroke-width: 1.6;
+}
+.edge.upstream .line {
+  stroke: var(--up);
+  stroke-width: 1.8;
+}
+.edge.downstream .line {
+  stroke: var(--down);
+  stroke-width: 1.8;
+}
+.edge.cycle .line {
+  stroke: var(--warn);
+  stroke-width: 1.6;
+}
+.edge.selected .line {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.edge-count {
+  fill: var(--ink-soft);
+  font-size: 10px;
+  text-anchor: middle;
+}
+.arrow {
+  fill: var(--ink);
+}
+.arrow.up {
+  fill: var(--up);
+}
+.arrow.down {
+  fill: var(--down);
+}
+.arrow.cycle {
+  fill: var(--warn);
+}
+.titleblock {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  border: 1px solid var(--ink);
+  background: var(--panel);
+  padding: 6px 10px;
+  font-size: 11px;
+  min-width: 200px;
+  pointer-events: none;
+}
+.titleblock b {
+  display: block;
+  font-size: 12px;
+}
+.zoom {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 4px;
+}
+.drop {
+  margin: 10vh auto;
+  max-width: 520px;
+  padding: 24px;
+  border: 2px dashed var(--line);
+  text-align: center;
+}
+.drop .errors {
+  color: var(--warn);
+  text-align: left;
+  white-space: pre-wrap;
+}
+@media (max-width: 800px) {
+  .body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+  .left {
+    display: none;
+  }
+  .right {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    max-height: 42vh;
+  }
+}

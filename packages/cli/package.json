@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit"
   },
   "bin": {
-    "buildrax": "./dist/index.js"
+    "buildrax": "./dist/bin.js"
   },
   "dependencies": {
     "@buildrax/graph": "workspace:*",
