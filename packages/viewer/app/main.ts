@@ -9,6 +9,8 @@ import {
 } from "@buildrax/graph";
 import { validateModel, validateNotes, type Model, type NodeKind } from "@buildrax/ir";
 import { h, put, s } from "./dom.js";
+import { createCodeSource } from "./code-source.js";
+import { renderCodePanel } from "./code-ui.js";
 import { renderInspector } from "./inspector.js";
 import { edgeBadges, nodeBadges } from "./notes-logic.js";
 import { LocalStorageStore, ServerStore, type NotesStore } from "./notes-store.js";
@@ -65,6 +67,23 @@ function showDropZone(errors: string[] = []): void {
   );
 }
 
+function readThemePref(): ViewState["theme"] | undefined {
+  try {
+    const v = window.localStorage.getItem("buildrax:theme");
+    return v === "light" || v === "dark" || v === "auto" ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeThemePref(theme: ViewState["theme"]): void {
+  try {
+    window.localStorage.setItem("buildrax:theme", theme);
+  } catch {
+    /* storage blocked: the choice still lasts for this page via the URL hash */
+  }
+}
+
 function readJson(id: string): unknown {
   const text = document.getElementById(id)?.textContent?.trim();
   if (!text) return undefined;
@@ -101,6 +120,10 @@ function createStore(model: Model, onError: (m: string) => void): NotesStore {
 function start(model: Model): void {
   const index = new GraphIndex(model);
   const state: ViewState = decodeState(location.hash);
+  if (!location.hash) {
+    const saved = readThemePref();
+    if (saved) state.theme = saved;
+  }
   let view: GraphView = { nodes: [], edges: [] };
   let layout: Layout = { nodes: new Map(), edges: new Map(), width: 0, height: 0 };
   const tf = { x: 0, y: 0, k: 1 };
@@ -145,7 +168,23 @@ function start(model: Model): void {
   const notesBox = h("div", { class: "notes-box" });
   const research = parseResearch(readJson("buildrax-research"));
   const store = createStore(model, (msg) => void (notesStatus.textContent = msg));
-  const right = h("aside", { class: "right", "aria-live": "polite" });
+  const inspectorBox = h("div", { class: "tab-body", "aria-live": "polite" });
+  const codeBox = h("div", { class: "tab-body code-box" });
+  const tabInspector = h("button", { type: "button", role: "tab" }, "Inspector");
+  const tabCode = h("button", { type: "button", role: "tab" }, "Code");
+  const right = h(
+    "aside",
+    { class: "right" },
+    h("div", { class: "tabs", role: "tablist" }, tabInspector, tabCode),
+    inspectorBox,
+    codeBox,
+  );
+  const source = createCodeSource(
+    readJson("buildrax-config") as { server?: boolean; token?: string } | undefined,
+    readJson("buildrax-sources"),
+    (url, init) => fetch(url, init),
+  );
+  let codeSeq = 0;
   const canvas = h(
     "main",
     { class: "canvas" },
@@ -249,7 +288,7 @@ function start(model: Model): void {
         ? computeLineage(view, sel.id, state.depth)
         : undefined;
     paintHighlight(content, { selected: sel, lineage });
-    renderInspector(right, {
+    renderInspector(inspectorBox, {
       index,
       view,
       selected: sel,
@@ -259,8 +298,8 @@ function start(model: Model): void {
       onCollapse: (id) => void collapse(id),
       cyclesFor,
     });
-    if (sel?.type === "node") put(right, renderResearchSection(research, index, sel.id));
-    if (sel) put(right, renderNotesSection({ type: sel.type, id: sel.id }, store, index));
+    if (sel?.type === "node") put(inspectorBox, renderResearchSection(research, index, sel.id));
+    if (sel) put(inspectorBox, renderNotesSection({ type: sel.type, id: sel.id }, store, index));
     paintNoteBadges(content, nodeBadges(store.list(), index), edgeBadges(store.list()));
     renderNotesPanel(notesBox, {
       store,
@@ -269,7 +308,40 @@ function start(model: Model): void {
       selectedNodeId: sel?.type === "node" ? sel.id : undefined,
       onJump: (note) => void jumpToNote(note.target),
     });
+    syncTabs();
+    if (state.panel === "code") {
+      const my = ++codeSeq;
+      renderCodePanel(
+        codeBox,
+        {
+          index,
+          source,
+          selected: sel,
+          edge: (id) => view.edges.find((e) => e.id === id),
+          onSelectNode: (id) => void selectNode(id),
+        },
+        () => my === codeSeq,
+      );
+    }
   };
+
+  const syncTabs = (): void => {
+    const code = state.panel === "code";
+    inspectorBox.hidden = code;
+    codeBox.hidden = !code;
+    tabInspector.setAttribute("aria-selected", String(!code));
+    tabCode.setAttribute("aria-selected", String(code));
+    document.body.classList.toggle("code-open", code);
+  };
+  const openPanel = (panel: "inspector" | "code"): void => {
+    state.panel = panel;
+    paint();
+    writeHash();
+    // The canvas width changes with the panel, so refit once layout has settled.
+    requestAnimationFrame(() => fit());
+  };
+  tabInspector.addEventListener("click", () => openPanel("inspector"));
+  tabCode.addEventListener("click", () => openPanel("code"));
 
   async function jumpToNote(target: { type: "node" | "edge"; id: string }): Promise<void> {
     if (target.type === "node") return selectNode(target.id);
@@ -479,6 +551,7 @@ function start(model: Model): void {
     state.theme = state.theme === "auto" ? "dark" : state.theme === "dark" ? "light" : "auto";
     themeBtn.textContent = `Theme: ${state.theme}`;
     setTheme();
+    writeThemePref(state.theme);
     writeHash();
   });
   window.addEventListener("resize", fit);

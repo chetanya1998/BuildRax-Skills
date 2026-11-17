@@ -8,6 +8,8 @@ export interface ViewState {
   showExternal: boolean;
   showUnresolved: boolean;
   theme: ThemeChoice;
+  /** Which right-hand tab is open. */
+  panel: "inspector" | "code";
 }
 
 export const DEFAULT_STATE: ViewState = {
@@ -16,6 +18,7 @@ export const DEFAULT_STATE: ViewState = {
   showExternal: true,
   showUnresolved: true,
   theme: "auto",
+  panel: "inspector",
 };
 
 /** Serialize view state into a URL-hash-safe string. */
@@ -42,6 +45,7 @@ export function decodeState(hash: string): ViewState {
       showExternal: v.showExternal !== false,
       showUnresolved: v.showUnresolved !== false,
       theme: v.theme === "light" || v.theme === "dark" ? v.theme : "auto",
+      panel: v.panel === "code" ? "code" : "inspector",
     };
   } catch {
     return { ...DEFAULT_STATE };

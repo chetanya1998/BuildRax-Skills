@@ -38,9 +38,12 @@ export function buildProgram(): Command {
     .command("view")
     .argument("[path]", "repository containing .buildrax/model.json", ".")
     .option("--open", "open the viewer in the default browser")
-    .description("generate .buildrax/view.html (single offline file)")
-    .action(async (repo: string, opts: { open?: boolean }) => {
-      const file = await viewCommand(repo);
+    .option("--no-source", "do not embed source code (the Code tab will be empty)")
+    .description(
+      "generate .buildrax/view.html (single offline file, includes source for the Code tab)",
+    )
+    .action(async (repo: string, opts: { open?: boolean; source: boolean }) => {
+      const file = await viewCommand(repo, { source: opts.source });
       console.log(`Viewer written to ${file}`);
       if (opts.open) openFile(file);
     });

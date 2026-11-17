@@ -18,3 +18,11 @@ Guarantees enforced in code and tests:
 - Scanning is static; repository code is never executed.
 - The agent running a skill may itself send what you show it to its model provider. BuildRAX keeps
   what it shows the agent small (digest/context) and excludes notes.
+
+## Source code in the viewer
+
+`buildrax view` embeds the source of scanned files into `.buildrax/view.html` so the Code tab works
+offline (per file up to 300 KB, 8 MB total). That file is git-ignored and local, but **it contains
+your source: do not share it unless you mean to**. Use `buildrax view --no-source` to leave source
+out. `buildrax serve` embeds nothing; `/api/file` serves only files that are nodes of the scanned
+model, only with the session token, and refuses anything outside the repo (including symlinks).

@@ -35,6 +35,8 @@ export interface InjectExtras {
   research?: ResearchFile;
   /** Present when served by `buildrax serve`; tells the page to use the notes API. */
   config?: { server: true; token: string };
+  /** Source text by repo-relative path, for the Code tab in static files. */
+  sources?: Record<string, string>;
 }
 
 /** Embed a model (and optional notes/research/config) into the viewer HTML. */
@@ -43,5 +45,6 @@ export function injectModel(html: string, model: Model, extras: InjectExtras = {
   if (extras.notes) out = setScript(out, "buildrax-notes", extras.notes);
   if (extras.research) out = setScript(out, "buildrax-research", extras.research);
   if (extras.config) out = setScript(out, "buildrax-config", extras.config);
+  if (extras.sources) out = setScript(out, "buildrax-sources", extras.sources);
   return out;
 }

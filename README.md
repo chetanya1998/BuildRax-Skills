@@ -27,8 +27,9 @@ buildrax view fixtures/sample-monorepo --open
 | `research [--online]`                   | dependency facts from npm/PyPI; plan-only unless `--online`                 |
 | `install-skill`                         | install the agent skill for Claude Code, Codex, Antigravity                 |
 
-The viewer is one offline HTML file: click for upstream/downstream lineage, double-click a module
-to expand, sticky notes and flags for your own reference (the architecture itself is read-only).
+The viewer is one offline HTML file: click a node to highlight everything upstream and downstream,
+open the **Code** tab to read that node's code plus the connecting lines and files on both sides,
+double-click a module to expand, light/dark themes (remembered), sticky notes and flags for your own reference (the architecture itself is read-only).
 See `docs/privacy.md` and `docs/agents.md`.
 
 ## Measured on this repo (estimates, chars / 4)

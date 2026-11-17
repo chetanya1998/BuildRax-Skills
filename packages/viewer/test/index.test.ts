@@ -318,3 +318,124 @@ describe("research ui logic", () => {
     expect(parseResearch({ schemaVersion: "x" })).toBeUndefined();
   });
 });
+
+import { tokenizeFile, tokenizeLine } from "../app/highlight.js";
+import { connectionsFor, excerptRange } from "../app/code-logic.js";
+import { EmbeddedSource, NoSource, ServerSource, createCodeSource } from "../app/code-source.js";
+
+describe("highlighter", () => {
+  const kinds = (line: string, lang = "typescript") =>
+    tokenizeLine(line, lang).toks.map((t) => `${t.k}:${t.v}`);
+  it("tokenizes keywords, strings, numbers and comments", () => {
+    expect(kinds('import x from "./a"; // hi')).toEqual([
+      "kw:import",
+      "plain: x ",
+      "kw:from",
+      "plain: ",
+      'str:"./a"',
+      "plain:; ",
+      "com://" + " hi",
+    ]);
+    expect(kinds("const n = 42;")).toContain("num:42");
+  });
+  it("keeps block comments and python docstrings across lines", () => {
+    const ts = tokenizeFile("/* a\nb */ const x", "typescript");
+    expect(ts[0]!.every((t) => t.k === "com")).toBe(true);
+    expect(ts[1]![0]).toEqual({ k: "com", v: "b */" });
+    const py = tokenizeFile('"""doc\nmore"""\nimport os  # c', "python");
+    expect(py[1]!.every((t) => t.k === "str")).toBe(true);
+    expect(py[2]!.some((t) => t.k === "kw" && t.v === "import")).toBe(true);
+    expect(py[2]!.some((t) => t.k === "com")).toBe(true);
+  });
+  it("never loses characters and handles unterminated strings", () => {
+    for (const line of ['a = "unterminated', "x = 'it\\'s'", "`tpl ${a}`", ""]) {
+      expect(
+        tokenizeLine(line, "javascript")
+          .toks.map((t) => t.v)
+          .join(""),
+      ).toBe(line);
+    }
+  });
+});
+
+describe("connectionsFor", () => {
+  const ev = (file: string, line: number) => [{ kind: "verified" as const, file, startLine: line }];
+  const mk = (id: string, kind: "file" | "module" | "external", parent?: string) => ({
+    id,
+    kind,
+    name: id,
+    parent,
+    evidence: [{ kind: "verified" as const }],
+  });
+  const idx = new GraphIndex({
+    schemaVersion: "buildrax-ir/v1",
+    meta: {
+      repo: "r",
+      scannedAt: "t",
+      generator: { name: "buildrax", version: "0" },
+      languages: [],
+    },
+    nodes: [
+      mk("project:r", "module"),
+      mk("module:m", "module", "project:r"),
+      mk("file:a", "file", "module:m"),
+      mk("file:b", "file", "module:m"),
+      mk("file:c", "file", "project:r"),
+      mk("external:lib", "external", "project:r"),
+    ],
+    edges: [
+      { id: "1", from: "file:a", to: "file:b", kind: "imports", evidence: ev("a", 1) },
+      { id: "2", from: "file:a", to: "external:lib", kind: "depends-on", evidence: ev("a", 2) },
+      { id: "3", from: "file:c", to: "file:a", kind: "imports", evidence: ev("c", 7) },
+    ],
+  });
+  it("splits a file's connections into used and used-by, with source anchors", () => {
+    const c = connectionsFor(idx, "file:a");
+    expect(c.down.map((l) => l.other)).toEqual(["external:lib", "file:b"]);
+    expect(c.up).toEqual([
+      { other: "file:c", count: 1, evidence: [{ kind: "verified", file: "c", startLine: 7 }] },
+    ]);
+  });
+  it("covers everything inside a container and ignores internal links", () => {
+    const c = connectionsFor(idx, "module:m");
+    expect(c.files).toEqual(["file:a", "file:b"]);
+    expect(c.down.map((l) => l.other)).toEqual(["external:lib"]);
+    expect(c.up.map((l) => l.other)).toEqual(["file:c"]);
+    expect(connectionsFor(idx, "nope")).toEqual({ files: [], down: [], up: [] });
+  });
+  it("clamps excerpts to the file", () => {
+    expect(excerptRange(10, 1, 3)).toEqual({ start: 1, end: 4 });
+    expect(excerptRange(10, 10, 3)).toEqual({ start: 7, end: 10 });
+  });
+});
+
+describe("code sources", () => {
+  it("embedded source answers only for embedded paths (no prototype leaks)", async () => {
+    const s = new EmbeddedSource({ "a.ts": "x" });
+    expect(await s.get("a.ts")).toBe("x");
+    expect(await s.get("b.ts")).toBeUndefined();
+    expect(await s.get("constructor")).toBeUndefined();
+  });
+  it("server source sends the token, encodes the path and caches", async () => {
+    const calls: string[] = [];
+    const s = new ServerSource("tok", async (url, init) => {
+      calls.push(`${url}|${(init?.headers as Record<string, string>)["x-buildrax-token"]}`);
+      return { ok: true, status: 200, json: async () => ({ text: "code" }) };
+    });
+    expect(await s.get("a b/c.ts")).toBe("code");
+    await s.get("a b/c.ts");
+    expect(calls).toEqual(["/api/file?path=a%20b%2Fc.ts|tok"]);
+    const failing = new ServerSource("t", async () => ({
+      ok: false,
+      status: 404,
+      json: async () => ({}),
+    }));
+    expect(await failing.get("x")).toBeUndefined();
+  });
+  it("picks the right source from the page's data", () => {
+    const f = async () => ({ ok: true, status: 200, json: async () => ({}) });
+    expect(createCodeSource({ server: true, token: "t" }, undefined, f).mode).toBe("server");
+    expect(createCodeSource(undefined, { "a.ts": "x" }, f).mode).toBe("embedded");
+    expect(createCodeSource(undefined, undefined, f)).toBeInstanceOf(NoSource);
+  });
+});

@@ -3,6 +3,7 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import { validateNotes } from "@buildrax/ir";
 import { loadModel, loadNotes, saveNotes } from "./data.js";
+import { readModelFile } from "./sources.js";
 import { buildViewerHtml } from "./view.js";
 
 export interface RunningServer {
@@ -79,6 +80,13 @@ export async function startServer(repo: string, port = 4317): Promise<RunningSer
 
         if (url.pathname === "/api/model" && req.method === "GET")
           return send(res, 200, JSON.stringify(await loadModel(repo)));
+        if (url.pathname === "/api/file" && req.method === "GET") {
+          const rel = url.searchParams.get("path") ?? "";
+          const text = await readModelFile(repo, await loadModel(repo), rel);
+          if (text === undefined)
+            return send(res, 404, JSON.stringify({ error: "not a scanned source file" }));
+          return send(res, 200, JSON.stringify({ path: rel, text }));
+        }
         if (url.pathname === "/api/notes" && req.method === "GET")
           return send(res, 200, JSON.stringify(await loadNotes(repo)));
         if (url.pathname === "/api/notes" && req.method === "PUT") {

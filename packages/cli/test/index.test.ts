@@ -260,3 +260,112 @@ describe("skill stays in sync with the cli", () => {
     }
   });
 });
+
+import { collectSources, readModelFile } from "../src/commands/sources.js";
+
+describe("source access for the Code tab", () => {
+  it("embeds scanned source in a static view, safely inside the script tag", async () => {
+    await scanCommand(tmp);
+    await fs.writeFile(
+      path.join(tmp, "packages/api/src/evil.ts"),
+      'export const s = "</script><script>window.__x=1</script>";\n',
+    );
+    await scanCommand(tmp);
+    const html = await fs.readFile(await viewCommand(tmp), "utf8");
+    expect(html).toContain("import Stripe");
+    expect(html).not.toContain("</script><script>window.__x=1</script>");
+    const tag = /<script id="buildrax-sources" type="application\/json">([\s\S]*?)<\/script>/.exec(
+      html,
+    )![1]!;
+    expect(JSON.parse(tag)["packages/api/src/evil.ts"]).toContain("</script>");
+    await fs.rm(path.join(tmp, "packages/api/src/evil.ts"));
+    await scanCommand(tmp);
+  });
+
+  it("omits source with --no-source", async () => {
+    await scanCommand(tmp);
+    const html = await fs.readFile(await viewCommand(tmp, { source: false }), "utf8");
+    expect(html).not.toContain("import Stripe");
+  });
+
+  it("only reads files that are nodes of the model, inside the repo", async () => {
+    await scanCommand(tmp);
+    const model = JSON.parse(await fs.readFile(path.join(tmp, ".buildrax", "model.json"), "utf8"));
+    expect(await readModelFile(tmp, model, "packages/api/src/server.ts")).toContain("express");
+    for (const bad of [
+      "../../etc/passwd",
+      "/etc/passwd",
+      "package.json",
+      ".buildrax/model.json",
+      "packages/api/package.json",
+      "nope.ts",
+    ]) {
+      expect(await readModelFile(tmp, model, bad), bad).toBeUndefined();
+    }
+    // A symlink inside the repo pointing outside must not be followed.
+    const outside = await fs.mkdtemp(path.join(os.tmpdir(), "brx-out-"));
+    await fs.writeFile(path.join(outside, "secret.ts"), "secret");
+    await fs.symlink(path.join(outside, "secret.ts"), path.join(tmp, "packages/api/src/link.ts"));
+    const withLink = {
+      ...model,
+      nodes: [
+        ...model.nodes,
+        {
+          id: "file:packages/api/src/link.ts",
+          kind: "file",
+          name: "link.ts",
+          path: "packages/api/src/link.ts",
+          evidence: [{ kind: "verified" }],
+        },
+      ],
+    };
+    expect(await readModelFile(tmp, withLink, "packages/api/src/link.ts")).toBeUndefined();
+    expect((await collectSources(tmp, withLink)).omitted).toContain("packages/api/src/link.ts");
+    await fs.rm(path.join(tmp, "packages/api/src/link.ts"));
+    await fs.rm(outside, { recursive: true, force: true });
+  });
+});
+
+describe("serve /api/file", () => {
+  let server: RunningServer;
+  beforeAll(async () => {
+    await scanCommand(tmp);
+    server = await startServer(tmp, 0);
+  });
+  afterAll(async () => server.close());
+  const get = (p: string, token: string | null = server.token) =>
+    new Promise<{ status: number; body: string }>((resolve, reject) => {
+      const u = new URL(server.url);
+      http
+        .get(
+          {
+            host: u.hostname,
+            port: u.port,
+            path: p,
+            headers: token ? { "x-buildrax-token": token } : {},
+          },
+          (res) => {
+            let body = "";
+            res.on("data", (c) => (body += c));
+            res.on("end", () => resolve({ status: res.statusCode ?? 0, body }));
+          },
+        )
+        .on("error", reject);
+    });
+
+  it("serves scanned files with a token and nothing else", async () => {
+    const ok = await get("/api/file?path=packages/api/src/server.ts");
+    expect(ok.status).toBe(200);
+    expect(JSON.parse(ok.body).text).toContain("express");
+    expect((await get("/api/file?path=packages/api/src/server.ts", null)).status).toBe(401);
+    for (const bad of [
+      "../../../etc/passwd",
+      "%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+      "package.json",
+      ".buildrax%2Fnotes.json",
+      "",
+    ]) {
+      expect((await get(`/api/file?path=${bad}`)).status, bad).toBe(404);
+    }
+  });
+});
