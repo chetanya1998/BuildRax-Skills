@@ -27,9 +27,21 @@ buildrax view fixtures/sample-monorepo --open
 | `research [--online]`                   | dependency facts from npm/PyPI; plan-only unless `--online`                 |
 | `install-skill`                         | install the agent skill for Claude Code, Codex, Antigravity                 |
 
-The viewer is one offline HTML file: click a node to highlight everything upstream and downstream,
-open the **Code** tab to read that node's code plus the connecting lines and files on both sides,
-double-click a module to expand, light/dark themes (remembered), sticky notes and flags for your own reference (the architecture itself is read-only).
+The viewer is one offline HTML file with an animated, interactive graph:
+
+- **Live physics layout** (default): drag any node and its neighbours follow elastically; dragged
+  nodes stay pinned (Alt-click or _Unpin_ releases them, _Shake_ re-runs the physics). **Layered**
+  gives a structured left-to-right layout. Switching, expanding and collapsing all animate: nodes
+  glide to their new places and new ones burst out of their parent.
+- **Color coding**: by package, kind, language or connectivity (heat), with a clickable legend that
+  focuses one color. Orb size reflects files (containers) or connections (files); package
+  _clusters_ get glowing halos; cycles pulse red.
+- **Click a node** to light up everything upstream (orange) and downstream (blue) with animated
+  flow along the links; the camera glides to it. A minimap and zoom controls help navigation.
+- **Code tab** shows that node's code plus the connecting lines and files on both sides.
+- Light/dark/auto themes (remembered), sticky notes and flags for your own reference, and a
+  _motion_ toggle. The OS "reduce motion" setting is honoured (static layout, no particles).
+
 See `docs/privacy.md` and `docs/agents.md`.
 
 ## Measured on this repo (estimates, chars / 4)
@@ -45,5 +57,7 @@ question-specific `context` pack is about 3,900 tokens.
 - Research uses npm/PyPI registry data only: no security advisories and no pinned-version
   comparison yet; findings describe the latest release.
 - Agent skill install paths are unverified against vendor docs (see `docs/agents.md`).
-- The viewer bundle is about 1.5 MB (inlined ELK layout engine); large graphs are unbenchmarked.
+- The viewer bundle is about 1.6 MB (inlined ELK layout engine). The physics itself is cheap
+  (about 3 ms per step at 600 nodes) but the graph is drawn as SVG, so very large views (many
+  hundreds of nodes on screen) have not been measured; collapse packages to stay responsive.
 - Package names (`buildrax`, `@buildrax/*`) are placeholders and unpublished.

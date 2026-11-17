@@ -10,6 +10,13 @@ export interface ViewState {
   theme: ThemeChoice;
   /** Which right-hand tab is open. */
   panel: "inspector" | "code";
+  /** Canvas layout: structured layers or live physics. */
+  layout: "layered" | "force";
+  color: "package" | "kind" | "language" | "heat";
+  /** Force layout: pull package members together and draw halos. */
+  cluster: boolean;
+  /** Animations, physics idle and particles. */
+  motion: boolean;
 }
 
 export const DEFAULT_STATE: ViewState = {
@@ -19,6 +26,10 @@ export const DEFAULT_STATE: ViewState = {
   showUnresolved: true,
   theme: "auto",
   panel: "inspector",
+  layout: "force",
+  color: "package",
+  cluster: true,
+  motion: true,
 };
 
 /** Serialize view state into a URL-hash-safe string. */
@@ -46,6 +57,11 @@ export function decodeState(hash: string): ViewState {
       showUnresolved: v.showUnresolved !== false,
       theme: v.theme === "light" || v.theme === "dark" ? v.theme : "auto",
       panel: v.panel === "code" ? "code" : "inspector",
+      layout: v.layout === "layered" ? "layered" : "force",
+      color:
+        v.color === "kind" || v.color === "language" || v.color === "heat" ? v.color : "package",
+      cluster: v.cluster !== false,
+      motion: v.motion !== false,
     };
   } catch {
     return { ...DEFAULT_STATE };

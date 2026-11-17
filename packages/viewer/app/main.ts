@@ -1,4 +1,5 @@
 import "./theme.css";
+import "./scene.css";
 import {
   GraphIndex,
   buildView,
@@ -14,16 +15,20 @@ import { renderCodePanel } from "./code-ui.js";
 import { renderInspector } from "./inspector.js";
 import { edgeBadges, nodeBadges } from "./notes-logic.js";
 import { LocalStorageStore, ServerStore, type NotesStore } from "./notes-store.js";
-import {
-  paintNoteBadges,
-  relocateNotes,
-  renderNotesPanel,
-  renderNotesSection,
-} from "./notes-ui.js";
-import { layoutView, type Layout } from "./layout.js";
+import { relocateNotes, renderNotesPanel, renderNotesSection } from "./notes-ui.js";
+import { layoutView } from "./layout.js";
 import { computeLineage } from "./lineage.js";
 import { parseResearch, renderResearchSection } from "./research-ui.js";
-import { defs, gridRect, paintHighlight, renderGraph } from "./render.js";
+import { radiusFor } from "./geometry.js";
+import {
+  COLOR_MODES,
+  legendFor,
+  packageHues,
+  packageOf,
+  swatchFor,
+  type ColorMode,
+} from "./palette.js";
+import { Scene, type NodeStyle } from "./scene.js";
 import { decodeState, encodeState, type ViewState } from "./state-url.js";
 
 const root = document.getElementById("app")!;
@@ -124,10 +129,11 @@ function start(model: Model): void {
     const saved = readThemePref();
     if (saved) state.theme = saved;
   }
+  // The operating system's "reduce motion" setting wins over a shared link; the toggle can re-enable it.
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) state.motion = false;
   let view: GraphView = { nodes: [], edges: [] };
-  let layout: Layout = { nodes: new Map(), edges: new Map(), width: 0, height: 0 };
-  const tf = { x: 0, y: 0, k: 1 };
   let seq = 0;
+  let focusKey: string | undefined;
 
   const cycles = fileCycles(index);
   const cyclesFor = (id: string): string[][] => {
@@ -137,10 +143,14 @@ function start(model: Model): void {
 
   // ---- DOM skeleton ----
   const svg = s("svg", { class: "stage", role: "application", "aria-label": "Architecture graph" });
-  const viewport = s("g", { id: "viewport" });
-  const content = s("g", { id: "content" });
-  viewport.append(gridRect(), content);
-  svg.append(defs(), viewport);
+  const scene = new Scene(svg, {
+    select: (sel) => {
+      state.selected = sel;
+      paint();
+      writeHash();
+    },
+    expand: (id) => void expand(id),
+  });
 
   const searchInput = h("input", {
     type: "search",
@@ -148,21 +158,37 @@ function start(model: Model): void {
     "aria-label": "Search architecture",
   });
   const results = h("div", { class: "results" });
-  const depthSel = h(
-    "select",
-    { "aria-label": "Lineage depth" },
-    ...[
-      ["1", "depth 1"],
-      ["2", "depth 2"],
-      ["3", "depth 3"],
-      ["0", "all"],
-    ].map(([v, t]) => h("option", { value: v! }, t!)),
+  const select = (label: string, opts: [string, string][]): HTMLSelectElement =>
+    h("select", { "aria-label": label }, ...opts.map(([v, t]) => h("option", { value: v }, t)));
+  const depthSel = select("Lineage depth", [
+    ["1", "depth 1"],
+    ["2", "depth 2"],
+    ["3", "depth 3"],
+    ["0", "depth ∞"],
+  ]);
+  const colorSel = select(
+    "Color by",
+    COLOR_MODES.map((c) => [c, `color: ${c}`]),
   );
+  const segLayered = h("button", { type: "button", role: "radio" }, "Layered");
+  const segForce = h("button", { type: "button", role: "radio" }, "Live");
+  const clusterBox = h("input", { type: "checkbox" });
+  const motionBox = h("input", { type: "checkbox" });
   const extBox = h("input", { type: "checkbox" });
   const unrBox = h("input", { type: "checkbox" });
   const themeBtn = h("button", { type: "button" }, "Theme");
   const fitBtn = h("button", { type: "button" }, "Fit");
-  const collapseBtn = h("button", { type: "button" }, "Collapse all");
+  const shakeBtn = h(
+    "button",
+    { type: "button", class: "live-only", title: "Re-run the physics" },
+    "Shake",
+  );
+  const unpinBtn = h(
+    "button",
+    { type: "button", class: "live-only", title: "Release dragged nodes" },
+    "Unpin",
+  );
+  const collapseBtn = h("button", { type: "button" }, "Collapse");
   const left = h("aside", { class: "left" });
   const notesStatus = h("p", { class: "warn", role: "status" });
   const notesBox = h("div", { class: "notes-box" });
@@ -185,10 +211,17 @@ function start(model: Model): void {
     (url, init) => fetch(url, init),
   );
   let codeSeq = 0;
+  const legendBox = h("div", { class: "legend", "aria-label": "Color legend" });
+  const statsBox = h("div", { class: "stats" });
+  const minimap = h("canvas", { class: "minimap", width: 168, height: 112, "aria-hidden": "true" });
+  scene.attachMinimap(minimap);
   const canvas = h(
     "main",
     { class: "canvas" },
     svg,
+    legendBox,
+    statsBox,
+    minimap,
     h(
       "div",
       { class: "zoom" },
@@ -198,31 +231,32 @@ function start(model: Model): void {
           { type: "button", "aria-label": t === "+" ? "Zoom in" : "Zoom out" },
           t,
         );
-        b.addEventListener("click", () => zoomBy(t === "+" ? 1.25 : 0.8));
+        b.addEventListener("click", () => scene.zoomBy(t === "+" ? 1.25 : 0.8));
         return b;
       }),
-    ),
-    h(
-      "div",
-      { class: "titleblock" },
-      h("b", null, model.meta.repo),
-      `scanned ${model.meta.scannedAt}`,
-      h("br"),
-      `${model.schemaVersion} · ${model.nodes.length} nodes · ${model.edges.length} edges`,
-      h("br"),
-      `${cycles.length} cycle${cycles.length === 1 ? "" : "s"} · read-only`,
     ),
   );
   root.replaceChildren(
     h(
       "header",
       { class: "top" },
-      h("h1", null, "BUILDRAX"),
+      h("h1", null, h("span", { class: "logo" }), "BUILDRAX"),
       h("div", { class: "search" }, searchInput, results),
+      h("div", { class: "seg", role: "radiogroup", "aria-label": "Layout" }, segLayered, segForce),
+      colorSel,
       depthSel,
-      h("label", null, extBox, "externals"),
-      h("label", null, unrBox, "unresolved"),
+      h(
+        "label",
+        { class: "chip", title: "Pull each package's files together" },
+        clusterBox,
+        "clusters",
+      ),
+      h("label", { class: "chip", title: "Animations and physics" }, motionBox, "motion"),
+      h("label", { class: "chip" }, extBox, "externals"),
+      h("label", { class: "chip" }, unrBox, "unresolved"),
       collapseBtn,
+      shakeBtn,
+      unpinBtn,
       fitBtn,
       themeBtn,
     ),
@@ -248,38 +282,6 @@ function start(model: Model): void {
     return k;
   };
 
-  // ---- viewport ----
-  const applyTf = (): void =>
-    viewport.setAttribute("transform", `translate(${tf.x},${tf.y}) scale(${tf.k})`);
-  const fit = (): void => {
-    const r = svg.getBoundingClientRect();
-    if (!layout.width || !r.width) return;
-    const k = Math.min((r.width - 80) / layout.width, (r.height - 80) / layout.height, 1.5);
-    tf.k = Math.max(0.1, k);
-    tf.x = (r.width - layout.width * tf.k) / 2;
-    tf.y = (r.height - layout.height * tf.k) / 2;
-    applyTf();
-  };
-  const zoomAt = (px: number, py: number, factor: number): void => {
-    const k2 = Math.min(3, Math.max(0.1, tf.k * factor));
-    tf.x = px - ((px - tf.x) * k2) / tf.k;
-    tf.y = py - ((py - tf.y) * k2) / tf.k;
-    tf.k = k2;
-    applyTf();
-  };
-  function zoomBy(factor: number): void {
-    const r = svg.getBoundingClientRect();
-    zoomAt(r.width / 2, r.height / 2, factor);
-  }
-  const centerOn = (id: string): void => {
-    const n = layout.nodes.get(id);
-    const r = svg.getBoundingClientRect();
-    if (!n) return;
-    tf.x = r.width / 2 - (n.x + n.w / 2) * tf.k;
-    tf.y = r.height / 2 - (n.y + n.h / 2) * tf.k;
-    applyTf();
-  };
-
   // ---- drawing ----
   const paint = (): void => {
     const sel = state.selected;
@@ -287,7 +289,7 @@ function start(model: Model): void {
       sel?.type === "node" && view.nodes.some((n) => n.id === sel.id)
         ? computeLineage(view, sel.id, state.depth)
         : undefined;
-    paintHighlight(content, { selected: sel, lineage });
+    scene.setHighlight({ selected: sel, lineage, focusKey });
     renderInspector(inspectorBox, {
       index,
       view,
@@ -300,7 +302,7 @@ function start(model: Model): void {
     });
     if (sel?.type === "node") put(inspectorBox, renderResearchSection(research, index, sel.id));
     if (sel) put(inspectorBox, renderNotesSection({ type: sel.type, id: sel.id }, store, index));
-    paintNoteBadges(content, nodeBadges(store.list(), index), edgeBadges(store.list()));
+    scene.setBadges(nodeBadges(store.list(), index), edgeBadges(store.list()));
     renderNotesPanel(notesBox, {
       store,
       model,
@@ -338,7 +340,7 @@ function start(model: Model): void {
     paint();
     writeHash();
     // The canvas width changes with the panel, so refit once layout has settled.
-    requestAnimationFrame(() => fit());
+    requestAnimationFrame(() => scene.fit(true));
   };
   tabInspector.addEventListener("click", () => openPanel("inspector"));
   tabCode.addEventListener("click", () => openPanel("code"));
@@ -352,20 +354,115 @@ function start(model: Model): void {
     await refresh({ fit: true });
   }
 
+  const maxDegree = Math.max(1, ...model.nodes.map((n) => index.fanIn(n.id) + index.fanOut(n.id)));
+  const hues = packageHues(index);
+  const groups = new Map(
+    [...hues].map(([id, hue]) => [id, { label: index.node(id)?.name ?? id, hue }] as const),
+  );
+
+  const styleFor = (v: GraphView, mode: ColorMode): Map<string, NodeStyle> => {
+    const out = new Map<string, NodeStyle>();
+    for (const vn of v.nodes) {
+      const node = index.node(vn.id)!;
+      const sw = swatchFor(
+        { id: vn.id, kind: vn.kind, language: node.language },
+        mode,
+        { index, maxDegree },
+        hues,
+      );
+      const degree = index.fanIn(vn.id) + index.fanOut(vn.id);
+      out.set(vn.id, {
+        hue: sw.hue,
+        sat: sw.sat,
+        key: sw.key,
+        r: radiusFor(vn.kind, vn.fileCount, degree),
+        group: packageOf(index, vn.id),
+      });
+    }
+    return out;
+  };
+
+  const renderLegend = (): void => {
+    const entries = legendFor(
+      view.nodes.map((n) => ({ id: n.id, kind: n.kind, language: index.node(n.id)?.language })),
+      state.color,
+      { index, maxDegree },
+      hues,
+    );
+    legendBox.replaceChildren(
+      h("div", { class: "legend-title" }, `Color: ${state.color}`),
+      ...entries.slice(0, 10).map((e) => {
+        const b = h(
+          "button",
+          {
+            type: "button",
+            class: `legend-item${focusKey === e.key ? " on" : ""}`,
+            style: `--h:${e.hue};--s:${e.sat}%`,
+            title: "Click to focus this color",
+          },
+          h("i", { class: "swatch" }),
+          h("span", null, e.label),
+          h("em", null, String(e.count)),
+        );
+        b.addEventListener("click", () => {
+          focusKey = focusKey === e.key ? undefined : e.key;
+          paint();
+          renderLegend();
+        });
+        return b;
+      }),
+    );
+    statsBox.replaceChildren(
+      h("span", null, h("b", null, String(view.nodes.length)), " nodes"),
+      h("span", null, h("b", null, String(view.edges.length)), " links"),
+      h(
+        "span",
+        { class: cycles.length ? "bad" : "" },
+        h("b", null, String(cycles.length)),
+        ` cycle${cycles.length === 1 ? "" : "s"}`,
+      ),
+      h("span", null, state.layout === "force" ? "live physics" : "layered"),
+    );
+  };
+
   async function refresh(opts: { fit?: boolean; center?: string } = {}): Promise<void> {
     const my = ++seq;
     view = buildView(index, { expanded: new Set(state.expanded), hideKinds: hideKinds() });
-    const next = await layoutView(view);
+    const style = styleFor(view, state.color);
+    const radii = new Map([...style].map(([id, st]) => [id, st.r] as const));
+    const positions = await layoutView(view, radii);
     if (my !== seq) return;
-    layout = next;
     if (state.selected?.type === "node" && !view.nodes.some((n) => n.id === state.selected!.id))
       state.selected = undefined;
-    renderGraph(content, view, layout);
+    scene.setMotion(state.motion);
+    scene.setGraph(
+      {
+        view,
+        mode: state.layout,
+        positions,
+        style,
+        ancestors: (id) => index.ancestors(id),
+        groups,
+        cluster: state.cluster,
+      },
+      { fit: opts.fit },
+    );
     paint();
-    if (opts.fit) fit();
-    if (opts.center) centerOn(opts.center);
+    renderLegend();
+    if (opts.center) {
+      const id = opts.center;
+      if (state.layout === "layered") scene.centerOn(id, true);
+      else setTimeout(() => scene.centerOn(id, true), 500);
+    }
     writeHash();
   }
+
+  const restyle = (): void => {
+    const style = styleFor(view, state.color);
+    scene.restyle(style, groups);
+    renderLegend();
+    writeHash();
+  };
 
   function ensureVisible(id: string): void {
     const n = index.node(id);
@@ -392,8 +489,19 @@ function start(model: Model): void {
     state.selected = { type: "node", id };
     await refresh({ fit: true });
   }
+  function setLayout(layout: ViewState["layout"]): void {
+    state.layout = layout;
+    syncControls();
+    void refresh({ fit: true });
+  }
   function syncControls(): void {
     depthSel.value = String(state.depth);
+    colorSel.value = state.color;
+    clusterBox.checked = state.cluster;
+    motionBox.checked = state.motion;
+    segLayered.setAttribute("aria-checked", String(state.layout === "layered"));
+    segForce.setAttribute("aria-checked", String(state.layout === "force"));
+    document.body.dataset.layout = state.layout;
     extBox.checked = state.showExternal;
     unrBox.checked = state.showUnresolved;
   }
@@ -439,61 +547,6 @@ function start(model: Model): void {
   });
 
   // ---- events ----
-  let dragged = false;
-  svg.addEventListener("pointerdown", (ev) => {
-    dragged = false;
-    const sx = ev.clientX,
-      sy = ev.clientY,
-      ox = tf.x,
-      oy = tf.y;
-    const move = (m: PointerEvent): void => {
-      if (Math.abs(m.clientX - sx) + Math.abs(m.clientY - sy) > 4) dragged = true;
-      if (dragged) {
-        tf.x = ox + m.clientX - sx;
-        tf.y = oy + m.clientY - sy;
-        applyTf();
-      }
-    };
-    const up = (): void => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-  });
-  svg.addEventListener(
-    "wheel",
-    (ev) => {
-      ev.preventDefault();
-      const r = svg.getBoundingClientRect();
-      zoomAt(ev.clientX - r.left, ev.clientY - r.top, Math.exp(-ev.deltaY * 0.0015));
-    },
-    { passive: false },
-  );
-  svg.addEventListener("click", (ev) => {
-    if (dragged) return;
-    const t = ev.target as Element;
-    const nodeEl = t.closest("[data-node]");
-    const edgeEl = t.closest("[data-edge]");
-    if (nodeEl) state.selected = { type: "node", id: nodeEl.getAttribute("data-node")! };
-    else if (edgeEl) state.selected = { type: "edge", id: edgeEl.getAttribute("data-edge")! };
-    else state.selected = undefined;
-    paint();
-    writeHash();
-  });
-  svg.addEventListener("dblclick", (ev) => {
-    const id = (ev.target as Element).closest("[data-node]")?.getAttribute("data-node");
-    if (id && view.nodes.find((n) => n.id === id)?.expandable) void expand(id);
-  });
-  svg.addEventListener("keydown", (ev) => {
-    const id = (ev.target as Element).closest("[data-node]")?.getAttribute("data-node");
-    if (!id) return;
-    if (ev.key === "Enter") void selectNode(id);
-    if (ev.key === " " && view.nodes.find((n) => n.id === id)?.expandable) {
-      ev.preventDefault();
-      void expand(id);
-    }
-  });
   window.addEventListener("keydown", (ev) => {
     const typing = ev.target instanceof HTMLInputElement || ev.target instanceof HTMLSelectElement;
     if (ev.key === "Escape") {
@@ -546,17 +599,45 @@ function start(model: Model): void {
     state.selected = undefined;
     void refresh({ fit: true });
   });
-  fitBtn.addEventListener("click", fit);
+  fitBtn.addEventListener("click", () => scene.fit(true));
+  shakeBtn.addEventListener("click", () => scene.reheat());
+  unpinBtn.addEventListener("click", () => scene.unpinAll());
+  segLayered.addEventListener("click", () => setLayout("layered"));
+  segForce.addEventListener("click", () => setLayout("force"));
+  colorSel.addEventListener("change", () => {
+    state.color = colorSel.value as ColorMode;
+    focusKey = undefined;
+    restyle();
+    paint();
+  });
+  clusterBox.addEventListener("change", () => {
+    state.cluster = clusterBox.checked;
+    void refresh({ fit: true });
+  });
+  motionBox.addEventListener("change", () => {
+    state.motion = motionBox.checked;
+    void refresh({ fit: true });
+  });
   themeBtn.addEventListener("click", () => {
     state.theme = state.theme === "auto" ? "dark" : state.theme === "dark" ? "light" : "auto";
-    themeBtn.textContent = `Theme: ${state.theme}`;
+    themeBtn.textContent =
+      state.theme === "dark"
+        ? "Theme: dark"
+        : state.theme === "light"
+          ? "Theme: light"
+          : "Theme: auto";
     setTheme();
     writeThemePref(state.theme);
     writeHash();
   });
-  window.addEventListener("resize", fit);
+  window.addEventListener("resize", () => scene.fit(false));
 
-  themeBtn.textContent = `Theme: ${state.theme}`;
+  themeBtn.textContent =
+    state.theme === "dark"
+      ? "Theme: dark"
+      : state.theme === "light"
+        ? "Theme: light"
+        : "Theme: auto";
   setTheme();
   syncControls();
   void refresh({ fit: true });

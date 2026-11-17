@@ -9,9 +9,8 @@ import {
   type Note,
   type NoteTarget,
 } from "@buildrax/ir";
-import { h, put, s } from "./dom.js";
+import { h, put } from "./dom.js";
 import { renderMarkdown } from "./markdown.js";
-import type { Badge } from "./notes-logic.js";
 import type { NotesStore } from "./notes-store.js";
 
 function snapshotFor(index: GraphIndex, target: NoteTarget): Note["snapshot"] {
@@ -236,30 +235,4 @@ export function renderNotesPanel(root: HTMLElement, ctx: NotesPanelCtx): void {
     h("div", { class: "actions" }, exportBtn, importBtn, importInput),
     status,
   );
-}
-
-/** Add/remove small count badges on nodes and edges without rebuilding the graph. */
-export function paintNoteBadges(
-  layer: SVGGElement,
-  nodes: Map<string, Badge>,
-  edges: Map<string, Badge>,
-): void {
-  layer.querySelectorAll(".note-badge").forEach((el) => el.remove());
-  const badge = (b: Badge, x: number, y: number): SVGGElement =>
-    s(
-      "g",
-      { class: `note-badge dot-${b.color}`, transform: `translate(${x},${y})` },
-      s("circle", { r: 9 }),
-      s("text", { y: 4 }, String(b.count)),
-    );
-  layer.querySelectorAll<SVGGElement>("[data-node]").forEach((el) => {
-    const b = nodes.get(el.getAttribute("data-node")!);
-    const w = Number(el.querySelector(".box")?.getAttribute("width") ?? 0);
-    if (b) el.append(badge(b, w - 2, 2));
-  });
-  layer.querySelectorAll<SVGGElement>("[data-edge]").forEach((el) => {
-    const b = edges.get(el.getAttribute("data-edge")!);
-    if (b)
-      el.append(badge(b, Number(el.getAttribute("data-mx")), Number(el.getAttribute("data-my"))));
-  });
 }

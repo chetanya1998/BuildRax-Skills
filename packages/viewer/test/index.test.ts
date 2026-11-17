@@ -439,3 +439,228 @@ describe("code sources", () => {
     expect(createCodeSource(undefined, undefined, f)).toBeInstanceOf(NoSource);
   });
 });
+
+import {
+  edgeGeometry,
+  easeInOutCubic,
+  easeOutCubic,
+  nodeBox,
+  radiusFor,
+  quadAt,
+} from "../app/geometry.js";
+import { ForceSim, type SimNode } from "../app/physics.js";
+import { legendFor, packageHues, swatchFor, PACKAGE_HUES } from "../app/palette.js";
+
+describe("geometry", () => {
+  it("sizes orbs by files (containers) or connections (files) within bounds", () => {
+    expect(radiusFor("module", 0, 0)).toBe(19);
+    expect(radiusFor("module", 100, 0)).toBe(39);
+    expect(radiusFor("file", 0, 0)).toBeLessThan(radiusFor("file", 50, 50));
+    expect(radiusFor("file", 0, 1e9)).toBeLessThanOrEqual(21);
+    expect(nodeBox(20, "a-very-long-file-name.ts").w).toBeGreaterThan(40);
+  });
+  it("eases from 0 to 1 and clamps", () => {
+    for (const f of [easeOutCubic, easeInOutCubic]) {
+      expect(f(0)).toBe(0);
+      expect(f(1)).toBe(1);
+      expect(f(2)).toBe(1);
+      expect(f(-1)).toBe(0);
+    }
+    expect(easeOutCubic(0.5)).toBeGreaterThan(0.5);
+  });
+  it("trims edges to the orb rims and bends opposite directions to opposite sides", () => {
+    const a = { x: 0, y: 0 };
+    const b = { x: 200, y: 0 };
+    const ab = edgeGeometry(a, 20, b, 20, 1);
+    const ba = edgeGeometry(b, 20, a, 20, 1);
+    expect(Math.hypot(ab.start.x - a.x, ab.start.y - a.y)).toBeCloseTo(22, 5);
+    expect(Math.hypot(ab.tip.x - b.x, ab.tip.y - b.y)).toBeCloseTo(23, 5);
+    expect(Math.abs(ab.angle)).toBeLessThan(1);
+    // A->B and B->A use the same side flag but travel in opposite directions, so they separate.
+    expect(Math.sign(ab.ctrl.y)).toBe(-Math.sign(ba.ctrl.y));
+    expect(quadAt({ x: 0, y: 0 }, { x: 5, y: 5 }, { x: 10, y: 0 }, 0.5)).toEqual({ x: 5, y: 2.5 });
+    expect(edgeGeometry(a, 10, a, 10, 1).d).toContain("M");
+  });
+});
+
+describe("force simulation", () => {
+  const ring = (n: number): SimNode[] =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `n${i}`,
+      x: Number.NaN,
+      y: Number.NaN,
+      vx: 0,
+      vy: 0,
+      r: 16,
+    }));
+  const chain = (n: number) =>
+    Array.from({ length: n - 1 }, (_, i) => ({ a: `n${i}`, b: `n${i + 1}`, weight: 1 }));
+  const dist = (a: SimNode, b: SimNode) => Math.hypot(a.x - b.x, a.y - b.y);
+
+  it("is deterministic and settles", () => {
+    const run = () => {
+      const s = new ForceSim(ring(12), chain(12));
+      const steps = s.settle(900);
+      return {
+        steps,
+        pos: s.nodes.map((n) => [Math.round(n.x * 100) / 100, Math.round(n.y * 100) / 100]),
+      };
+    };
+    const a = run();
+    expect(JSON.stringify(a)).toBe(JSON.stringify(run()));
+    expect(a.steps).toBeLessThan(900);
+    expect(a.pos.flat().every(Number.isFinite)).toBe(true);
+  });
+
+  it("keeps linked nodes closer than unlinked ones and never overlaps orbs", () => {
+    const s = new ForceSim(ring(10), chain(10));
+    s.settle(900);
+    const n = s.nodes;
+    expect(dist(n[0]!, n[1]!)).toBeLessThan(dist(n[0]!, n[9]!));
+    for (let i = 0; i < n.length; i++)
+      for (let j = i + 1; j < n.length; j++)
+        expect(dist(n[i]!, n[j]!)).toBeGreaterThan(n[i]!.r + n[j]!.r - 1);
+  });
+
+  it("holds pinned nodes in place and lets the rest react", () => {
+    const s = new ForceSim(ring(6), chain(6));
+    s.settle(900);
+    const pin = s.node("n0")!;
+    pin.pinned = true;
+    pin.x = 500;
+    pin.y = 0;
+    const before = s.node("n1")!.x;
+    s.reheat(0.8);
+    s.settle(900);
+    expect(pin.x).toBe(500);
+    expect(s.node("n1")!.x).toBeGreaterThan(before + 50);
+  });
+
+  it("pulls group members together when clustering is on", () => {
+    const mk = (cluster: number) => {
+      const ns = ring(8).map((n, i) => ({ ...n, group: i % 2 ? "a" : "b" }));
+      const s = new ForceSim(ns, chain(8), { cluster });
+      s.settle(900);
+      const spread = (g: string) => {
+        const m = s.nodes.filter((n) => n.group === g);
+        const cx = m.reduce((t, n) => t + n.x, 0) / m.length;
+        const cy = m.reduce((t, n) => t + n.y, 0) / m.length;
+        return m.reduce((t, n) => t + Math.hypot(n.x - cx, n.y - cy), 0) / m.length;
+      };
+      return spread("a") + spread("b");
+    };
+    expect(mk(0.2)).toBeLessThan(mk(0));
+  });
+
+  it("ignores links to unknown nodes and handles empty graphs", () => {
+    const s = new ForceSim(ring(2), [{ a: "n0", b: "ghost", weight: 1 }]);
+    expect(() => s.settle(50)).not.toThrow();
+    expect(new ForceSim([], []).settle(50)).toBeGreaterThan(0);
+  });
+});
+
+describe("color coding", () => {
+  const mkN = (
+    id: string,
+    kind: "file" | "module" | "external",
+    parent?: string,
+    extra: object = {},
+  ) => ({ id, kind, name: id, parent, evidence: [{ kind: "verified" as const }], ...extra });
+  const idx = new GraphIndex({
+    schemaVersion: "buildrax-ir/v1",
+    meta: {
+      repo: "r",
+      scannedAt: "t",
+      generator: { name: "buildrax", version: "0" },
+      languages: [],
+    },
+    nodes: [
+      mkN("project:r", "module"),
+      mkN("module:b", "module", "project:r", { meta: { package: true } }),
+      mkN("module:a", "module", "project:r", { meta: { package: true } }),
+      mkN("file:a/x", "file", "module:a", { language: "typescript" }),
+      mkN("file:b/y", "file", "module:b", { language: "python" }),
+      mkN("external:lib", "external", "project:r"),
+    ],
+    edges: [
+      {
+        id: "e",
+        from: "file:a/x",
+        to: "file:b/y",
+        kind: "imports",
+        evidence: [{ kind: "verified" }],
+      },
+    ],
+  });
+  const hues = packageHues(idx);
+  const ctx = { index: idx, maxDegree: 2 };
+
+  it("assigns distinct, stable hues per package regardless of order", () => {
+    expect(hues.get("module:a")).toBe(PACKAGE_HUES[0]);
+    expect(hues.get("module:b")).toBe(PACKAGE_HUES[1]);
+    expect(swatchFor({ id: "file:a/x", kind: "file" }, "package", ctx, hues).hue).toBe(
+      PACKAGE_HUES[0],
+    );
+    expect(swatchFor({ id: "file:b/y", kind: "file" }, "package", ctx, hues).hue).toBe(
+      PACKAGE_HUES[1],
+    );
+  });
+  it("colors by kind, language and connectivity", () => {
+    expect(swatchFor({ id: "external:lib", kind: "external" }, "package", ctx, hues).label).toBe(
+      "external dependency",
+    );
+    expect(
+      swatchFor({ id: "file:a/x", kind: "file", language: "python" }, "language", ctx, hues).label,
+    ).toBe("python");
+    const cold = swatchFor({ id: "external:lib", kind: "external" }, "heat", ctx, hues);
+    const hot = swatchFor({ id: "file:a/x", kind: "file" }, "heat", ctx, hues);
+    expect(hot.hue).toBeGreaterThan(cold.hue);
+    expect(hot.label).not.toBe(cold.label);
+  });
+  it("builds a legend with counts for what is on screen", () => {
+    const nodes = idx.model.nodes.filter((n) => n.kind !== "module");
+    const leg = legendFor(nodes, "package", ctx, hues);
+    expect(leg.map((l) => l.label).sort()).toEqual(
+      ["external dependency", "module:a", "module:b"].sort(),
+    );
+    expect(leg.reduce((t, l) => t + l.count, 0)).toBe(3);
+  });
+});
+
+describe("heat legend", () => {
+  it("never repeats a label and orders buckets from least to most connected", () => {
+    const mk = (id: string, parent?: string) => ({
+      id,
+      kind: "file" as const,
+      name: id,
+      parent,
+      evidence: [{ kind: "verified" as const }],
+    });
+    const nodes = [
+      mk("project:r"),
+      ...Array.from({ length: 12 }, (_, i) => mk(`file:f${i}`, "project:r")),
+    ];
+    const edges = Array.from({ length: 11 }, (_, i) => ({
+      id: `e${i}`,
+      from: "file:f0",
+      to: `file:f${i + 1}`,
+      kind: "imports" as const,
+      evidence: [{ kind: "verified" as const }],
+    }));
+    const i2 = new GraphIndex({
+      schemaVersion: "buildrax-ir/v1",
+      meta: {
+        repo: "r",
+        scannedAt: "t",
+        generator: { name: "buildrax", version: "0" },
+        languages: [],
+      },
+      nodes,
+      edges,
+    });
+    const leg = legendFor(nodes.slice(1), "heat", { index: i2, maxDegree: 11 }, new Map());
+    expect(new Set(leg.map((l) => l.label)).size).toBe(leg.length);
+    expect(leg[0]!.label).toBe("some links");
+    expect(leg[leg.length - 1]!.label).toBe("hub");
+  });
+});
