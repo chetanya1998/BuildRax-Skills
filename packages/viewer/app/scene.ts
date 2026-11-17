@@ -182,6 +182,20 @@ export class Scene {
       this.nodeLayer,
     );
     this.bindEvents();
+    // When panels open, close or float, keep whatever was in the middle of the canvas in the middle
+    // instead of re-zooming, so the user does not lose their place.
+    let last = { w: 0, h: 0 };
+    new ResizeObserver(() => {
+      const r = svg.getBoundingClientRect();
+      if (last.w && last.h && (r.width !== last.w || r.height !== last.h)) {
+        this.cam = undefined;
+        this.tf.x += (r.width - last.w) / 2;
+        this.tf.y += (r.height - last.h) / 2;
+        this.applyCamera();
+        this.drawMinimap();
+      }
+      last = { w: r.width, h: r.height };
+    }).observe(svg);
   }
 
   // ---------------------------------------------------------------- public API
@@ -352,6 +366,11 @@ export class Scene {
   zoomBy(factor: number): void {
     const r = this.svg.getBoundingClientRect();
     this.zoomAt(r.width / 2, r.height / 2, factor);
+  }
+
+  /** Redraw the minimap (e.g. after it was shown again). */
+  wakeMinimap(): void {
+    this.drawMinimap();
   }
 
   attachMinimap(canvas: HTMLCanvasElement): void {

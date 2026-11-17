@@ -1,5 +1,6 @@
 import "./theme.css";
 import "./scene.css";
+import "./panels.css";
 import {
   GraphIndex,
   buildView,
@@ -29,6 +30,7 @@ import {
   swatchFor,
   type ColorMode,
 } from "./palette.js";
+import { iconButton, Panels } from "./panels.js";
 import { Scene, type NodeStyle } from "./scene.js";
 import { decodeState, encodeState, type ViewState } from "./state-url.js";
 
@@ -191,7 +193,15 @@ function start(model: Model): void {
     "Unpin",
   );
   const collapseBtn = h("button", { type: "button" }, "Collapse");
-  const left = h("aside", { class: "left" });
+  const leftActions = h("div", { class: "panel-actions" });
+  const leftHead = h(
+    "div",
+    { class: "panel-head" },
+    h("span", { class: "panel-title" }, "Overview"),
+    leftActions,
+  );
+  const leftBody = h("div", { class: "panel-body" });
+  const left = h("aside", { class: "left", "aria-label": "Overview" }, leftHead, leftBody);
   const notesStatus = h("p", { class: "warn", role: "status" });
   const notesBox = h("div", { class: "notes-box" });
   const research = parseResearch(readJson("buildrax-research"));
@@ -200,10 +210,17 @@ function start(model: Model): void {
   const codeBox = h("div", { class: "tab-body code-box" });
   const tabInspector = h("button", { type: "button", role: "tab" }, "Inspector");
   const tabCode = h("button", { type: "button", role: "tab" }, "Code");
+  const rightActions = h("div", { class: "panel-actions" });
+  const rightHead = h(
+    "div",
+    { class: "tabs" },
+    h("div", { class: "tab-list", role: "tablist" }, tabInspector, tabCode),
+    rightActions,
+  );
   const right = h(
     "aside",
-    { class: "right" },
-    h("div", { class: "tabs", role: "tablist" }, tabInspector, tabCode),
+    { class: "right", "aria-label": "Inspector" },
+    rightHead,
     inspectorBox,
     codeBox,
   );
@@ -217,13 +234,14 @@ function start(model: Model): void {
   const statsBox = h("div", { class: "stats" });
   const minimap = h("canvas", { class: "minimap", width: 168, height: 112, "aria-hidden": "true" });
   scene.attachMinimap(minimap);
+  const minimapWrap = h("div", { class: "minimap-wrap" }, minimap);
   const canvas = h(
     "main",
     { class: "canvas" },
     svg,
     legendBox,
     statsBox,
-    minimap,
+    minimapWrap,
     h(
       "div",
       { class: "zoom" },
@@ -238,6 +256,7 @@ function start(model: Model): void {
       }),
     ),
   );
+  const bodyEl = h("div", { class: "body" }, left, canvas, right);
   root.replaceChildren(
     h(
       "header",
@@ -262,8 +281,26 @@ function start(model: Model): void {
       fitBtn,
       themeBtn,
     ),
-    h("div", { class: "body" }, left, canvas, right),
+    bodyEl,
   );
+
+  // ---- collapsible / detachable panels, minimap and legend visibility ----
+  const panels = new Panels(
+    {
+      body: bodyEl,
+      canvas,
+      left,
+      right,
+      leftActions,
+      rightActions,
+      leftHandle: leftHead,
+      rightHandle: rightHead,
+      minimapWrap,
+      legend: legendBox,
+    },
+    () => scene.wakeMinimap(),
+  );
+  canvas.querySelector(".zoom")?.append(panels.minimapToggle);
 
   // ---- state helpers ----
   const setTheme = (): void => {
@@ -341,8 +378,6 @@ function start(model: Model): void {
     state.panel = panel;
     paint();
     writeHash();
-    // The canvas width changes with the panel, so refit once layout has settled.
-    requestAnimationFrame(() => scene.fit(true));
   };
   tabInspector.addEventListener("click", () => openPanel("inspector"));
   tabCode.addEventListener("click", () => openPanel("code"));
@@ -393,8 +428,16 @@ function start(model: Model): void {
       { index, maxDegree },
       hues,
     );
+    const minBtn = iconButton(
+      panels.prefs.legend ? "min" : "plus",
+      panels.prefs.legend ? "Minimize the legend" : "Expand the legend",
+    );
+    minBtn.addEventListener("click", () => {
+      panels.setLegend(!panels.prefs.legend);
+      renderLegend();
+    });
     legendBox.replaceChildren(
-      h("div", { class: "legend-title" }, `Color: ${state.color}`),
+      h("div", { class: "legend-title" }, h("span", null, `Color: ${state.color}`), minBtn),
       ...entries.slice(0, 10).map((e) => {
         const b = h(
           "button",
@@ -521,8 +564,7 @@ function start(model: Model): void {
     b.addEventListener("click", () => void selectNode(id));
     return b;
   };
-  left.append(
-    h("h3", null, "Overview"),
+  leftBody.append(
     h(
       "p",
       { class: "muted" },
@@ -547,7 +589,7 @@ function start(model: Model): void {
     ),
   );
 
-  put(left, notesStatus, notesBox);
+  put(leftBody, notesStatus, notesBox);
   store.subscribe(() => {
     relocateNotes(store, model);
     paint();
@@ -555,7 +597,13 @@ function start(model: Model): void {
 
   // ---- events ----
   window.addEventListener("keydown", (ev) => {
-    const typing = ev.target instanceof HTMLInputElement || ev.target instanceof HTMLSelectElement;
+    // Never steal keys while the user is writing (search box, note editor, selects).
+    const t = ev.target;
+    const typing =
+      t instanceof HTMLInputElement ||
+      t instanceof HTMLSelectElement ||
+      t instanceof HTMLTextAreaElement ||
+      (t instanceof HTMLElement && t.isContentEditable);
     if (ev.key === "Escape") {
       state.selected = undefined;
       results.classList.remove("open");
@@ -564,6 +612,10 @@ function start(model: Model): void {
     } else if (ev.key === "/" && !typing) {
       ev.preventDefault();
       searchInput.focus();
+    } else if (!typing && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
+      if (ev.key === "[") panels.toggle("left");
+      else if (ev.key === "]") panels.toggle("right");
+      else if (ev.key === "m" || ev.key === "M") panels.setMinimap(!panels.prefs.minimap);
     }
   });
   searchInput.addEventListener("input", () => {
@@ -637,7 +689,6 @@ function start(model: Model): void {
     writeThemePref(state.theme);
     writeHash();
   });
-  window.addEventListener("resize", () => scene.fit(false));
 
   themeBtn.textContent =
     state.theme === "dark"

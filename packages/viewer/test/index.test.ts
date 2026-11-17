@@ -994,3 +994,59 @@ describe("nested boxes enclose children even when a child grows to fit its tab",
     expect(c.y0 - p.y0).toBeGreaterThanOrEqual(40);
   });
 });
+
+import {
+  DEFAULT_PANELS,
+  MIN_FLOAT,
+  clampFloat,
+  parsePanelPrefs,
+  toggled,
+} from "../app/panel-prefs.js";
+
+describe("panel preferences", () => {
+  it("falls back to defaults for missing, corrupt or partly invalid data", () => {
+    expect(parsePanelPrefs(null)).toEqual(DEFAULT_PANELS);
+    expect(parsePanelPrefs("{nope")).toEqual(DEFAULT_PANELS);
+    const p = parsePanelPrefs(
+      JSON.stringify({
+        left: "floating",
+        right: "sideways",
+        minimap: "yes",
+        leftFloat: { x: 5, y: 6, w: 300, h: 300 },
+      }),
+    );
+    expect(p.left).toBe("floating");
+    expect(p.right).toBe("docked");
+    expect(p.minimap).toBe(true);
+    expect(p.leftFloat).toEqual({ x: 5, y: 6, w: 300, h: 300 });
+  });
+  it("does not let callers mutate the defaults", () => {
+    const p = parsePanelPrefs(null);
+    p.leftFloat.w = 999;
+    expect(DEFAULT_PANELS.leftFloat.w).toBe(260);
+  });
+  it("keeps floating windows inside the area and above a minimum size", () => {
+    const area = { w: 1000, h: 700 };
+    expect(clampFloat({ x: 5000, y: -50, w: 300, h: 300 }, area, "left")).toEqual({
+      x: 692,
+      y: 8,
+      w: 300,
+      h: 300,
+    });
+    const tiny = clampFloat({ x: 10, y: 10, w: 20, h: 20 }, area, "left");
+    expect([tiny.w, tiny.h]).toEqual([MIN_FLOAT.w, MIN_FLOAT.h]);
+    const huge = clampFloat({ x: 0, y: 0, w: 5000, h: 5000 }, area, "right");
+    expect(huge.w).toBeLessThanOrEqual(area.w - 16);
+    expect(huge.h).toBeLessThanOrEqual(area.h - 16);
+  });
+  it("places a never-moved window at its own side", () => {
+    const area = { w: 1000, h: 700 };
+    expect(clampFloat({ x: -1, y: 16, w: 300, h: 400 }, area, "left").x).toBe(16);
+    expect(clampFloat({ x: -1, y: 16, w: 300, h: 400 }, area, "right").x).toBe(1000 - 300 - 16);
+  });
+  it("toggles between hidden and the last visible mode", () => {
+    expect(toggled("docked", "docked")).toBe("collapsed");
+    expect(toggled("floating", "floating")).toBe("collapsed");
+    expect(toggled("collapsed", "floating")).toBe("floating");
+  });
+});

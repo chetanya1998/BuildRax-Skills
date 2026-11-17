@@ -45,6 +45,11 @@ The viewer is one offline HTML file with an animated, interactive graph:
 - **Code tab** shows that node's code plus the connecting lines and files on both sides.
 - Light/dark/auto themes (remembered), sticky notes and flags for your own reference, and a
   _motion_ toggle. The OS "reduce motion" setting is honoured (static layout, no particles).
+- **Make room for the graph**: each sidebar can be hidden (a small tab on the canvas edge brings
+  it back) or detached into a floating window you drag by its grip and resize, then dock again.
+  The minimap has a close button (and a map toggle under the zoom buttons); the legend can be
+  minimized. Shortcuts: `[` Overview, `]` Inspector, `M` minimap, `/` search. Your layout is
+  remembered in this browser, and the graph stays where you were looking when panels change.
 
 See `docs/privacy.md` and `docs/agents.md`.
 
