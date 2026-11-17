@@ -45,7 +45,8 @@ export interface Highlight {
 
 export interface SceneEvents {
   select(sel: Selection | undefined): void;
-  expand(id: string): void;
+  /** Double-click (or Space) on a node; `expandable` says whether it is a container. */
+  activate(id: string, expandable: boolean): void;
   /** Collapse an expanded container (its box's header button). */
   collapse(id: string): void;
 }
@@ -863,15 +864,16 @@ export class Scene {
     });
     svg.addEventListener("dblclick", (ev) => {
       const id = (ev.target as Element).closest("[data-node]")?.getAttribute("data-node");
-      if (id && this.nodes.get(id)?.view.expandable) this.events.expand(id);
+      const n = id ? this.nodes.get(id) : undefined;
+      if (id && n) this.events.activate(id, n.view.expandable);
     });
     svg.addEventListener("keydown", (ev) => {
       const id = (ev.target as Element).closest("[data-node]")?.getAttribute("data-node");
       if (!id) return;
       if (ev.key === "Enter") this.events.select({ type: "node", id });
-      if (ev.key === " " && this.nodes.get(id)?.view.expandable) {
+      if (ev.key === " ") {
         ev.preventDefault();
-        this.events.expand(id);
+        this.events.activate(id, !!this.nodes.get(id)?.view.expandable);
       }
     });
     svg.addEventListener("pointerover", (ev) =>

@@ -50,6 +50,12 @@ The viewer is one offline HTML file with an animated, interactive graph:
   The minimap has a close button (and a map toggle under the zoom buttons); the legend can be
   minimized. Shortcuts: `[` Overview, `]` Inspector, `M` minimap, `/` search. Your layout is
   remembered in this browser, and the graph stays where you were looking when panels change.
+- **Node view** (`F`, or _Open node view_ in the Inspector): shows only the selected node, with what
+  depends on it in columns to the left and what it depends on to the right, one column per hop.
+  The _Lineage depth_ setting limits how far it reaches; double-click a neighbour to move the
+  focus to it; `Esc` returns to the full graph. The view is kept in the shareable URL.
+- **Compact top bar**: search, the Layered/Live switch, _Fit_ and a **Menu** that holds the rest
+  (color, depth, theme, what to show, graph actions and the shortcut list).
 
 See `docs/privacy.md` and `docs/agents.md`.
 

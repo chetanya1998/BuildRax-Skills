@@ -10,6 +10,10 @@ export interface InspectorCtx {
   onSelectNode(id: string): void;
   onExpand(id: string): void;
   onCollapse(id: string): void;
+  /** Enter (or leave) node view for a node. */
+  onFocus(id: string): void;
+  /** Node currently shown in node view, if any. */
+  focusId?: string;
   cyclesFor(id: string): string[][];
 }
 
@@ -122,6 +126,14 @@ export function renderInspector(root: HTMLElement, ctx: InspectorCtx): void {
   }
 
   const actions = h("div", { class: "actions" });
+  const inFocus = ctx.focusId === sel.id;
+  const focusBtn = h(
+    "button",
+    { type: "button", class: "primary", title: "Show only this node and what connects to it (F)" },
+    inFocus ? "Exit node view" : "Open node view",
+  );
+  focusBtn.addEventListener("click", () => ctx.onFocus(sel.id));
+  actions.append(focusBtn);
   const viewNode = ctx.view.nodes.find((n) => n.id === sel.id);
   if (viewNode?.expandable) {
     const b = h("button", { type: "button" }, "Expand");

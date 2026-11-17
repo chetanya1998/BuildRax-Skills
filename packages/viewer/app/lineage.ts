@@ -5,6 +5,8 @@ export type Role = "self" | "upstream" | "downstream";
 export interface Lineage {
   roles: Map<string, Role>;
   edges: Map<string, "upstream" | "downstream">;
+  /** Hops from the start node (start = 0), along the role's direction. */
+  dist: Map<string, number>;
 }
 
 /** Upstream/downstream reachability over the *visible* graph. depth 0 = unlimited. */
@@ -12,6 +14,7 @@ export function computeLineage(view: GraphView, start: string, depth: number): L
   const limit = depth > 0 ? depth : Infinity;
   const roles = new Map<string, Role>([[start, "self"]]);
   const edges = new Map<string, "upstream" | "downstream">();
+  const dist = new Map<string, number>([[start, 0]]);
 
   const walk = (dir: "downstream" | "upstream"): void => {
     const seen = new Set([start]);
@@ -27,7 +30,10 @@ export function computeLineage(view: GraphView, start: string, depth: number): L
           if (!seen.has(to)) {
             seen.add(to);
             next.push(to);
-            if (!roles.has(to)) roles.set(to, dir);
+            if (!roles.has(to)) {
+              roles.set(to, dir);
+              dist.set(to, d + 1);
+            }
           }
         }
       }
@@ -36,5 +42,5 @@ export function computeLineage(view: GraphView, start: string, depth: number): L
   };
   walk("downstream");
   walk("upstream");
-  return { roles, edges };
+  return { roles, edges, dist };
 }

@@ -1,6 +1,7 @@
 import "./theme.css";
 import "./scene.css";
 import "./panels.css";
+import "./toolbar.css";
 import {
   GraphIndex,
   buildView,
@@ -30,6 +31,7 @@ import {
   swatchFor,
   type ColorMode,
 } from "./palette.js";
+import { focusView, nodeViewLayout } from "./node-view.js";
 import { iconButton, Panels } from "./panels.js";
 import { Scene, type NodeStyle } from "./scene.js";
 import { decodeState, encodeState, type ViewState } from "./state-url.js";
@@ -152,7 +154,11 @@ function start(model: Model): void {
       paint();
       writeHash();
     },
-    expand: (id) => void expand(id),
+    // Double-click: in node view it moves the focus; otherwise it expands packages and folders.
+    activate: (id, expandable) => {
+      if (state.focus) void setFocus(id);
+      else if (expandable) void expand(id);
+    },
     collapse: (id) => void collapse(id),
   });
 
@@ -165,14 +171,14 @@ function start(model: Model): void {
   const select = (label: string, opts: [string, string][]): HTMLSelectElement =>
     h("select", { "aria-label": label }, ...opts.map(([v, t]) => h("option", { value: v }, t)));
   const depthSel = select("Lineage depth", [
-    ["1", "depth 1"],
-    ["2", "depth 2"],
-    ["3", "depth 3"],
-    ["0", "depth ∞"],
+    ["1", "1 hop"],
+    ["2", "2 hops"],
+    ["3", "3 hops"],
+    ["0", "all"],
   ]);
   const colorSel = select(
     "Color by",
-    COLOR_MODES.map((c) => [c, `color: ${c}`]),
+    COLOR_MODES.map((c) => [c, c === "heat" ? "connectivity (heat)" : c]),
   );
   const segLayered = h("button", { type: "button", role: "radio" }, "Layered");
   const segForce = h("button", { type: "button", role: "radio" }, "Live");
@@ -192,7 +198,7 @@ function start(model: Model): void {
     { type: "button", class: "live-only", title: "Release dragged nodes" },
     "Unpin",
   );
-  const collapseBtn = h("button", { type: "button" }, "Collapse");
+  const collapseBtn = h("button", { type: "button" }, "Collapse all packages");
   const leftActions = h("div", { class: "panel-actions" });
   const leftHead = h(
     "div",
@@ -257,6 +263,82 @@ function start(model: Model): void {
     ),
   );
   const bodyEl = h("div", { class: "body" }, left, canvas, right);
+
+  // Top bar keeps only what is used all the time; everything else lives in the menu.
+  const menuSection = (title: string, ...kids: (Node | null)[]): HTMLElement =>
+    h("section", { class: "menu-section" }, h("h4", null, title), ...kids);
+  const field = (label: string, control: HTMLElement): HTMLElement =>
+    h("label", { class: "menu-field" }, h("span", null, label), control);
+  const check = (box: HTMLInputElement, label: string, hint: string): HTMLElement =>
+    h("label", { class: "menu-check" }, box, h("span", null, label, h("small", null, hint)));
+  const menuPanel = h(
+    "div",
+    { class: "menu-panel", role: "dialog", "aria-label": "View options", hidden: "" },
+    menuSection(
+      "Display",
+      field("Color by", colorSel),
+      field("Lineage depth", depthSel),
+      field("Theme", themeBtn),
+    ),
+    menuSection(
+      "Show",
+      check(clusterBox, "Segment boxes", "Dotted boxes around services and folders"),
+      check(extBox, "External dependencies", "npm / PyPI packages"),
+      check(unrBox, "Unresolved imports", "Imports BuildRAX could not resolve"),
+      check(motionBox, "Motion", "Animations, physics and flow"),
+    ),
+    menuSection("Graph", h("div", { class: "menu-actions" }, collapseBtn, shakeBtn, unpinBtn)),
+    menuSection(
+      "Shortcuts",
+      h(
+        "dl",
+        { class: "shortcuts" },
+        ...[
+          ["/", "Search"],
+          ["F", "Node view of the selection"],
+          ["[  ]", "Overview / Inspector panel"],
+          ["M", "Minimap"],
+          ["Esc", "Close / clear selection"],
+        ].flatMap(([k, v]) => [h("dt", null, h("kbd", null, k!)), h("dd", null, v!)]),
+      ),
+    ),
+  );
+  const menuBtn = h(
+    "button",
+    { type: "button", class: "menu-btn", "aria-haspopup": "dialog", "aria-expanded": "false" },
+    s(
+      "svg",
+      { viewBox: "0 0 16 16", width: 14, height: 14, "aria-hidden": "true" },
+      s("path", { d: "M2.5 4 H13.5 M2.5 8 H13.5 M2.5 12 H13.5" }),
+    ),
+    "Menu",
+  );
+  const menuWrap = h("div", { class: "menu-wrap" }, menuBtn, menuPanel);
+  const setMenu = (open: boolean): void => {
+    menuPanel.hidden = !open;
+    menuBtn.setAttribute("aria-expanded", String(open));
+  };
+  menuBtn.addEventListener("click", () => setMenu(menuPanel.hidden));
+  document.addEventListener("pointerdown", (ev) => {
+    if (!menuPanel.hidden && !menuWrap.contains(ev.target as Node)) setMenu(false);
+  });
+
+  const focusName = h("strong", null, "");
+  const focusDepth = h("span", { class: "muted" }, "");
+  const focusExit = h(
+    "button",
+    { type: "button", class: "focus-exit", "aria-label": "Exit node view" },
+    "Exit",
+  );
+  const focusPill = h(
+    "div",
+    { class: "focus-pill", role: "status", hidden: "" },
+    h("span", { class: "focus-label" }, "Node view"),
+    focusName,
+    focusDepth,
+    focusExit,
+  );
+
   root.replaceChildren(
     h(
       "header",
@@ -264,22 +346,8 @@ function start(model: Model): void {
       h("h1", null, h("span", { class: "logo" }), "BUILDRAX"),
       h("div", { class: "search" }, searchInput, results),
       h("div", { class: "seg", role: "radiogroup", "aria-label": "Layout" }, segLayered, segForce),
-      colorSel,
-      depthSel,
-      h(
-        "label",
-        { class: "chip", title: "Dotted boxes around services, packages and folders" },
-        clusterBox,
-        "segments",
-      ),
-      h("label", { class: "chip", title: "Animations and physics" }, motionBox, "motion"),
-      h("label", { class: "chip" }, extBox, "externals"),
-      h("label", { class: "chip" }, unrBox, "unresolved"),
-      collapseBtn,
-      shakeBtn,
-      unpinBtn,
-      fitBtn,
-      themeBtn,
+      focusPill,
+      h("div", { class: "top-right" }, fitBtn, menuWrap),
     ),
     bodyEl,
   );
@@ -337,6 +405,8 @@ function start(model: Model): void {
       onSelectNode: (id) => void selectNode(id),
       onExpand: (id) => void expand(id),
       onCollapse: (id) => void collapse(id),
+      onFocus: (id) => void (state.focus === id ? exitFocus() : setFocus(id)),
+      focusId: state.focus,
       cyclesFor,
     });
     if (sel?.type === "node") put(inspectorBox, renderResearchSection(research, index, sel.id));
@@ -468,32 +538,44 @@ function start(model: Model): void {
         h("b", null, String(cycles.length)),
         ` cycle${cycles.length === 1 ? "" : "s"}`,
       ),
-      h("span", null, state.layout === "force" ? "live physics" : "layered"),
+      h(
+        "span",
+        null,
+        state.focus ? "node view" : state.layout === "force" ? "live physics" : "layered",
+      ),
     );
   };
 
   async function refresh(opts: { fit?: boolean; center?: string } = {}): Promise<void> {
     const my = ++seq;
-    view = buildView(index, { expanded: new Set(state.expanded), hideKinds: hideKinds() });
-    groups = state.cluster
+    const full = buildView(index, { expanded: new Set(state.expanded), hideKinds: hideKinds() });
+    if (state.focus && !full.nodes.some((n) => n.id === state.focus)) state.focus = undefined;
+    // Node view: only the focused node and its upstream/downstream neighbourhood, in columns.
+    const focusLineage = state.focus ? computeLineage(full, state.focus, state.depth) : undefined;
+    view = focusLineage ? focusView(full, focusLineage) : full;
+    const boxes = state.cluster && !focusLineage;
+    groups = boxes
       ? buildGroups(index, view, new Set(state.expanded), hueOf)
       : { specs: [], groupOf: new Map() };
     const style = styleFor(view, state.color);
     const radii = new Map([...style].map(([id, st]) => [id, st.r] as const));
-    const positions = await layoutView(view, radii, state.cluster ? groups : undefined);
+    const positions = focusLineage
+      ? nodeViewLayout(view, focusLineage, radii)
+      : await layoutView(view, radii, boxes ? groups : undefined);
     if (my !== seq) return;
+    syncFocus();
     if (state.selected?.type === "node" && !view.nodes.some((n) => n.id === state.selected!.id))
       state.selected = undefined;
     scene.setMotion(state.motion);
     scene.setGraph(
       {
         view,
-        mode: state.layout,
+        mode: focusLineage ? "layered" : state.layout,
         positions,
         style,
         ancestors: (id) => index.ancestors(id),
         groups: groups.specs,
-        cluster: state.cluster,
+        cluster: boxes,
       },
       { fit: opts.fit },
     );
@@ -528,6 +610,32 @@ function start(model: Model): void {
     syncControls();
     await refresh({ center: id });
   }
+  /** Enter node view on a node (or re-centre it on another node while already in it). */
+  async function setFocus(id: string): Promise<void> {
+    ensureVisible(id);
+    state.focus = id;
+    state.selected = { type: "node", id };
+    syncControls();
+    await refresh({ fit: true });
+  }
+  async function exitFocus(): Promise<void> {
+    const back = state.focus;
+    state.focus = undefined;
+    if (back) state.selected = { type: "node", id: back };
+    await refresh({ fit: true, center: back });
+  }
+  function syncFocus(): void {
+    const on = !!state.focus;
+    focusPill.hidden = !on;
+    document.body.classList.toggle("node-view", on);
+    if (on) {
+      focusName.textContent = index.node(state.focus!)?.name ?? state.focus!;
+      focusDepth.textContent =
+        state.depth > 0 ? `${state.depth} hop${state.depth === 1 ? "" : "s"}` : "all hops";
+    }
+  }
+  focusExit.addEventListener("click", () => void exitFocus());
+
   async function expand(id: string): Promise<void> {
     if (!state.expanded.includes(id)) state.expanded.push(id);
     state.selected = undefined;
@@ -605,10 +713,16 @@ function start(model: Model): void {
       t instanceof HTMLTextAreaElement ||
       (t instanceof HTMLElement && t.isContentEditable);
     if (ev.key === "Escape") {
-      state.selected = undefined;
+      // Close the innermost thing first: menu, then node view, then the selection.
+      if (!menuPanel.hidden) return setMenu(false);
       results.classList.remove("open");
+      if (state.focus) return void exitFocus();
+      state.selected = undefined;
       paint();
       writeHash();
+    } else if ((ev.key === "f" || ev.key === "F") && !typing && !ev.ctrlKey && !ev.metaKey) {
+      if (state.focus) void exitFocus();
+      else if (state.selected?.type === "node") void setFocus(state.selected.id);
     } else if (ev.key === "/" && !typing) {
       ev.preventDefault();
       searchInput.focus();
@@ -642,6 +756,8 @@ function start(model: Model): void {
   });
   depthSel.addEventListener("change", () => {
     state.depth = Number(depthSel.value);
+    // In node view the depth decides which neighbours are shown, so rebuild it.
+    if (state.focus) return void refresh({ fit: true });
     paint();
     writeHash();
   });
@@ -680,22 +796,14 @@ function start(model: Model): void {
   themeBtn.addEventListener("click", () => {
     state.theme = state.theme === "auto" ? "dark" : state.theme === "dark" ? "light" : "auto";
     themeBtn.textContent =
-      state.theme === "dark"
-        ? "Theme: dark"
-        : state.theme === "light"
-          ? "Theme: light"
-          : "Theme: auto";
+      state.theme === "dark" ? "Dark" : state.theme === "light" ? "Light" : "Auto (system)";
     setTheme();
     writeThemePref(state.theme);
     writeHash();
   });
 
   themeBtn.textContent =
-    state.theme === "dark"
-      ? "Theme: dark"
-      : state.theme === "light"
-        ? "Theme: light"
-        : "Theme: auto";
+    state.theme === "dark" ? "Dark" : state.theme === "light" ? "Light" : "Auto (system)";
   setTheme();
   syncControls();
   void refresh({ fit: true });

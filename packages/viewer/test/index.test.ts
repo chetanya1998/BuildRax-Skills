@@ -1050,3 +1050,74 @@ describe("panel preferences", () => {
     expect(toggled("collapsed", "floating")).toBe("floating");
   });
 });
+
+import { NODE_VIEW_COLUMN_GAP, focusView, nodeViewLayout } from "../app/node-view.js";
+
+describe("node view", () => {
+  const ve = (from: string, to: string) => ({
+    id: `${from}=>${to}`,
+    from,
+    to,
+    count: 1,
+    kinds: ["imports" as const],
+    evidence: [],
+    inCycle: false,
+  });
+  const vn = (id: string) => ({
+    id,
+    kind: "file" as const,
+    name: id,
+    expandable: false,
+    fileCount: 0,
+    inCycle: false,
+  });
+  // u2 -> u1 -> F -> d1 -> d2 ; F -> d1b ; x -> y (unrelated)
+  const view = {
+    nodes: ["u2", "u1", "F", "d1", "d1b", "d2", "x", "y"].map(vn),
+    edges: [
+      ve("u2", "u1"),
+      ve("u1", "F"),
+      ve("F", "d1"),
+      ve("F", "d1b"),
+      ve("d1", "d2"),
+      ve("x", "y"),
+    ],
+  };
+
+  it("lineage records hop distance", () => {
+    const l = computeLineage(view, "F", 0);
+    expect([l.dist.get("F"), l.dist.get("u1"), l.dist.get("u2"), l.dist.get("d2")]).toEqual([
+      0, 1, 2, 2,
+    ]);
+  });
+
+  it("keeps only the focused neighbourhood, respecting depth", () => {
+    const all = focusView(view, computeLineage(view, "F", 0));
+    expect(all.nodes.map((n) => n.id).sort()).toEqual(["F", "d1", "d1b", "d2", "u1", "u2"]);
+    expect(all.edges.some((e) => e.from === "x")).toBe(false);
+    const one = focusView(view, computeLineage(view, "F", 1));
+    expect(one.nodes.map((n) => n.id).sort()).toEqual(["F", "d1", "d1b", "u1"]);
+  });
+
+  it("puts the focus in the middle, dependents left and dependencies right, by hops", () => {
+    const l = computeLineage(view, "F", 0);
+    const fv = focusView(view, l);
+    const pos = nodeViewLayout(fv, l, new Map());
+    expect(pos.get("F")).toEqual({ x: 0, y: 0 });
+    expect(pos.get("u1")!.x).toBe(-NODE_VIEW_COLUMN_GAP);
+    expect(pos.get("u2")!.x).toBe(-2 * NODE_VIEW_COLUMN_GAP);
+    expect(pos.get("d1")!.x).toBe(NODE_VIEW_COLUMN_GAP);
+    expect(pos.get("d2")!.x).toBe(2 * NODE_VIEW_COLUMN_GAP);
+    // two nodes in the same column never overlap
+    const a = pos.get("d1")!,
+      b = pos.get("d1b")!;
+    expect(Math.abs(a.y - b.y)).toBeGreaterThanOrEqual(2 * 16 + 48);
+    expect(pos.has("x")).toBe(false);
+  });
+
+  it("round-trips the focus in the URL state", () => {
+    const st = { ...DEFAULT_STATE, focus: "file:a.ts" };
+    expect(decodeState(`#${encodeState(st)}`).focus).toBe("file:a.ts");
+    expect(decodeState(`#${encodeState(DEFAULT_STATE)}`).focus).toBeUndefined();
+  });
+});

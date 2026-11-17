@@ -1,0 +1,197 @@
+/* ---------- compact top bar + menu ---------- */
+.top {
+  /* above floating panels so the menu is never hidden behind one */
+  z-index: 40;
+  flex-wrap: nowrap;
+}
+.top .search {
+  flex: 0 1 280px;
+  min-width: 120px;
+}
+.top .search input[type="search"] {
+  width: 100%;
+  min-width: 0;
+}
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.menu-wrap {
+  position: relative;
+}
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.menu-btn svg,
+.focus-pill svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+.menu-btn[aria-expanded="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  max-height: calc(100vh - 80px);
+  overflow: auto;
+  padding: 6px 14px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel-solid);
+  box-shadow:
+    var(--shadow),
+    0 24px 60px rgba(0, 0, 0, 0.25);
+  animation: menuin 0.16s ease-out;
+}
+.menu-panel[hidden],
+.focus-pill[hidden] {
+  display: none;
+}
+@keyframes menuin {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.menu-section {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.menu-section:last-child {
+  border-bottom: 0;
+}
+.menu-section h4 {
+  margin: 4px 0 8px;
+  color: var(--ink-soft);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.menu-panel label.menu-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  color: var(--ink);
+}
+.menu-panel label.menu-check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 2px 10px;
+  margin: 4px -6px;
+  padding: 5px 6px;
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.menu-panel label.menu-check:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.menu-check input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+.menu-check small {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+.menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.shortcuts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 12px;
+}
+.shortcuts dt {
+  text-align: right;
+}
+.shortcuts dd {
+  margin: 0;
+  color: var(--ink-soft);
+}
+kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--paper);
+  font: 600 11px var(--font);
+}
+
+/* node view indicator */
+.focus-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 3px 4px 3px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  white-space: nowrap;
+  animation: menuin 0.2s ease-out;
+}
+.focus-pill strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+.focus-label {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.top .focus-exit {
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+body.node-view .seg,
+body.node-view .live-only {
+  display: none;
+}
+.actions button.primary {
+  border-color: transparent;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+.actions button.primary:hover {
+  filter: brightness(1.08);
+}
+
+@media (max-width: 800px) {
+  .top {
+    flex-wrap: wrap;
+  }
+  .top .search {
+    flex: 1 1 100%;
+    order: 5;
+  }
+  .menu-panel {
+    position: fixed;
+    top: auto;
+    right: 8px;
+    left: 8px;
+    width: auto;
+  }
+}

@@ -10,6 +10,8 @@ export interface ViewState {
   theme: ThemeChoice;
   /** Which right-hand tab is open. */
   panel: "inspector" | "code";
+  /** Node view: show only this node and its upstream/downstream neighbourhood. */
+  focus?: string;
   /** Canvas layout: structured layers or live physics. */
   layout: "layered" | "force";
   color: "package" | "kind" | "language" | "heat";
@@ -57,6 +59,7 @@ export function decodeState(hash: string): ViewState {
       showUnresolved: v.showUnresolved !== false,
       theme: v.theme === "light" || v.theme === "dark" ? v.theme : "auto",
       panel: v.panel === "code" ? "code" : "inspector",
+      focus: typeof v.focus === "string" && v.focus ? v.focus : undefined,
       layout: v.layout === "layered" ? "layered" : "force",
       color:
         v.color === "kind" || v.color === "language" || v.color === "heat" ? v.color : "package",
