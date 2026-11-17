@@ -1,9 +1,11 @@
 import { Command } from "commander";
 import { formatSummary, scanCommand } from "./commands/scan.js";
 import { contextFor, renderDigest } from "@buildrax/context";
+import { ALL_TARGETS, installSkill, type SkillScope, type SkillTarget } from "@buildrax/skills";
 import path from "node:path";
 import { loadModel } from "./commands/data.js";
 import { formatNotes, notesCommand } from "./commands/notes.js";
+import { formatTrace, traceCommand, type TraceDirection } from "./commands/trace.js";
 import { formatPlan, formatResearch, researchCommand, researchPlan } from "./commands/research.js";
 import { startServer } from "./commands/serve.js";
 import { openFile, viewCommand } from "./commands/view.js";
@@ -12,6 +14,7 @@ export { scanCommand, summarize, formatSummary } from "./commands/scan.js";
 export { modelPathFor, notesPathFor, researchPathFor } from "./commands/data.js";
 export { notesCommand, formatNotes } from "./commands/notes.js";
 export { startServer } from "./commands/serve.js";
+export { traceModel, traceCommand, formatTrace, resolveTarget } from "./commands/trace.js";
 export { formatPlan, researchCommand, researchPlan } from "./commands/research.js";
 export type { RunningServer } from "./commands/serve.js";
 export { viewCommand } from "./commands/view.js";
@@ -102,6 +105,71 @@ export function buildProgram(): Command {
         }
         const file = await researchCommand(repo, { limit, cache: opts.cache });
         console.log(opts.json ? JSON.stringify(file, null, 2) : formatResearch(file));
+      },
+    );
+
+  program
+    .command("trace")
+    .argument("<target>", "node id, file path, module path or name")
+    .argument("[path]", "repository containing .buildrax/model.json", ".")
+    .option(
+      "--direction <dir>",
+      "up = what depends on it (impact), down = what it depends on",
+      "up",
+    )
+    .option("--depth <n>", "max hops (default: unlimited)")
+    .option("--json", "print as JSON")
+    .description("transitive dependency trace with file:line evidence (no LLM)")
+    .action(
+      async (
+        target: string,
+        repo: string,
+        opts: { direction: string; depth?: string; json?: boolean },
+      ) => {
+        if (opts.direction !== "up" && opts.direction !== "down")
+          throw new Error("--direction must be up or down");
+        const r = await traceCommand(repo, target, {
+          direction: opts.direction as TraceDirection,
+          depth: opts.depth ? Number(opts.depth) : undefined,
+        });
+        console.log(opts.json ? JSON.stringify(r, null, 2) : formatTrace(r));
+      },
+    );
+
+  program
+    .command("install-skill")
+    .option("--target <t>", "claude | codex | antigravity | all", "all")
+    .option("--scope <s>", "project (this repo) or user (your home directory)", "project")
+    .option("--dir <path>", "install into <path>/buildrax instead of the default location")
+    .option("--force", "replace an existing skill directory that BuildRAX did not create")
+    .option("--dry-run", "show where the skill would be installed")
+    .description("install the BuildRAX agent skill for Claude Code, Codex and/or Antigravity")
+    .action(
+      async (opts: {
+        target: string;
+        scope: string;
+        dir?: string;
+        force?: boolean;
+        dryRun?: boolean;
+      }) => {
+        if (opts.scope !== "project" && opts.scope !== "user")
+          throw new Error("--scope must be project or user");
+        if (opts.target !== "all" && !ALL_TARGETS.includes(opts.target as SkillTarget)) {
+          throw new Error(`--target must be one of: ${ALL_TARGETS.join(", ")}, all`);
+        }
+        const results = await installSkill({
+          targets: opts.target === "all" ? ALL_TARGETS : [opts.target as SkillTarget],
+          scope: opts.scope as SkillScope,
+          projectRoot: process.cwd(),
+          dir: opts.dir,
+          force: opts.force,
+          dryRun: opts.dryRun,
+        });
+        for (const r of results) {
+          console.log(
+            `${r.status.padEnd(9)} ${r.plan.dir}  (${r.plan.targets.join(" + ")})${r.reason ? ` - ${r.reason}` : ""}`,
+          );
+        }
       },
     );
 

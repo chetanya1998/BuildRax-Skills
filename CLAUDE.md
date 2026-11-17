@@ -12,9 +12,10 @@ pnpm workspaces, Node >= 20, TypeScript strict, ESM only. tsup (packages), vites
 
 ## Package dependency rules (no cycles)
 
-ir ← ingest ; ir ← graph ← viewer ; cli depends on ir, ingest, graph, viewer.
+ir is the root. ingest, graph, research depend on ir. viewer and context depend on ir + graph.
+skills has no internal dependencies. cli depends on all of them.
 graph must stay pure and browser-safe (no node: APIs). Viewer never extracts from source.
-Add context / research / skills only when their milestone starts.
+Skills contain instructions only; all logic lives behind the CLI.
 
 ## Hard rules
 
@@ -23,8 +24,8 @@ Add context / research / skills only when their milestone starts.
   (.buildrax/notes.json) keyed by stable IDs and never mutate the IR.
 - Every node/edge carries evidence or is explicitly marked inferred/unresolved with confidence.
 - Stable, deterministic IDs. Same repo → same IDs.
-- Source stays local. Research and sync are opt-in; send only sanitized tech metadata. Notes are
-  never sent anywhere without explicit opt-in.
+- Source stays local. Research is opt-in (`--online`) and sends only validated public package names
+  to allowlisted registry hosts. Notes are never sent anywhere and never appear in digest/context.
 - Viewer works fully offline from one HTML file; escape all repo/user text.
 - Don't present estimates as measured facts; don't invent prices.
 - Tests ship with each feature. Schema changes bump the version and update docs.

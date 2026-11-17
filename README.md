@@ -10,27 +10,39 @@ flags for your own reference). Agent skills stay thin and use compact, token-bou
 
 ```bash
 pnpm install && pnpm build
-node packages/cli/dist/bin.js scan fixtures/sample-monorepo   # writes .buildrax/model.json
-node packages/cli/dist/bin.js view fixtures/sample-monorepo --open
+alias buildrax="node $PWD/packages/cli/dist/bin.js"   # until it is published
+buildrax scan fixtures/sample-monorepo
+buildrax view fixtures/sample-monorepo --open
 ```
 
-Scanning is static (tree-sitter), runs locally and uses no LLM tokens. The viewer is a single
-offline HTML file. Click a node for upstream/downstream lineage, double-click a module to expand
-it, and use the inspector for file:line evidence.
+## Commands
 
-## Known limits (this slice)
+| Command                                 | Purpose                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------- |
+| `scan`                                  | static scan to `.buildrax/model.json` (no LLM tokens, no code execution)    |
+| `digest` / `context "<question>"`       | compact, token-bounded context for agents (notes excluded)                  |
+| `trace <target> [--direction up\|down]` | transitive dependencies / change impact with `file:line`                    |
+| `view` / `serve`                        | read-only viewer; `serve` saves your sticky notes to `.buildrax/notes.json` |
+| `notes`                                 | list your notes and flags                                                   |
+| `research [--online]`                   | dependency facts from npm/PyPI; plan-only unless `--online`                 |
+| `install-skill`                         | install the agent skill for Claude Code, Codex, Antigravity                 |
 
-- TS/JS/Python imports only; no functions, routes or data flow yet.
+The viewer is one offline HTML file: click for upstream/downstream lineage, double-click a module
+to expand, sticky notes and flags for your own reference (the architecture itself is read-only).
+See `docs/privacy.md` and `docs/agents.md`.
+
+## Measured on this repo (estimates, chars / 4)
+
+54 TypeScript files is about 40,500 tokens of raw source; `digest` is about 300 tokens; a
+question-specific `context` pack is about 3,900 tokens.
+
+## Known limits
+
+- TS/JS/Python imports only; no functions, routes, databases or data flow yet.
 - tsconfig `paths` aliases are reported as unresolved rather than guessed.
 - Full rescan every time (no incremental cache yet).
-- The viewer bundle is ~1.5 MB because the ELK layout engine is inlined.
-- Sticky notes/flags, research and the context engine are not built yet.
-
-## Develop
-
-```bash
-pnpm install
-pnpm lint && pnpm typecheck && pnpm test && pnpm build
-```
-
-Requires Node >= 20 and pnpm.
+- Research uses npm/PyPI registry data only: no security advisories and no pinned-version
+  comparison yet; findings describe the latest release.
+- Agent skill install paths are unverified against vendor docs (see `docs/agents.md`).
+- The viewer bundle is about 1.5 MB (inlined ELK layout engine); large graphs are unbenchmarked.
+- Package names (`buildrax`, `@buildrax/*`) are placeholders and unpublished.

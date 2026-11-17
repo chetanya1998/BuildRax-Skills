@@ -13,6 +13,7 @@ export default defineConfig({
       "@buildrax/graph": src("graph"),
       "@buildrax/context": src("context"),
       "@buildrax/research": src("research"),
+      "@buildrax/skills": src("skills"),
       "@buildrax/viewer": src("viewer"),
     },
   },

@@ -50,6 +50,9 @@ importers:
       '@buildrax/research':
         specifier: workspace:*
         version: link:../research
+      '@buildrax/skills':
+        specifier: workspace:*
+        version: link:../skills
       '@buildrax/viewer':
         specifier: workspace:*
         version: link:../viewer
@@ -106,6 +109,8 @@ importers:
       '@buildrax/ingest':
         specifier: workspace:*
         version: link:../ingest
+
+  packages/skills: {}
 
   packages/viewer:
     dependencies:

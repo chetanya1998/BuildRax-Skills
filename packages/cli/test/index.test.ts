@@ -176,3 +176,87 @@ describe("serve", () => {
     expect((await call("/package.json")).status).toBe(404);
   });
 });
+
+import { traceModel } from "../src/index.js";
+import { scan } from "@buildrax/ingest";
+
+describe("trace", () => {
+  it("finds what depends on a file (impact) with evidence, and what it depends on", async () => {
+    const m = await scan(FIXTURE, { now: "2026-01-01T00:00:00.000Z" });
+    const up = traceModel(m, "packages/api/src/services/billing.ts", { direction: "up" });
+    expect(up.hits.map((h) => h.path)).toEqual(
+      expect.arrayContaining([
+        "packages/api/src/services/orders.ts",
+        "packages/api/src/routes/orders.ts",
+        "packages/api/src/server.ts",
+      ]),
+    );
+    const first = up.hits.find((h) => h.path === "packages/api/src/services/orders.ts")!;
+    expect(first).toMatchObject({
+      distance: 1,
+      via: { evidence: { file: "packages/api/src/services/orders.ts", startLine: 1 } },
+    });
+    const down = traceModel(m, "billing.ts", { direction: "down", depth: 1 });
+    expect(down.hits.map((h) => h.id)).toEqual(
+      expect.arrayContaining(["external:stripe", "file:packages/api/src/services/orders.ts"]),
+    );
+    expect(down.hits.every((h) => h.distance === 1)).toBe(true);
+  });
+  it("rejects unknown targets with a helpful message", async () => {
+    const m = await scan(FIXTURE, { now: "2026-01-01T00:00:00.000Z" });
+    expect(() => traceModel(m, "zzz-nothing")).toThrow(/no node matches/);
+  });
+});
+
+import { buildProgram } from "../src/index.js";
+import { skillSourceDir } from "@buildrax/skills";
+
+describe("skill stays in sync with the cli", () => {
+  it("every `buildrax <command>` mentioned in the skill docs exists", async () => {
+    const commands = new Set(buildProgram().commands.map((c) => c.name()));
+    const root = skillSourceDir();
+    const files = [
+      "SKILL.md",
+      "references/commands.md",
+      "references/answering-questions.md",
+      "references/limits.md",
+    ];
+    const mentioned = new Set<string>();
+    for (const f of files) {
+      const text = await fs.readFile(path.join(root, f), "utf8");
+      for (const m of text.matchAll(/buildrax ([a-z][a-z-]+)/g)) mentioned.add(m[1]!);
+    }
+    // Words that follow "buildrax" in prose rather than naming a command.
+    const prose = new Set([
+      "install",
+      "does",
+      "did",
+      "skill",
+      "is",
+      "to",
+      "reports",
+      "from",
+      "cli",
+      "cannot",
+      "has",
+      "output",
+      "model",
+      "will",
+    ]);
+    const unknown = [...mentioned].filter((m) => !commands.has(m) && !prose.has(m));
+    expect(unknown).toEqual([]);
+    for (const c of [
+      "scan",
+      "digest",
+      "context",
+      "trace",
+      "view",
+      "serve",
+      "notes",
+      "research",
+      "install-skill",
+    ]) {
+      expect(commands.has(c), c).toBe(true);
+    }
+  });
+});

@@ -29,6 +29,7 @@
     "@buildrax/viewer": "workspace:*",
     "commander": "^15.1.0",
     "@buildrax/context": "workspace:*",
-    "@buildrax/research": "workspace:*"
+    "@buildrax/research": "workspace:*",
+    "@buildrax/skills": "workspace:*"
   }
 }
