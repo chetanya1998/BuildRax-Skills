@@ -11,6 +11,7 @@ export default defineConfig({
       "@buildrax/ir": src("ir"),
       "@buildrax/ingest": src("ingest"),
       "@buildrax/graph": src("graph"),
+      "@buildrax/context": src("context"),
       "@buildrax/viewer": src("viewer"),
     },
   },

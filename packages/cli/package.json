@@ -27,6 +27,7 @@
     "@buildrax/ingest": "workspace:*",
     "@buildrax/ir": "workspace:*",
     "@buildrax/viewer": "workspace:*",
-    "commander": "^15.1.0"
+    "commander": "^15.1.0",
+    "@buildrax/context": "workspace:*"
   }
 }

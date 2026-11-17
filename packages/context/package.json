@@ -1,0 +1,29 @@
+{
+  "name": "@buildrax/context",
+  "version": "0.0.0",
+  "description": "Token-bounded architecture context for agents: digest and question-driven context packs",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@buildrax/graph": "workspace:*",
+    "@buildrax/ir": "workspace:*"
+  },
+  "devDependencies": {
+    "@buildrax/ingest": "workspace:*"
+  }
+}

@@ -35,6 +35,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@buildrax/context':
+        specifier: workspace:*
+        version: link:../context
       '@buildrax/graph':
         specifier: workspace:*
         version: link:../graph
@@ -50,6 +53,19 @@ importers:
       commander:
         specifier: ^15.1.0
         version: 15.1.0
+
+  packages/context:
+    dependencies:
+      '@buildrax/graph':
+        specifier: workspace:*
+        version: link:../graph
+      '@buildrax/ir':
+        specifier: workspace:*
+        version: link:../ir
+    devDependencies:
+      '@buildrax/ingest':
+        specifier: workspace:*
+        version: link:../ingest
 
   packages/graph:
     dependencies:

@@ -1,5 +1,8 @@
 import { Command } from "commander";
 import { formatSummary, scanCommand } from "./commands/scan.js";
+import { contextFor, renderDigest } from "@buildrax/context";
+import path from "node:path";
+import { loadModel } from "./commands/data.js";
 import { formatNotes, notesCommand } from "./commands/notes.js";
 import { startServer } from "./commands/serve.js";
 import { openFile, viewCommand } from "./commands/view.js";
@@ -36,6 +39,43 @@ export function buildProgram(): Command {
       console.log(`Viewer written to ${file}`);
       if (opts.open) openFile(file);
     });
+
+  program
+    .command("digest")
+    .argument("[path]", "repository containing .buildrax/model.json", ".")
+    .option("--level <n>", "0 = packages, 1 = packages + directories", "0")
+    .option("--budget <tokens>", "approximate token budget")
+    .option("--json", "print as JSON")
+    .description("compact overview of the architecture for agents (no LLM, notes excluded)")
+    .action(async (repo: string, opts: { level: string; budget?: string; json?: boolean }) => {
+      const d = renderDigest(await loadModel(repo), {
+        level: opts.level === "1" ? 1 : 0,
+        budgetTokens: opts.budget ? Number(opts.budget) : undefined,
+      });
+      console.log(opts.json ? JSON.stringify(d, null, 2) : d.text);
+    });
+
+  program
+    .command("context")
+    .argument("<question>", "what you want to know, in plain words")
+    .argument("[path]", "repository containing .buildrax/model.json", ".")
+    .option("--budget <tokens>", "approximate token budget", "4000")
+    .option("--snippets", "include short code snippets around the evidence")
+    .option("--json", "print as JSON")
+    .description("bounded, evidence-linked context for a question (no LLM, notes excluded)")
+    .action(
+      async (
+        question: string,
+        repo: string,
+        opts: { budget: string; snippets?: boolean; json?: boolean },
+      ) => {
+        const pack = await contextFor(await loadModel(repo), question, {
+          budgetTokens: Number(opts.budget),
+          root: opts.snippets ? path.resolve(repo) : undefined,
+        });
+        console.log(opts.json ? JSON.stringify(pack, null, 2) : pack.text);
+      },
+    );
 
   program
     .command("serve")
