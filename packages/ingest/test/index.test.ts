@@ -124,3 +124,14 @@ describe("scan fixture", () => {
     });
   });
 });
+
+describe("external dependency ecosystems", () => {
+  it("records npm vs pypi on external nodes so research can pick the right registry", async () => {
+    const m = await scan(FIXTURE, { now: NOW });
+    const eco = (id: string) => m.nodes.find((n) => n.id === id)?.meta?.ecosystem;
+    expect(eco("external:express")).toBe("npm");
+    expect(eco("external:stripe")).toBe("npm");
+    expect(eco("external:requests")).toBe("pypi");
+    expect(eco("external:redis")).toBe("pypi");
+  });
+});

@@ -20,6 +20,7 @@ import {
 } from "./notes-ui.js";
 import { layoutView, type Layout } from "./layout.js";
 import { computeLineage } from "./lineage.js";
+import { parseResearch, renderResearchSection } from "./research-ui.js";
 import { defs, gridRect, paintHighlight, renderGraph } from "./render.js";
 import { decodeState, encodeState, type ViewState } from "./state-url.js";
 
@@ -142,6 +143,7 @@ function start(model: Model): void {
   const left = h("aside", { class: "left" });
   const notesStatus = h("p", { class: "warn", role: "status" });
   const notesBox = h("div", { class: "notes-box" });
+  const research = parseResearch(readJson("buildrax-research"));
   const store = createStore(model, (msg) => void (notesStatus.textContent = msg));
   const right = h("aside", { class: "right", "aria-live": "polite" });
   const canvas = h(
@@ -257,6 +259,7 @@ function start(model: Model): void {
       onCollapse: (id) => void collapse(id),
       cyclesFor,
     });
+    if (sel?.type === "node") put(right, renderResearchSection(research, index, sel.id));
     if (sel) put(right, renderNotesSection({ type: sel.type, id: sel.id }, store, index));
     paintNoteBadges(content, nodeBadges(store.list(), index), edgeBadges(store.list()));
     renderNotesPanel(notesBox, {

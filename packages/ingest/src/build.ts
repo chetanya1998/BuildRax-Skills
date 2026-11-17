@@ -122,10 +122,22 @@ export function buildModel(input: BuildInput): Model {
     else edges.set(id, { id, from, to, kind, evidence: [ev] });
   };
 
-  const ensureTarget = (kind: "external" | "unresolved", key: string, ev: Evidence): string => {
+  const ensureTarget = (
+    kind: "external" | "unresolved",
+    key: string,
+    ev: Evidence,
+    ecosystem?: "npm" | "pypi",
+  ): string => {
     const id = nodeId(kind, key);
     if (!nodes.has(id)) {
-      nodes.set(id, { id, kind, name: key, parent: projectId, evidence: [ev] });
+      nodes.set(id, {
+        id,
+        kind,
+        name: key,
+        parent: projectId,
+        evidence: [ev],
+        ...(ecosystem ? { meta: { ecosystem } } : {}),
+      });
     }
     return id;
   };
@@ -147,7 +159,8 @@ export function buildModel(input: BuildInput): Model {
         const res = resolvePython(s.path, imp.specifier, imp.names ?? [], roots, files);
         for (const t of res.targets)
           if (sourceSet.has(t)) link(from, "imports", nodeId("file", t), ev);
-        if (res.external) link(from, "depends-on", ensureTarget("external", res.external, ev), ev);
+        if (res.external)
+          link(from, "depends-on", ensureTarget("external", res.external, ev, "pypi"), ev);
         if (res.unresolved) {
           const uev: Evidence = { ...ev, kind: "unresolved" };
           link(from, "depends-on", ensureTarget("unresolved", imp.specifier, uev), uev);
@@ -178,7 +191,7 @@ export function buildModel(input: BuildInput): Model {
             kind: "config",
             detail: `workspace package ${name}`,
           });
-        else link(from, "depends-on", ensureTarget("external", name, ev), ev);
+        else link(from, "depends-on", ensureTarget("external", name, ev, "npm"), ev);
       }
     }
   }

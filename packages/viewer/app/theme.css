@@ -446,3 +446,27 @@ span.dot-question {
 span.dot-todo {
   color: #c26a10;
 }
+
+.findings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.finding {
+  margin: 8px 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  word-break: break-word;
+}
+.finding a {
+  color: var(--accent);
+}
+.badge.rel-high {
+  color: #2f8f4e;
+  border-color: #2f8f4e;
+}
+.badge.rel-low {
+  color: var(--warn);
+  border-color: var(--warn);
+}

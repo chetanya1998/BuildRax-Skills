@@ -47,6 +47,9 @@ importers:
       '@buildrax/ir':
         specifier: workspace:*
         version: link:../ir
+      '@buildrax/research':
+        specifier: workspace:*
+        version: link:../research
       '@buildrax/viewer':
         specifier: workspace:*
         version: link:../viewer
@@ -93,6 +96,16 @@ importers:
       zod:
         specifier: ^4.6.7
         version: 4.6.7
+
+  packages/research:
+    dependencies:
+      '@buildrax/ir':
+        specifier: workspace:*
+        version: link:../ir
+    devDependencies:
+      '@buildrax/ingest':
+        specifier: workspace:*
+        version: link:../ingest
 
   packages/viewer:
     dependencies:

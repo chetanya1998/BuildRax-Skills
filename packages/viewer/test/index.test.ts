@@ -237,3 +237,84 @@ describe("badges", () => {
     expect(e.get("a=>b")).toEqual({ count: 1, color: "todo" });
   });
 });
+
+import { findingsFor, parseResearch, safeHref } from "../app/research-ui.js";
+
+describe("research ui logic", () => {
+  const idx = new GraphIndex({
+    schemaVersion: "buildrax-ir/v1",
+    meta: {
+      repo: "r",
+      scannedAt: "t",
+      generator: { name: "buildrax", version: "0" },
+      languages: [],
+    },
+    nodes: [
+      { id: "project:r", kind: "project", name: "r", evidence: [{ kind: "config" }] },
+      {
+        id: "module:m",
+        kind: "module",
+        name: "m",
+        parent: "project:r",
+        evidence: [{ kind: "config" }],
+      },
+      {
+        id: "file:a",
+        kind: "file",
+        name: "a",
+        parent: "module:m",
+        evidence: [{ kind: "verified" }],
+      },
+      {
+        id: "external:lib",
+        kind: "external",
+        name: "lib",
+        parent: "project:r",
+        evidence: [{ kind: "verified" }],
+      },
+      {
+        id: "external:other",
+        kind: "external",
+        name: "other",
+        parent: "project:r",
+        evidence: [{ kind: "verified" }],
+      },
+    ],
+    edges: [
+      {
+        id: "e",
+        from: "file:a",
+        to: "external:lib",
+        kind: "depends-on",
+        evidence: [{ kind: "verified" }],
+      },
+    ],
+  });
+  const file = parseResearch({
+    schemaVersion: "buildrax-research/v1",
+    generatedAt: "2026-01-01T00:00:00Z",
+    findings: ["lib", "other"].map((n) => ({
+      id: `f-${n}`,
+      nodeId: `external:${n}`,
+      subject: n,
+      finding: "x",
+      sourceUrl: "https://registry.npmjs.org/x",
+      publisher: "npm",
+      retrievedAt: "t",
+      evidenceType: "registry-metadata",
+      reliability: "high",
+    })),
+    errors: [],
+  });
+  it("shows a container the findings of dependencies used inside it, and nothing else", () => {
+    expect(findingsFor(file, idx, "module:m").map((f) => f.subject)).toEqual(["lib"]);
+    expect(findingsFor(file, idx, "external:other").map((f) => f.subject)).toEqual(["other"]);
+    expect(findingsFor(undefined, idx, "module:m")).toEqual([]);
+  });
+  it("only links http(s) and rejects malformed research files", () => {
+    expect(safeHref("https://x.io/a")).toBe("https://x.io/a");
+    expect(safeHref("javascript:alert(1)")).toBeUndefined();
+    expect(safeHref("not a url")).toBeUndefined();
+    expect(parseResearch({ schemaVersion: "x" })).toBeUndefined();
+  });
+});

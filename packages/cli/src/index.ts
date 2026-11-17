@@ -4,6 +4,7 @@ import { contextFor, renderDigest } from "@buildrax/context";
 import path from "node:path";
 import { loadModel } from "./commands/data.js";
 import { formatNotes, notesCommand } from "./commands/notes.js";
+import { formatPlan, formatResearch, researchCommand, researchPlan } from "./commands/research.js";
 import { startServer } from "./commands/serve.js";
 import { openFile, viewCommand } from "./commands/view.js";
 
@@ -11,6 +12,7 @@ export { scanCommand, summarize, formatSummary } from "./commands/scan.js";
 export { modelPathFor, notesPathFor, researchPathFor } from "./commands/data.js";
 export { notesCommand, formatNotes } from "./commands/notes.js";
 export { startServer } from "./commands/serve.js";
+export { formatPlan, researchCommand, researchPlan } from "./commands/research.js";
 export type { RunningServer } from "./commands/serve.js";
 export { viewCommand } from "./commands/view.js";
 
@@ -74,6 +76,32 @@ export function buildProgram(): Command {
           root: opts.snippets ? path.resolve(repo) : undefined,
         });
         console.log(opts.json ? JSON.stringify(pack, null, 2) : pack.text);
+      },
+    );
+
+  program
+    .command("research")
+    .argument("[path]", "repository containing .buildrax/model.json", ".")
+    .option("--online", "actually contact the public registries (default: only show the plan)")
+    .option("--limit <n>", "research at most n dependencies", "50")
+    .option("--no-cache", "ignore the local 24h response cache")
+    .option("--json", "print as JSON")
+    .description(
+      "look up current registry facts for your dependencies (opt-in; sends package names only)",
+    )
+    .action(
+      async (
+        repo: string,
+        opts: { online?: boolean; limit: string; cache: boolean; json?: boolean },
+      ) => {
+        const limit = Number(opts.limit);
+        if (!opts.online) {
+          const plan = await researchPlan(repo, { limit });
+          console.log(opts.json ? JSON.stringify(plan, null, 2) : formatPlan(plan));
+          return;
+        }
+        const file = await researchCommand(repo, { limit, cache: opts.cache });
+        console.log(opts.json ? JSON.stringify(file, null, 2) : formatResearch(file));
       },
     );
 

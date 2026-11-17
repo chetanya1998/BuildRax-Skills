@@ -12,6 +12,7 @@ export default defineConfig({
       "@buildrax/ingest": src("ingest"),
       "@buildrax/graph": src("graph"),
       "@buildrax/context": src("context"),
+      "@buildrax/research": src("research"),
       "@buildrax/viewer": src("viewer"),
     },
   },
