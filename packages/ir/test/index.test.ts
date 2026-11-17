@@ -65,3 +65,79 @@ describe("validateModel", () => {
     expect(validateModel(m).errors.join()).toContain("parent chain contains a cycle");
   });
 });
+
+import {
+  emptyNotes,
+  reconcileNotes,
+  validateNotes,
+  validateResearch,
+  type Note,
+} from "../src/index.js";
+
+const note = (over: Partial<Note> = {}): Note => ({
+  id: "n1",
+  target: { type: "node", id: "file:a.ts" },
+  type: "flag",
+  color: "red",
+  body: "remember this",
+  createdAt: "t",
+  updatedAt: "t",
+  ...over,
+});
+
+describe("notes schema", () => {
+  it("accepts a valid file and rejects duplicates and long bodies", () => {
+    expect(validateNotes({ ...emptyNotes(), notes: [note()] }).ok).toBe(true);
+    expect(validateNotes({ ...emptyNotes(), notes: [note(), note()] }).errors.join()).toContain(
+      "duplicate id",
+    );
+    expect(validateNotes({ ...emptyNotes(), notes: [note({ body: "x".repeat(4001) })] }).ok).toBe(
+      false,
+    );
+    expect(validateNotes({ schemaVersion: "nope", notes: [] }).ok).toBe(false);
+  });
+});
+
+describe("reconcileNotes", () => {
+  const m = base();
+  it("attaches, relocates by snapshot, and orphans without deleting", () => {
+    const attached = note();
+    const moved = note({
+      id: "n2",
+      target: { type: "node", id: "file:old.ts" },
+      snapshot: { kind: "file", name: "b.ts", path: "b.ts" },
+    });
+    const lost = note({ id: "n3", target: { type: "node", id: "file:gone.ts" } });
+    const edge = note({ id: "n4", target: { type: "edge", id: "file:a.ts=>file:b.ts" } });
+    const r = reconcileNotes([attached, moved, lost, edge], m);
+    expect(r.attached.map((n) => n.id)).toEqual(["n1", "n4"]);
+    expect(r.relocated).toEqual([{ note: moved, to: "file:b.ts" }]);
+    expect(r.orphaned.map((n) => n.id)).toEqual(["n3"]);
+  });
+});
+
+describe("research schema", () => {
+  it("requires a valid url and keeps errors explicit", () => {
+    const ok = {
+      schemaVersion: "buildrax-research/v1",
+      generatedAt: "t",
+      findings: [
+        {
+          id: "f1",
+          nodeId: "external:express",
+          subject: "express",
+          finding: "latest is 5.0.0",
+          sourceUrl: "https://registry.npmjs.org/express/latest",
+          publisher: "npm registry",
+          retrievedAt: "t",
+          evidenceType: "registry-metadata",
+          reliability: "high",
+        },
+      ],
+      errors: [],
+    };
+    expect(validateResearch(ok).ok).toBe(true);
+    ok.findings[0]!.sourceUrl = "not a url";
+    expect(validateResearch(ok).ok).toBe(false);
+  });
+});

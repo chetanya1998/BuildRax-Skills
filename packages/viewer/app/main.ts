@@ -7,9 +7,17 @@ import {
   searchNodes,
   type GraphView,
 } from "@buildrax/graph";
-import { validateModel, type Model, type NodeKind } from "@buildrax/ir";
-import { h, s } from "./dom.js";
+import { validateModel, validateNotes, type Model, type NodeKind } from "@buildrax/ir";
+import { h, put, s } from "./dom.js";
 import { renderInspector } from "./inspector.js";
+import { edgeBadges, nodeBadges } from "./notes-logic.js";
+import { LocalStorageStore, ServerStore, type NotesStore } from "./notes-store.js";
+import {
+  paintNoteBadges,
+  relocateNotes,
+  renderNotesPanel,
+  renderNotesSection,
+} from "./notes-ui.js";
 import { layoutView, type Layout } from "./layout.js";
 import { computeLineage } from "./lineage.js";
 import { defs, gridRect, paintHighlight, renderGraph } from "./render.js";
@@ -56,6 +64,39 @@ function showDropZone(errors: string[] = []): void {
   );
 }
 
+function readJson(id: string): unknown {
+  const text = document.getElementById(id)?.textContent?.trim();
+  if (!text) return undefined;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
+function browserStorage(): Storage | undefined {
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
+function createStore(model: Model, onError: (m: string) => void): NotesStore {
+  const config = readJson("buildrax-config") as { server?: boolean; token?: string } | undefined;
+  if (config?.server && typeof config.token === "string") {
+    const store = new ServerStore(config.token, (url, init) => fetch(url, init), onError);
+    void store.init();
+    return store;
+  }
+  const embedded = validateNotes(readJson("buildrax-notes"));
+  return new LocalStorageStore(
+    `buildrax:notes:${model.meta.repo}`,
+    embedded.ok && embedded.file ? embedded.file.notes : [],
+    browserStorage(),
+  );
+}
+
 function start(model: Model): void {
   const index = new GraphIndex(model);
   const state: ViewState = decodeState(location.hash);
@@ -99,6 +140,9 @@ function start(model: Model): void {
   const fitBtn = h("button", { type: "button" }, "Fit");
   const collapseBtn = h("button", { type: "button" }, "Collapse all");
   const left = h("aside", { class: "left" });
+  const notesStatus = h("p", { class: "warn", role: "status" });
+  const notesBox = h("div", { class: "notes-box" });
+  const store = createStore(model, (msg) => void (notesStatus.textContent = msg));
   const right = h("aside", { class: "right", "aria-live": "polite" });
   const canvas = h(
     "main",
@@ -213,7 +257,25 @@ function start(model: Model): void {
       onCollapse: (id) => void collapse(id),
       cyclesFor,
     });
+    if (sel) put(right, renderNotesSection({ type: sel.type, id: sel.id }, store, index));
+    paintNoteBadges(content, nodeBadges(store.list(), index), edgeBadges(store.list()));
+    renderNotesPanel(notesBox, {
+      store,
+      model,
+      index,
+      selectedNodeId: sel?.type === "node" ? sel.id : undefined,
+      onJump: (note) => void jumpToNote(note.target),
+    });
   };
+
+  async function jumpToNote(target: { type: "node" | "edge"; id: string }): Promise<void> {
+    if (target.type === "node") return selectNode(target.id);
+    const [from, to] = target.id.split("=>");
+    if (from) ensureVisible(from);
+    if (to) ensureVisible(to);
+    state.selected = { type: "edge", id: target.id };
+    await refresh({ fit: true });
+  }
 
   async function refresh(opts: { fit?: boolean; center?: string } = {}): Promise<void> {
     const my = ++seq;
@@ -294,6 +356,12 @@ function start(model: Model): void {
       ),
     ),
   );
+
+  put(left, notesStatus, notesBox);
+  store.subscribe(() => {
+    relocateNotes(store, model);
+    paint();
+  });
 
   // ---- events ----
   let dragged = false;

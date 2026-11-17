@@ -363,3 +363,86 @@ svg.stage {
     max-height: 42vh;
   }
 }
+
+.note {
+  margin: 8px 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.note.resolved {
+  opacity: 0.55;
+}
+.note-body p {
+  margin: 2px 0;
+}
+.note-body ul {
+  margin: 2px 0 2px 14px;
+  list-style: disc;
+}
+.note-form textarea,
+.note-body textarea {
+  width: 100%;
+  margin: 6px 0;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 4px 6px;
+}
+.md a {
+  color: var(--accent);
+}
+.md code {
+  background: var(--paper);
+  padding: 0 3px;
+}
+.note-badge text {
+  fill: #fff;
+  font-size: 10px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.note-badge circle {
+  stroke: var(--panel);
+  stroke-width: 2;
+}
+.dot-red circle {
+  fill: #c2362b;
+}
+.dot-amber circle {
+  fill: #c98a04;
+}
+.dot-green circle {
+  fill: #2f8f4e;
+}
+.dot-blue circle,
+.dot-note circle {
+  fill: #1b6ef3;
+}
+.dot-question circle {
+  fill: #8a4fd3;
+}
+.dot-todo circle {
+  fill: #c26a10;
+}
+.dot-decision circle {
+  fill: #2f8f4e;
+}
+span.dot-red {
+  color: #c2362b;
+}
+span.dot-amber {
+  color: #c98a04;
+}
+span.dot-green,
+span.dot-decision {
+  color: #2f8f4e;
+}
+span.dot-question {
+  color: #8a4fd3;
+}
+span.dot-todo {
+  color: #c26a10;
+}

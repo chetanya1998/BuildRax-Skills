@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileCycles, GraphIndex, hubs } from "@buildrax/graph";
 import { scan } from "@buildrax/ingest";
 import { validateModel, type Model } from "@buildrax/ir";
+import { modelPathFor } from "./data.js";
 
 export interface ScanSummary {
   repo: string;
@@ -19,9 +20,6 @@ export interface ScanSummary {
   cycles: string[][];
   hubs: { id: string; fanIn: number; fanOut: number }[];
 }
-
-export const modelPathFor = (repo: string): string =>
-  path.join(path.resolve(repo), ".buildrax", "model.json");
 
 /** Scan, validate and write `.buildrax/model.json`. Returns a summary for printing. */
 export async function scanCommand(repoPath: string): Promise<ScanSummary> {

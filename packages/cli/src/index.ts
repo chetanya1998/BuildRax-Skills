@@ -1,8 +1,14 @@
 import { Command } from "commander";
 import { formatSummary, scanCommand } from "./commands/scan.js";
+import { formatNotes, notesCommand } from "./commands/notes.js";
+import { startServer } from "./commands/serve.js";
 import { openFile, viewCommand } from "./commands/view.js";
 
-export { scanCommand, summarize, formatSummary, modelPathFor } from "./commands/scan.js";
+export { scanCommand, summarize, formatSummary } from "./commands/scan.js";
+export { modelPathFor, notesPathFor, researchPathFor } from "./commands/data.js";
+export { notesCommand, formatNotes } from "./commands/notes.js";
+export { startServer } from "./commands/serve.js";
+export type { RunningServer } from "./commands/serve.js";
 export { viewCommand } from "./commands/view.js";
 
 export function buildProgram(): Command {
@@ -29,6 +35,29 @@ export function buildProgram(): Command {
       const file = await viewCommand(repo);
       console.log(`Viewer written to ${file}`);
       if (opts.open) openFile(file);
+    });
+
+  program
+    .command("serve")
+    .argument("[path]", "repository containing .buildrax/model.json", ".")
+    .option("--port <n>", "port to listen on (127.0.0.1 only)", "4317")
+    .option("--open", "open the viewer in the default browser")
+    .description("serve the viewer locally; notes are saved to .buildrax/notes.json")
+    .action(async (repo: string, opts: { port: string; open?: boolean }) => {
+      const server = await startServer(repo, Number(opts.port));
+      console.log(`BuildRAX viewer: ${server.url}  (Ctrl+C to stop)`);
+      if (opts.open) openFile(server.url);
+    });
+
+  program
+    .command("notes")
+    .argument("[path]", "repository", ".")
+    .option("--all", "include resolved notes")
+    .option("--json", "print as JSON")
+    .description("list your sticky notes and flags (read-only)")
+    .action(async (repo: string, opts: { all?: boolean; json?: boolean }) => {
+      const report = await notesCommand(repo, opts);
+      console.log(opts.json ? JSON.stringify(report, null, 2) : formatNotes(report));
     });
 
   return program;

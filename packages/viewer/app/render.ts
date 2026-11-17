@@ -77,7 +77,12 @@ function renderEdge(e: ViewEdge, layout: Layout): SVGGElement | null {
   const mid = le.points[Math.floor(le.points.length / 2)]!;
   const g = s(
     "g",
-    { class: `edge${e.inCycle ? " cycle" : ""}`, "data-edge": e.id },
+    {
+      class: `edge${e.inCycle ? " cycle" : ""}`,
+      "data-edge": e.id,
+      "data-mx": mid.x,
+      "data-my": mid.y,
+    },
     s("path", { d: edgePath(le.points), class: "hit" }),
     s("path", {
       d: edgePath(le.points),
