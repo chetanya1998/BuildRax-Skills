@@ -13,7 +13,7 @@ export interface ViewState {
   /** Canvas layout: structured layers or live physics. */
   layout: "layered" | "force";
   color: "package" | "kind" | "language" | "heat";
-  /** Force layout: pull package members together and draw halos. */
+  /** Draw dotted segmentation boxes around services/folders and keep them apart in the layout. */
   cluster: boolean;
   /** Animations, physics idle and particles. */
   motion: boolean;

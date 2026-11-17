@@ -20,6 +20,7 @@ import { layoutView } from "./layout.js";
 import { computeLineage } from "./lineage.js";
 import { parseResearch, renderResearchSection } from "./research-ui.js";
 import { radiusFor } from "./geometry.js";
+import { buildGroups, type Groups } from "./groups.js";
 import {
   COLOR_MODES,
   legendFor,
@@ -150,6 +151,7 @@ function start(model: Model): void {
       writeHash();
     },
     expand: (id) => void expand(id),
+    collapse: (id) => void collapse(id),
   });
 
   const searchInput = h("input", {
@@ -247,9 +249,9 @@ function start(model: Model): void {
       depthSel,
       h(
         "label",
-        { class: "chip", title: "Pull each package's files together" },
+        { class: "chip", title: "Dotted boxes around services, packages and folders" },
         clusterBox,
-        "clusters",
+        "segments",
       ),
       h("label", { class: "chip", title: "Animations and physics" }, motionBox, "motion"),
       h("label", { class: "chip" }, extBox, "externals"),
@@ -356,9 +358,11 @@ function start(model: Model): void {
 
   const maxDegree = Math.max(1, ...model.nodes.map((n) => index.fanIn(n.id) + index.fanOut(n.id)));
   const hues = packageHues(index);
-  const groups = new Map(
-    [...hues].map(([id, hue]) => [id, { label: index.node(id)?.name ?? id, hue }] as const),
-  );
+  const hueOf = (containerId: string): number => {
+    const pkg = packageOf(index, containerId);
+    return (pkg ? hues.get(pkg) : undefined) ?? 215;
+  };
+  let groups: Groups = { specs: [], groupOf: new Map() };
 
   const styleFor = (v: GraphView, mode: ColorMode): Map<string, NodeStyle> => {
     const out = new Map<string, NodeStyle>();
@@ -376,7 +380,7 @@ function start(model: Model): void {
         sat: sw.sat,
         key: sw.key,
         r: radiusFor(vn.kind, vn.fileCount, degree),
-        group: packageOf(index, vn.id),
+        group: groups.groupOf.get(vn.id),
       });
     }
     return out;
@@ -428,9 +432,12 @@ function start(model: Model): void {
   async function refresh(opts: { fit?: boolean; center?: string } = {}): Promise<void> {
     const my = ++seq;
     view = buildView(index, { expanded: new Set(state.expanded), hideKinds: hideKinds() });
+    groups = state.cluster
+      ? buildGroups(index, view, new Set(state.expanded), hueOf)
+      : { specs: [], groupOf: new Map() };
     const style = styleFor(view, state.color);
     const radii = new Map([...style].map(([id, st]) => [id, st.r] as const));
-    const positions = await layoutView(view, radii);
+    const positions = await layoutView(view, radii, state.cluster ? groups : undefined);
     if (my !== seq) return;
     if (state.selected?.type === "node" && !view.nodes.some((n) => n.id === state.selected!.id))
       state.selected = undefined;
@@ -442,7 +449,7 @@ function start(model: Model): void {
         positions,
         style,
         ancestors: (id) => index.ancestors(id),
-        groups,
+        groups: groups.specs,
         cluster: state.cluster,
       },
       { fit: opts.fit },
@@ -459,7 +466,7 @@ function start(model: Model): void {
 
   const restyle = (): void => {
     const style = styleFor(view, state.color);
-    scene.restyle(style, groups);
+    scene.restyle(style);
     renderLegend();
     writeHash();
   };

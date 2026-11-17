@@ -3,7 +3,8 @@ import { s } from "./dom.js";
 import { easeInOutCubic, edgeGeometry, quadAt, type Pt } from "./geometry.js";
 import type { Lineage } from "./lineage.js";
 import type { Badge } from "./notes-logic.js";
-import { ForceSim, type SimNode } from "./physics.js";
+import { groupPath, type GroupSpec } from "./groups.js";
+import { boxRects, ForceSim, type SimNode } from "./physics.js";
 
 export type LayoutMode = "layered" | "force";
 
@@ -13,7 +14,7 @@ export interface NodeStyle {
   /** Color-group key (legend entry); used to focus one color. */
   key: string;
   r: number;
-  /** Cluster / halo group (owning package). */
+  /** Innermost segmentation box the node sits in. */
   group?: string;
 }
 
@@ -25,7 +26,8 @@ export interface SceneGraph {
   style: Map<string, NodeStyle>;
   /** Ancestors of a node, nearest first (to animate expand/collapse). */
   ancestors(id: string): string[];
-  groups: Map<string, { label: string; hue: number }>;
+  /** Segmentation boxes (nested); empty when segments are off. */
+  groups: GroupSpec[];
   cluster: boolean;
 }
 
@@ -44,6 +46,8 @@ export interface Highlight {
 export interface SceneEvents {
   select(sel: Selection | undefined): void;
   expand(id: string): void;
+  /** Collapse an expanded container (its box's header button). */
+  collapse(id: string): void;
 }
 
 interface SNode {
@@ -78,12 +82,19 @@ interface SEdge {
   end: Pt;
 }
 
-interface Halo {
-  group: string;
+interface GBox {
+  spec: GroupSpec;
   el: SVGGElement;
-  blobs: SVGGElement;
-  label: SVGTextElement;
-  members: string[];
+  rect: SVGRectElement;
+  tab: SVGGElement;
+  tabBg: SVGRectElement;
+  collapse?: SVGGElement;
+  /** Nodes directly inside this box, and boxes nested in it. */
+  nodes: string[];
+  children: string[];
+  tabW: number;
+  /** Path key used by the physics' box rectangles. */
+  key: string;
 }
 
 const ICONS: Record<string, string> = {
@@ -94,31 +105,33 @@ const ICONS: Record<string, string> = {
   unresolved: "M-3,-3 Q-3,-6 0,-6 Q3,-6 3,-3 Q3,-1 0,1 L0,3 M0,6 L0,6.5",
 };
 
-const SVG_NS_FILTER = "blur-halo";
-
 const hash = (str: string): number => {
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
   return h >>> 0;
 };
 
+/** Space a node needs (orb plus its label), shared by the physics and the box drawing. */
+const extentR = (r: number, name: string): number =>
+  Math.max(r + 19, Math.min(110, name.length * 3.6 + 8));
+
 const truncate = (text: string, max: number): string =>
   text.length <= max ? text : `${text.slice(0, Math.max(1, max - 1))}…`;
 
 /**
- * Owns the SVG: animated orbs and edges, live physics, dragging, camera, package halos, flow
+ * Owns the SVG: animated orbs and edges, live physics, dragging, camera, code-segmentation boxes, flow
  * particles and the minimap. It knows nothing about the architecture model beyond what it is given.
  */
 export class Scene {
   private readonly viewport = s("g", { id: "viewport" });
-  private readonly haloLayer = s("g", { class: "halos" });
+  private readonly boxLayer = s("g", { class: "boxes" });
   private readonly edgeLayer = s("g", { class: "edges" });
   private readonly particleLayer = s("g", { class: "particles" });
   private readonly nodeLayer = s("g", { class: "nodes" });
 
   private nodes = new Map<string, SNode>();
   private edges: SEdge[] = [];
-  private halos: Halo[] = [];
+  private boxes: GBox[] = [];
   private particles: { el: SVGCircleElement; edge: SEdge; phase: number }[] = [];
   private adjacency = new Map<string, Set<string>>();
   private mode: LayoutMode = "layered";
@@ -163,7 +176,7 @@ export class Scene {
         fill: "url(#grid-major)",
         class: "grid",
       }),
-      this.haloLayer,
+      this.boxLayer,
       this.edgeLayer,
       this.particleLayer,
       this.nodeLayer,
@@ -249,7 +262,7 @@ export class Scene {
     }
     this.nodes = next;
     this.rebuildEdges(g);
-    this.rebuildHalos(g);
+    this.rebuildBoxes(g);
     this.startSim(g);
     this.applyHighlight();
     this.applyBadges();
@@ -277,10 +290,7 @@ export class Scene {
   }
 
   /** Update colors/sizes only (no relayout). */
-  restyle(
-    style: Map<string, NodeStyle>,
-    groups: Map<string, { label: string; hue: number }>,
-  ): void {
+  restyle(style: Map<string, NodeStyle>): void {
     for (const n of this.nodes.values()) {
       const st = style.get(n.id);
       if (st) {
@@ -289,8 +299,7 @@ export class Scene {
       }
     }
     if (this.graph) {
-      this.graph = { ...this.graph, style, groups };
-      this.rebuildHalos(this.graph);
+      this.graph = { ...this.graph, style };
     }
     this.applyHighlight();
     this.wake();
@@ -382,11 +391,6 @@ export class Scene {
         { id: "grid-major", width: 48, height: 48, patternUnits: "userSpaceOnUse" },
         s("rect", { width: 48, height: 48, fill: "url(#grid-minor)" }),
         s("path", { d: "M48,0 L0,0 0,48", class: "grid-major" }),
-      ),
-      s(
-        "filter",
-        { id: SVG_NS_FILTER, x: "-50%", y: "-50%", width: "200%", height: "200%" },
-        s("feGaussianBlur", { stdDeviation: 18 }),
       ),
     );
   }
@@ -524,26 +528,100 @@ export class Scene {
     }
   }
 
-  private rebuildHalos(g: SceneGraph): void {
-    this.haloLayer.replaceChildren();
-    this.halos = [];
-    if (g.mode !== "force" || !g.cluster) return;
-    const byGroup = new Map<string, string[]>();
-    for (const [id, n] of this.nodes) {
+  /** Dotted segmentation boxes: one per expanded container, nested like the code. */
+  private rebuildBoxes(g: SceneGraph): void {
+    this.boxLayer.replaceChildren();
+    this.boxes = [];
+    if (!g.cluster) return;
+    const byId = new Map<string, GBox>();
+    for (const spec of g.groups) {
+      const tabW = Math.min(
+        300,
+        Math.round(spec.label.length * 7.4 + spec.sub.length * 6 + (spec.collapseId ? 62 : 38)),
+      );
+      const rect = s("rect", { class: "gbox", rx: 20 });
+      const tabBg = s("rect", { class: "gtab-bg", height: 24, rx: 12 });
+      const tab = s(
+        "g",
+        { class: "gtab", "data-gtab": spec.id },
+        tabBg,
+        s("text", { class: "gtitle", x: 12, y: 16 }, spec.label),
+        s("text", { class: "gsub", x: 12 + spec.label.length * 7.4 + 8, y: 16 }, spec.sub),
+        s(
+          "title",
+          null,
+          spec.collapseId
+            ? `${spec.label}: click to inspect, drag to move the whole box`
+            : spec.label,
+        ),
+      );
+      let collapse: SVGGElement | undefined;
+      if (spec.collapseId) {
+        collapse = s(
+          "g",
+          {
+            class: "gcollapse",
+            "data-collapse": spec.collapseId,
+            role: "button",
+            "aria-label": `Collapse ${spec.label}`,
+          },
+          s("circle", { r: 8 }),
+          s("path", { d: "M-3.5,0 L3.5,0" }),
+          s("title", null, "Collapse back into one node"),
+        );
+        tab.append(collapse);
+      }
+      const el = s(
+        "g",
+        {
+          class: `group depth-${Math.min(spec.depth, 3)} kind-${spec.kind}`,
+          style: `--h:${spec.hue}`,
+          "data-group": spec.id,
+        },
+        rect,
+        tab,
+      );
+      this.boxLayer.append(el);
+      const box: GBox = {
+        spec,
+        el,
+        rect,
+        tab,
+        tabBg,
+        collapse,
+        nodes: [],
+        children: [],
+        tabW,
+        key: groupPath(g.groups, spec.id).join("\u0000"),
+      };
+      tabBg.setAttribute("width", String(tabW));
+      collapse?.setAttribute("transform", `translate(${tabW - 14},12)`);
+      byId.set(spec.id, box);
+      this.boxes.push(box);
+    }
+    for (const n of this.nodes.values()) {
       if (n.exiting || !n.style.group) continue;
-      byGroup.set(n.style.group, [...(byGroup.get(n.style.group) ?? []), id]);
+      byId.get(n.style.group)?.nodes.push(n.id);
     }
-    for (const [group, members] of byGroup) {
-      if (members.length < 2) continue;
-      const meta = g.groups.get(group);
-      const blobs = s("g", { class: "blobs", filter: `url(#${SVG_NS_FILTER})` });
-      const label = s("text", { class: "halo-label" }, meta?.label ?? group);
-      const el = s("g", { class: "halo", style: `--h:${meta?.hue ?? 215}` }, blobs, label);
-      for (const m of members)
-        blobs.append(s("circle", { "data-m": m, r: (this.nodes.get(m)?.style.r ?? 16) + 34 }));
-      this.haloLayer.append(el);
-      this.halos.push({ group, el, blobs, label, members });
-    }
+    for (const b of this.boxes)
+      if (b.spec.parent) byId.get(b.spec.parent)?.children.push(b.spec.id);
+  }
+
+  /** Boxes must be at least as wide as their header tab. */
+  private boxMinWidth(): Map<string, number> {
+    return new Map(this.boxes.map((b) => [b.key, b.tabW + 28]));
+  }
+
+  /**
+   * Box path for the physics. A node outside every box, or sitting beside nested boxes, counts as
+   * its own one-node segment so it is kept clear of the boxes next to it.
+   */
+  private pathFor(g: SceneGraph, n: SNode): string[] {
+    const path = groupPath(g.groups, n.style.group);
+    if (!g.cluster) return path;
+    const inner = path[path.length - 1];
+    const besideBoxes = !inner || g.groups.some((sp) => sp.parent === inner);
+    return besideBoxes ? [...path, `free:${n.id}`] : path;
   }
 
   private startSim(g: SceneGraph): void {
@@ -552,20 +630,21 @@ export class Scene {
       return;
     }
     const live = [...this.nodes.values()].filter((n) => !n.exiting);
-    const simNodes: SimNode[] = live.map((n) => ({
+    const simNodes = live.map((n): SimNode => ({
       id: n.id,
       x: n.x,
       y: n.y,
       vx: 0,
       vy: 0,
-      r: n.style.r,
-      group: n.style.group,
+      // Orb plus its label, the same extent the boxes are drawn with.
+      r: extentR(n.style.r, n.view.name),
+      groups: this.pathFor(g, n),
       pinned: n.pinned,
     }));
     this.sim = new ForceSim(
       simNodes,
       g.view.edges.map((e) => ({ a: e.from, b: e.to, weight: e.count })),
-      { cluster: g.cluster ? 0.06 : 0 },
+      { cluster: g.cluster ? 0.11 : 0, boxMinWidth: this.boxMinWidth() },
     );
     this.sim.alpha = 0.9;
   }
@@ -582,6 +661,15 @@ export class Scene {
       n.el.classList.toggle("downstream", role === "downstream");
       n.el.classList.toggle("selected", selected?.type === "node" && selected.id === n.id);
       n.el.classList.toggle("hover", n.id === this.hover);
+    }
+    if (this.boxes.length) {
+      const active = new Set<string>();
+      for (const n of this.nodes.values()) {
+        if (n.exiting || n.el.classList.contains("dim") || !n.style.group) continue;
+        for (const gid of groupPath(this.graph?.groups ?? [], n.style.group)) active.add(gid);
+      }
+      const filtering = !!lineage || !!focusKey;
+      for (const b of this.boxes) b.el.classList.toggle("dim", filtering && !active.has(b.spec.id));
     }
     for (const e of this.edges) {
       const dir = lineage?.edges.get(e.view.id);
@@ -738,9 +826,15 @@ export class Scene {
         return;
       }
       const t = ev.target as Element;
+      const collapseEl = t.closest("[data-collapse]");
+      if (collapseEl) return this.events.collapse(collapseEl.getAttribute("data-collapse")!);
+      const tabEl = t.closest("[data-gtab]");
       const nodeEl = t.closest("[data-node]");
       const edgeEl = t.closest("[data-edge]");
-      if (nodeEl) {
+      if (tabEl) {
+        const spec = this.boxes.find((b) => b.spec.id === tabEl.getAttribute("data-gtab"))?.spec;
+        if (spec?.collapseId) this.events.select({ type: "node", id: spec.collapseId });
+      } else if (nodeEl) {
         const id = nodeEl.getAttribute("data-node")!;
         if (ev.altKey && this.mode === "force") return this.unpin(id);
         this.events.select({ type: "node", id });
@@ -785,8 +879,74 @@ export class Scene {
     this.reheat();
   }
 
+  /** Every node inside a box, including nested boxes. */
+  private membersOf(groupId: string): SNode[] {
+    const ids = new Set<string>();
+    const walk = (id: string): void => {
+      const b = this.boxes.find((x) => x.spec.id === id);
+      if (!b) return;
+      b.nodes.forEach((n) => ids.add(n));
+      b.children.forEach(walk);
+    };
+    walk(groupId);
+    return [...ids].map((id) => this.nodes.get(id)).filter((n): n is SNode => !!n && !n.exiting);
+  }
+
+  /** Dragging a box header moves the whole segment; in live mode the physics then re-settles around it. */
+  private startGroupDrag(groupId: string, ev: PointerEvent): void {
+    const members = this.membersOf(groupId);
+    if (!members.length) return;
+    const start = this.toWorld(ev.clientX, ev.clientY);
+    const origin = members.map((n) => ({ n, x: n.x, y: n.y, pinned: n.pinned }));
+    const sx = ev.clientX;
+    const sy = ev.clientY;
+    let dragged = false;
+    const move = (m: PointerEvent): void => {
+      if (!dragged && Math.abs(m.clientX - sx) + Math.abs(m.clientY - sy) > 4) {
+        dragged = true;
+        this.cam = undefined;
+        this.fitWhenSettled = false;
+        if (this.sim) this.sim.alphaTarget = 0.2;
+      }
+      if (!dragged) return;
+      const w = this.toWorld(m.clientX, m.clientY);
+      for (const o of origin) {
+        o.n.x = o.n.tx = o.x + (w.x - start.x);
+        o.n.y = o.n.ty = o.y + (w.y - start.y);
+        const sn = this.sim?.node(o.n.id);
+        if (sn && this.mode === "force") {
+          sn.x = o.n.x;
+          sn.y = o.n.y;
+          sn.pinned = true;
+        }
+      }
+      this.wake();
+    };
+    const up = (): void => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      if (dragged) this.suppressClick = true;
+      for (const o of origin) {
+        const sn = this.sim?.node(o.n.id);
+        if (sn) sn.pinned = o.pinned; // the box settles into place; only nodes you pinned stay pinned
+      }
+      if (this.sim) {
+        this.sim.alphaTarget = 0;
+        this.sim.reheat(0.4);
+      }
+      this.wake();
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
   private onPointerDown(ev: PointerEvent): void {
     if (ev.button !== 0) return;
+    const tabEl = (ev.target as Element).closest("[data-gtab]");
+    if (tabEl && !(ev.target as Element).closest("[data-collapse]")) {
+      this.startGroupDrag(tabEl.getAttribute("data-gtab")!, ev);
+      return;
+    }
     const nodeEl = (ev.target as Element).closest("[data-node]");
     const node = nodeEl ? this.nodes.get(nodeEl.getAttribute("data-node")!) : undefined;
     const sx = ev.clientX;
@@ -876,6 +1036,7 @@ export class Scene {
 
   private frame(now: number): void {
     this.raf = 0;
+    const frameStart = this.last;
     const dt = Math.min(0.05, Math.max(0.001, (now - this.last) / 1000));
     this.last = now;
     let moving = false;
@@ -904,7 +1065,11 @@ export class Scene {
     const simActive = this.mode === "force" && !!this.sim && this.motion;
     if (simActive && this.sim) {
       const wasActive = this.sim.active;
-      const still = this.sim.tick();
+      // Time-based: on slow frames run extra ticks (they are cheap; drawing is the cost), so the
+      // layout settles in about the same wall-clock time on any machine.
+      const steps = Math.min(4, Math.max(1, Math.round(((now - frameStart) / 1000) * 60)));
+      let still = true;
+      for (let i = 0; i < steps && still; i++) still = this.sim.tick();
       for (const sn of this.sim.nodes) {
         const n = this.nodes.get(sn.id);
         if (n && !n.pinned) {
@@ -952,7 +1117,7 @@ export class Scene {
     }
 
     this.updateEdges();
-    this.updateHalos();
+    this.updateBoxes();
     const flowing = this.updateParticles(now);
     this.drawMinimap();
     if (moving || flowing) this.wake();
@@ -983,24 +1148,40 @@ export class Scene {
     }
   }
 
-  private updateHalos(): void {
-    for (const h of this.halos) {
-      let minY = Infinity;
-      let cx = 0;
-      let n = 0;
-      for (const c of h.blobs.children) {
-        const node = this.nodes.get(c.getAttribute("data-m")!);
-        if (!node) continue;
-        c.setAttribute("cx", node.x.toFixed(1));
-        c.setAttribute("cy", node.y.toFixed(1));
-        minY = Math.min(minY, node.y - node.style.r);
-        cx += node.x;
-        n++;
+  /** Fit every box around its members (and nested boxes), innermost first, so nesting always encloses. */
+  private updateBoxes(): void {
+    if (!this.boxes.length || !this.graph) return;
+    const g = this.graph;
+    const pseudo: SimNode[] = [];
+    for (const n of this.nodes.values()) {
+      if (n.exiting || n.scale < 0.05 || !n.style.group) continue;
+      pseudo.push({
+        id: n.id,
+        x: n.x,
+        y: n.y,
+        vx: 0,
+        vy: 0,
+        r: extentR(n.style.r, n.view.name) * n.scale,
+        groups: this.pathFor(g, n),
+      });
+    }
+    // Exactly the rectangles the physics keeps apart, so what is drawn is what was separated.
+    const rects = boxRects(pseudo, this.boxMinWidth());
+    for (const b of this.boxes) {
+      const r = rects.get(b.key);
+      if (!r) {
+        b.el.style.display = "none";
+        continue;
       }
-      if (n) {
-        h.label.setAttribute("x", (cx / n).toFixed(1));
-        h.label.setAttribute("y", (minY - 46).toFixed(1));
-      }
+      b.el.style.display = "";
+      b.rect.setAttribute("x", r.x0.toFixed(1));
+      b.rect.setAttribute("y", r.y0.toFixed(1));
+      b.rect.setAttribute("width", Math.max(40, r.x1 - r.x0).toFixed(1));
+      b.rect.setAttribute("height", Math.max(40, r.y1 - r.y0).toFixed(1));
+      b.tab.setAttribute(
+        "transform",
+        `translate(${(r.x0 + 14).toFixed(1)},${(r.y0 + 10).toFixed(1)})`,
+      );
     }
   }
 

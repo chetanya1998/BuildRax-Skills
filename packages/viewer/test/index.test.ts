@@ -538,11 +538,11 @@ describe("force simulation", () => {
 
   it("pulls group members together when clustering is on", () => {
     const mk = (cluster: number) => {
-      const ns = ring(8).map((n, i) => ({ ...n, group: i % 2 ? "a" : "b" }));
+      const ns = ring(8).map((n, i) => ({ ...n, groups: [i % 2 ? "a" : "b"] }));
       const s = new ForceSim(ns, chain(8), { cluster });
       s.settle(900);
       const spread = (g: string) => {
-        const m = s.nodes.filter((n) => n.group === g);
+        const m = s.nodes.filter((n) => n.groups?.[0] === g);
         const cx = m.reduce((t, n) => t + n.x, 0) / m.length;
         const cy = m.reduce((t, n) => t + n.y, 0) / m.length;
         return m.reduce((t, n) => t + Math.hypot(n.x - cx, n.y - cy), 0) / m.length;
@@ -662,5 +662,335 @@ describe("heat legend", () => {
     expect(new Set(leg.map((l) => l.label)).size).toBe(leg.length);
     expect(leg[0]!.label).toBe("some links");
     expect(leg[leg.length - 1]!.label).toBe("hub");
+  });
+});
+
+describe("box clustering", () => {
+  const mk = (id: string, groups: string[]): SimNode => ({
+    id,
+    x: Number.NaN,
+    y: Number.NaN,
+    vx: 0,
+    vy: 0,
+    r: 18,
+    groups,
+  });
+  const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const d = (a: SimNode, b: SimNode) => Math.hypot(a.x - b.x, a.y - b.y);
+
+  it("separates unrelated services into distinct, non-overlapping regions", () => {
+    const ns = [
+      ...Array.from({ length: 6 }, (_, i) => mk(`a${i}`, ["A"])),
+      ...Array.from({ length: 6 }, (_, i) => mk(`b${i}`, ["B"])),
+    ];
+    const s = new ForceSim(ns, [], { cluster: 0.08 });
+    s.settle(900);
+    const A = ns.filter((n) => n.groups![0] === "A");
+    const B = ns.filter((n) => n.groups![0] === "B");
+    const intra = mean(
+      [
+        ...A.flatMap((x) => A.map((y) => (x === y ? NaN : d(x, y)))),
+        ...B.flatMap((x) => B.map((y) => (x === y ? NaN : d(x, y)))),
+      ].filter(Number.isFinite),
+    );
+    const inter = mean(A.flatMap((x) => B.map((y) => d(x, y))));
+    expect(intra / inter).toBeLessThan(0.7);
+    // every A node is closer to its own box's centroid than to B's
+    const c = (g: SimNode[]) => ({ x: mean(g.map((n) => n.x)), y: mean(g.map((n) => n.y)) });
+    const ca = c(A),
+      cb = c(B);
+    for (const n of A)
+      expect(Math.hypot(n.x - ca.x, n.y - ca.y)).toBeLessThan(Math.hypot(n.x - cb.x, n.y - cb.y));
+  });
+
+  it("nests: folders inside a service stay together, and the service stays together", () => {
+    const ns = [
+      ...Array.from({ length: 4 }, (_, i) => mk(`r${i}`, ["svc", "svc/routes"])),
+      ...Array.from({ length: 4 }, (_, i) => mk(`s${i}`, ["svc", "svc/services"])),
+      ...Array.from({ length: 4 }, (_, i) => mk(`w${i}`, ["worker", "worker/jobs"])),
+    ];
+    const s = new ForceSim(ns, [], { cluster: 0.08 });
+    s.settle(1200);
+    const grp = (f: (n: SimNode) => boolean) => ns.filter(f);
+    const spread = (g: SimNode[]) =>
+      mean(g.map((n) => Math.hypot(n.x - mean(g.map((m) => m.x)), n.y - mean(g.map((m) => m.y)))));
+    const svc = grp((n) => n.groups![0] === "svc");
+    const wk = grp((n) => n.groups![0] === "worker");
+    const routes = grp((n) => n.groups![1] === "svc/routes");
+    expect(spread(routes)).toBeLessThan(spread(svc));
+    const cs = { x: mean(svc.map((n) => n.x)), y: mean(svc.map((n) => n.y)) };
+    const cw = { x: mean(wk.map((n) => n.x)), y: mean(wk.map((n) => n.y)) };
+    expect(Math.hypot(cs.x - cw.x, cs.y - cw.y)).toBeGreaterThan(spread(svc) + spread(wk));
+  });
+
+  it("is still deterministic with boxes", () => {
+    const run = () => {
+      const ns = Array.from({ length: 10 }, (_, i) => mk(`n${i}`, [i < 5 ? "A" : "B"]));
+      new ForceSim(ns, [], { cluster: 0.08 }).settle(600);
+      return JSON.stringify(ns.map((n) => [Math.round(n.x * 100), Math.round(n.y * 100)]));
+    };
+    expect(run()).toBe(run());
+  });
+});
+
+import { buildGroups, groupPath, EXTERNAL_GROUP, UNRESOLVED_GROUP } from "../app/groups.js";
+import { layoutView } from "../app/layout.js";
+import { buildView } from "@buildrax/graph";
+
+describe("code segmentation boxes", () => {
+  const ev = [{ kind: "verified" as const }];
+  const n = (
+    id: string,
+    kind: "project" | "module" | "file" | "external" | "unresolved",
+    parent?: string,
+    extra: object = {},
+  ) => ({ id, kind, name: id.split(/[:/]/).pop()!, parent, evidence: ev, ...extra });
+  const model = {
+    schemaVersion: "buildrax-ir/v1" as const,
+    meta: {
+      repo: "r",
+      scannedAt: "t",
+      generator: { name: "buildrax" as const, version: "0" },
+      languages: [],
+    },
+    nodes: [
+      n("project:r", "project"),
+      n("module:api", "module", "project:r", { meta: { package: true } }),
+      n("module:api/routes", "module", "module:api"),
+      n("module:api/services", "module", "module:api"),
+      n("file:api/server.ts", "file", "module:api"),
+      n("file:api/routes/a.ts", "file", "module:api/routes"),
+      n("file:api/services/b.ts", "file", "module:api/services"),
+      n("module:worker", "module", "project:r", { meta: { package: true } }),
+      n("file:worker/w.ts", "file", "module:worker"),
+      n("external:express", "external", "project:r"),
+      n("external:zod", "external", "project:r"),
+      n("unresolved:./x", "unresolved", "project:r"),
+    ],
+    edges: [
+      {
+        id: "1",
+        from: "file:api/server.ts",
+        to: "file:api/routes/a.ts",
+        kind: "imports" as const,
+        evidence: ev,
+      },
+      {
+        id: "2",
+        from: "file:api/routes/a.ts",
+        to: "file:api/services/b.ts",
+        kind: "imports" as const,
+        evidence: ev,
+      },
+      {
+        id: "3",
+        from: "file:worker/w.ts",
+        to: "external:zod",
+        kind: "depends-on" as const,
+        evidence: ev,
+      },
+    ],
+  };
+  const idx = new GraphIndex(model);
+  const hue = (id: string) => (id.startsWith("module:api") ? 212 : 162);
+
+  it("makes no boxes while everything is collapsed except dependency segments", () => {
+    const g = buildGroups(idx, buildView(idx, { expanded: new Set() }), new Set(), hue);
+    expect(g.specs.map((s) => s.id).sort()).toEqual([EXTERNAL_GROUP, UNRESOLVED_GROUP].sort());
+  });
+
+  it("nests service > folder boxes for expanded containers and assigns the innermost box", () => {
+    const expanded = new Set(["module:api", "module:api/routes", "module:api/services"]);
+    const g = buildGroups(idx, buildView(idx, { expanded }), expanded, hue);
+    const byId = new Map(g.specs.map((s) => [s.id, s]));
+    expect(byId.get("module:api")).toMatchObject({
+      depth: 0,
+      parent: undefined,
+      sub: "3 files",
+      label: "api",
+      hue: 212,
+      collapseId: "module:api",
+    });
+    expect(byId.get("module:api/routes")).toMatchObject({
+      depth: 1,
+      parent: "module:api",
+      sub: "1 file",
+    });
+    expect(g.groupOf.get("file:api/routes/a.ts")).toBe("module:api/routes");
+    expect(g.groupOf.get("file:api/server.ts")).toBe("module:api");
+    expect(g.groupOf.get("module:worker")).toBeUndefined();
+    expect(groupPath(g.specs, "module:api/routes")).toEqual(["module:api", "module:api/routes"]);
+    expect(byId.get(EXTERNAL_GROUP)).toMatchObject({ kind: "external", sub: "2 packages" });
+    expect(g.groupOf.get("external:zod")).toBe(EXTERNAL_GROUP);
+  });
+
+  it("lays out boxes as compound nodes so sibling boxes never overlap", async () => {
+    const expanded = new Set([
+      "module:api",
+      "module:api/routes",
+      "module:api/services",
+      "module:worker",
+    ]);
+    const view = buildView(idx, { expanded });
+    const groups = buildGroups(idx, view, expanded, hue);
+    const radii = new Map(view.nodes.map((v) => [v.id, 18] as const));
+    const pos = await layoutView(view, radii, groups);
+    expect(pos.size).toBe(view.nodes.length);
+    const bbox = (gid: string) => {
+      const ids = view.nodes
+        .filter((v) => {
+          const path = groupPath(groups.specs, groups.groupOf.get(v.id));
+          return path.includes(gid);
+        })
+        .map((v) => pos.get(v.id)!);
+      return {
+        x0: Math.min(...ids.map((p) => p.x)),
+        x1: Math.max(...ids.map((p) => p.x)),
+        y0: Math.min(...ids.map((p) => p.y)),
+        y1: Math.max(...ids.map((p) => p.y)),
+      };
+    };
+    const a = bbox("module:api");
+    const w = bbox("module:worker");
+    const overlap = a.x0 < w.x1 && w.x0 < a.x1 && a.y0 < w.y1 && w.y0 < a.y1;
+    expect(overlap).toBe(false);
+    // folder boxes inside a service do not overlap each other either
+    const r = bbox("module:api/routes");
+    const sv = bbox("module:api/services");
+    expect(r.x0 < sv.x1 && sv.x0 < r.x1 && r.y0 < sv.y1 && sv.y0 < r.y1).toBe(false);
+  });
+});
+
+describe("loose nodes versus boxes", () => {
+  it("keeps nodes that belong to no box out of a box's region", () => {
+    const box = Array.from({ length: 6 }, (_, i) => ({
+      id: `a${i}`,
+      x: Number.NaN,
+      y: Number.NaN,
+      vx: 0,
+      vy: 0,
+      r: 18,
+      groups: ["A"],
+    }));
+    const loose = Array.from({ length: 3 }, (_, i) => ({
+      id: `f${i}`,
+      x: Number.NaN,
+      y: Number.NaN,
+      vx: 0,
+      vy: 0,
+      r: 18,
+      groups: [`free:f${i}`],
+    }));
+    // each loose node depends on box members, which would normally drag it inside
+    const links = loose.flatMap((l, i) =>
+      box.slice(i, i + 3).map((b) => ({ a: l.id, b: b.id, weight: 1 })),
+    );
+    const s = new ForceSim([...box, ...loose], links, { cluster: 0.11 });
+    s.settle(1200);
+    const cx = box.reduce((t, n) => t + n.x, 0) / box.length;
+    const cy = box.reduce((t, n) => t + n.y, 0) / box.length;
+    const radius = Math.max(...box.map((n) => Math.hypot(n.x - cx, n.y - cy) + n.r));
+    for (const l of loose) expect(Math.hypot(l.x - cx, l.y - cy)).toBeGreaterThan(radius);
+  });
+});
+
+import { boxRects } from "../app/physics.js";
+
+describe("box rectangles never overlap after settling", () => {
+  const mk = (id: string, groups: string[], r = 20): SimNode => ({
+    id,
+    x: Number.NaN,
+    y: Number.NaN,
+    vx: 0,
+    vy: 0,
+    r,
+    groups,
+  });
+  it("keeps sibling boxes and loose nodes apart even with many cross-box links", () => {
+    const ns: SimNode[] = [
+      ...Array.from({ length: 14 }, (_, i) => mk(`v${i}`, ["V"])),
+      ...Array.from({ length: 6 }, (_, i) => mk(`g${i}`, ["G"])),
+      ...Array.from({ length: 8 }, (_, i) => mk(`i${i}`, ["I"])),
+      ...Array.from({ length: 5 }, (_, i) => mk(`x${i}`, [`free:x${i}`], 30)),
+    ];
+    const links = ns.flatMap((n, i) => [
+      { a: n.id, b: ns[(i * 5 + 7) % ns.length]!.id, weight: 1 },
+      { a: n.id, b: ns[(i * 3 + 1) % ns.length]!.id, weight: 2 },
+    ]);
+    const sim = new ForceSim(ns, links, { cluster: 0.11 });
+    sim.settle(1500);
+    const rects = [...boxRects(ns).entries()].filter(([, b]) => b.parent === "");
+    expect(rects.length).toBe(8);
+    for (let i = 0; i < rects.length; i++) {
+      for (let j = i + 1; j < rects.length; j++) {
+        const a = rects[i]![1],
+          c = rects[j]![1];
+        const overlap = a.x0 < c.x1 && c.x0 < a.x1 && a.y0 < c.y1 && c.y0 < a.y1;
+        expect(overlap, `${rects[i]![0]} vs ${rects[j]![0]}`).toBe(false);
+      }
+    }
+  });
+
+  it("keeps nested boxes inside their parent and siblings apart", () => {
+    const ns = [
+      ...Array.from({ length: 4 }, (_, i) => mk(`r${i}`, ["S", "S/r"])),
+      ...Array.from({ length: 4 }, (_, i) => mk(`q${i}`, ["S", "S/q"])),
+      ...Array.from({ length: 4 }, (_, i) => mk(`w${i}`, ["W"])),
+    ];
+    new ForceSim(ns, [], { cluster: 0.11 }).settle(1500);
+    const r = boxRects(ns);
+    const [S, Sr, Sq, W] = ["S", "S\u0000S/r", "S\u0000S/q", "W"].map((k) => r.get(k)!);
+    const inside = (a: typeof S, b: typeof S) =>
+      a!.x0 >= b!.x0 && a!.y0 >= b!.y0 && a!.x1 <= b!.x1 && a!.y1 <= b!.y1;
+    expect(inside(Sr, S) && inside(Sq, S)).toBe(true);
+    expect(Sr!.x0 < Sq!.x1 && Sq!.x0 < Sr!.x1 && Sr!.y0 < Sq!.y1 && Sq!.y0 < Sr!.y1).toBe(false);
+    expect(S!.x0 < W!.x1 && W!.x0 < S!.x1 && S!.y0 < W!.y1 && W!.y0 < S!.y1).toBe(false);
+  });
+});
+
+describe("box sizing rules", () => {
+  const one = (id: string, groups: string[]): SimNode => ({
+    id,
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    r: 10,
+    groups,
+  });
+  it("never makes a box narrower than its header tab", () => {
+    const r = boxRects([one("a", ["A"])], new Map([["A", 300]])).get("A")!;
+    expect(r.x1 - r.x0).toBeGreaterThanOrEqual(300);
+    expect((r.x0 + r.x1) / 2).toBeCloseTo(0);
+  });
+  it("reserves header room for real boxes but not for loose one-node segments", () => {
+    const rects = boxRects([one("a", ["A"]), one("b", ["A", "free:b"])]);
+    const box = rects.get("A")!;
+    const loose = rects.get("A\u0000free:b")!;
+    expect(-box.y0).toBeGreaterThan(40);
+    expect(-loose.y0).toBeLessThan(20);
+  });
+});
+
+describe("nested boxes enclose children even when a child grows to fit its tab", () => {
+  it("parent contains a widened child", () => {
+    const n = (id: string, groups: string[]): SimNode => ({
+      id,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      r: 10,
+      groups,
+    });
+    const rects = boxRects(
+      [n("a", ["P", "P/c"]), n("b", ["P", "P/c"])],
+      new Map([["P\u0000P/c", 400]]),
+    );
+    const p = rects.get("P")!;
+    const c = rects.get("P\u0000P/c")!;
+    expect(c.x1 - c.x0).toBeGreaterThanOrEqual(400);
+    expect(c.x0 >= p.x0 && c.x1 <= p.x1 && c.y0 >= p.y0 && c.y1 <= p.y1).toBe(true);
+    expect(c.y0 - p.y0).toBeGreaterThanOrEqual(40);
   });
 });

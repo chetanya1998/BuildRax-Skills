@@ -33,9 +33,13 @@ The viewer is one offline HTML file with an animated, interactive graph:
   nodes stay pinned (Alt-click or _Unpin_ releases them, _Shake_ re-runs the physics). **Layered**
   gives a structured left-to-right layout. Switching, expanding and collapsing all animate: nodes
   glide to their new places and new ones burst out of their parent.
+- **Code segmentation boxes** (_segments_): every expanded service, package or folder is drawn as a
+  dotted box around its files, nested like the code (service › folder › files). External
+  dependencies and unresolved imports get their own boxes. Boxes never overlap: the layout keeps
+  them apart in both modes. Drag a box by its header to move the whole segment, click the header to
+  inspect it, or press **−** to collapse it back into one node.
 - **Color coding**: by package, kind, language or connectivity (heat), with a clickable legend that
-  focuses one color. Orb size reflects files (containers) or connections (files); package
-  _clusters_ get glowing halos; cycles pulse red.
+  focuses one color. Orb size reflects files (containers) or connections (files); cycles pulse red.
 - **Click a node** to light up everything upstream (orange) and downstream (blue) with animated
   flow along the links; the camera glides to it. A minimap and zoom controls help navigation.
 - **Code tab** shows that node's code plus the connecting lines and files on both sides.
