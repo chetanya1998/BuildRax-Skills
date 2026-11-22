@@ -161,6 +161,8 @@ export class Scene {
   private last = 0;
   private suppressClick = false;
   private minimap: HTMLCanvasElement | undefined;
+  /** Only the visible view draws to (and reacts to) the shared minimap. */
+  private active = true;
 
   constructor(
     readonly svg: SVGSVGElement,
@@ -370,6 +372,11 @@ export class Scene {
   }
 
   /** Redraw the minimap (e.g. after it was shown again). */
+  setActive(on: boolean): void {
+    this.active = on;
+    if (on) this.drawMinimap();
+  }
+
   wakeMinimap(): void {
     this.drawMinimap();
   }
@@ -377,6 +384,7 @@ export class Scene {
   attachMinimap(canvas: HTMLCanvasElement): void {
     this.minimap = canvas;
     canvas.addEventListener("pointerdown", (ev) => {
+      if (!this.active) return;
       const m = this.mapMetrics();
       if (!m) return;
       const rect = canvas.getBoundingClientRect();
@@ -1241,6 +1249,7 @@ export class Scene {
   }
 
   private drawMinimap(): void {
+    if (!this.active) return;
     const c = this.minimap;
     const m = this.mapMetrics();
     const ctx = c?.getContext("2d");

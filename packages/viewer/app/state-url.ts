@@ -12,6 +12,8 @@ export interface ViewState {
   panel: "inspector" | "code";
   /** Node view: show only this node and its upstream/downstream neighbourhood. */
   focus?: string;
+  /** Graph view (orbs, physics) or Nodes view (structured cards and routed arrows). */
+  view: "graph" | "nodes";
   /** Canvas layout: structured layers or live physics. */
   layout: "layered" | "force";
   color: "package" | "kind" | "language" | "heat";
@@ -28,6 +30,7 @@ export const DEFAULT_STATE: ViewState = {
   showUnresolved: true,
   theme: "auto",
   panel: "inspector",
+  view: "graph",
   layout: "force",
   color: "package",
   cluster: true,
@@ -60,6 +63,7 @@ export function decodeState(hash: string): ViewState {
       theme: v.theme === "light" || v.theme === "dark" ? v.theme : "auto",
       panel: v.panel === "code" ? "code" : "inspector",
       focus: typeof v.focus === "string" && v.focus ? v.focus : undefined,
+      view: v.view === "nodes" ? "nodes" : "graph",
       layout: v.layout === "layered" ? "layered" : "force",
       color:
         v.color === "kind" || v.color === "language" || v.color === "heat" ? v.color : "package",

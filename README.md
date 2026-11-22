@@ -27,7 +27,18 @@ buildrax view fixtures/sample-monorepo --open
 | `research [--online]`                   | dependency facts from npm/PyPI; plan-only unless `--online`                 |
 | `install-skill`                         | install the agent skill for Claude Code, Codex, Antigravity                 |
 
-The viewer is one offline HTML file with an animated, interactive graph:
+The viewer is one offline HTML file with two views of the same architecture (switch with the
+**Graph | Nodes** buttons or `V`; selection, panels, notes and the Code tab are shared):
+
+- **Nodes view**: a structured diagram. Rectangular cards in left-to-right layers, frames for
+  services and folders, and right-angled arrows routed around the cards. Nothing moves on its own.
+- **Graph view**: animated orbs, live physics and dotted segment boxes, for exploring.
+- **Step-by-step trace**: select a node and the Inspector's _Trace_ explains how it connects, one
+  hop at a time (what it uses, what uses it), with the file:line of each link. Arrows in the Nodes
+  view carry matching step numbers; step through with ◀ ▶ or press _Play_; filter to _Uses_ or
+  _Used by_.
+
+In the Graph view:
 
 - **Live physics layout** (default): drag any node and its neighbours follow elastically; dragged
   nodes stay pinned (Alt-click or _Unpin_ releases them, _Shake_ re-runs the physics). **Layered**
@@ -50,12 +61,14 @@ The viewer is one offline HTML file with an animated, interactive graph:
   The minimap has a close button (and a map toggle under the zoom buttons); the legend can be
   minimized. Shortcuts: `[` Overview, `]` Inspector, `M` minimap, `/` search. Your layout is
   remembered in this browser, and the graph stays where you were looking when panels change.
-- **Node view** (`F`, or _Open node view_ in the Inspector): shows only the selected node, with what
-  depends on it in columns to the left and what it depends on to the right, one column per hop.
-  The _Lineage depth_ setting limits how far it reaches; double-click a neighbour to move the
-  focus to it; `Esc` returns to the full graph. The view is kept in the shareable URL.
-- **Compact top bar**: search, the Layered/Live switch, _Fit_ and a **Menu** that holds the rest
-  (color, depth, theme, what to show, graph actions and the shortcut list).
+- **Focus** (`F`, or _Focus on this node_ in the Inspector), in either view: shows only the selected
+  node and what connects to it (in the Graph view: dependents in columns to the left, dependencies
+  to the right, one column per hop). The _Lineage depth_ setting limits how far it reaches;
+  double-click a neighbour to move the focus; `Esc` returns. Kept in the shareable URL.
+- **Compact top bar**: search, the Graph/Nodes switch, _Fit_ and a **Menu** that holds the rest
+  (color, depth, Graph layout, theme, what to show, graph actions and the shortcut list).
+
+See `docs/roadmap.md` for what comes next (infrastructure detection and the cost estimator).
 
 See `docs/privacy.md` and `docs/agents.md`.
 

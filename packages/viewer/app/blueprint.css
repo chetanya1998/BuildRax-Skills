@@ -1,0 +1,372 @@
+/* ---------- Graph | Nodes view switch ---------- */
+.stage-nodes {
+  display: none;
+}
+body.view-nodes .stage-nodes {
+  display: block;
+}
+body.view-nodes .stage-graph {
+  display: none;
+}
+.seg.small {
+  justify-self: end;
+}
+.top .seg.small button,
+.menu-panel .seg.small button {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+/* ---------- Nodes view: cards ---------- */
+.card {
+  --l: 48%;
+  --c: hsl(var(--h) var(--s) var(--l));
+  --edge: var(--c);
+  cursor: pointer;
+  outline: none;
+  transition:
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.3s;
+}
+:root[data-theme="dark"] .card {
+  --l: 62%;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .card {
+    --l: 62%;
+  }
+}
+.card.enter {
+  animation: card-in 0.45s ease-out;
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+  }
+}
+.card-bg {
+  fill: var(--panel-solid);
+  stroke: var(--line);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12));
+  transition:
+    stroke 0.2s,
+    stroke-width 0.2s;
+}
+.card-stripe {
+  fill: var(--c);
+}
+.card-icon-bg {
+  fill: var(--c);
+}
+.card-icon {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.card-title {
+  fill: var(--ink);
+  font: 600 13px var(--ui);
+  pointer-events: none;
+}
+.card-sub {
+  fill: var(--ink-soft);
+  font: 500 11px var(--ui);
+  pointer-events: none;
+}
+.card-more {
+  fill: var(--ink-soft);
+  font: 700 15px var(--ui);
+  text-anchor: end;
+}
+.card.kind-external .card-bg,
+.card.kind-unresolved .card-bg {
+  stroke-dasharray: 5 4;
+}
+.card.kind-unresolved .card-bg,
+.card.cycle .card-bg {
+  stroke: var(--warn);
+  stroke-width: 1.8;
+}
+.card.hover .card-bg,
+.card:focus-visible .card-bg {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.card.upstream .card-bg {
+  stroke: var(--up);
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--up) 55%, transparent));
+}
+.card.downstream .card-bg {
+  stroke: var(--down);
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--down) 55%, transparent));
+}
+.card.selected .card-bg {
+  stroke: var(--accent);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 12px var(--accent));
+}
+.card.dim {
+  opacity: 0.18;
+}
+
+/* ---------- Nodes view: frames (segments) ---------- */
+.frame {
+  transition: opacity 0.3s;
+}
+.frame-box {
+  fill: hsl(var(--h) 80% 55% / 0.05);
+  stroke: hsl(var(--h) 60% 50% / 0.55);
+  stroke-width: 1.3;
+}
+.frame.depth-1 .frame-box,
+.frame.depth-2 .frame-box {
+  fill: hsl(var(--h) 80% 55% / 0.06);
+  stroke-dasharray: 4 4;
+}
+.frame.kind-unresolved .frame-box {
+  stroke: var(--warn);
+}
+.frame-title {
+  fill: hsl(var(--h) 60% 42%);
+  font: 800 12px var(--ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+:root[data-theme="dark"] .frame-title {
+  fill: hsl(var(--h) 80% 72%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .frame-title {
+    fill: hsl(var(--h) 80% 72%);
+  }
+}
+.frame-sub {
+  fill: var(--ink-soft);
+  font: 500 11px var(--ui);
+}
+.frame-collapse {
+  cursor: pointer;
+}
+.frame-collapse rect {
+  fill: transparent;
+  stroke: hsl(var(--h) 60% 50% / 0.6);
+}
+.frame-collapse:hover rect {
+  fill: hsl(var(--h) 80% 55% / 0.15);
+}
+.frame-collapse path {
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.frame.dim {
+  opacity: 0.3;
+}
+
+/* ---------- Nodes view: routed arrows ---------- */
+.bp-edge {
+  --stroke: color-mix(in srgb, var(--ink) 42%, transparent);
+}
+.bp-edge .line {
+  fill: none;
+  stroke: var(--stroke);
+  stroke-width: var(--w, 1.3);
+  stroke-linejoin: round;
+  transition:
+    opacity 0.3s,
+    stroke 0.2s;
+}
+.bp-edge .arrow {
+  fill: var(--stroke);
+  transition: opacity 0.3s;
+}
+.bp-edge .hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+  cursor: pointer;
+}
+.bp-count {
+  fill: var(--ink-soft);
+  font: 600 10px var(--ui);
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 3px;
+}
+.bp-edge.cycle {
+  --stroke: var(--warn);
+}
+.bp-edge.hot {
+  --stroke: var(--accent);
+}
+.bp-edge.downstream {
+  --stroke: var(--down);
+}
+.bp-edge.upstream {
+  --stroke: var(--up);
+}
+.bp-edge.downstream .line,
+.bp-edge.upstream .line {
+  stroke-width: calc(var(--w, 1.3) + 1.2px);
+  stroke-dasharray: 10 6;
+  animation: flow 0.9s linear infinite;
+}
+.bp-edge.selected .line {
+  stroke: var(--accent);
+  stroke-width: calc(var(--w, 1.3) + 1.6px);
+}
+.bp-edge.dim > .line,
+.bp-edge.dim > .arrow,
+.bp-edge.dim > .bp-count {
+  opacity: 0.07;
+}
+.arrive {
+  animation: bp-arrive 0.5s 0.35s ease-out backwards;
+}
+@keyframes bp-arrive {
+  from {
+    opacity: 0;
+  }
+}
+
+/* numbered step badges */
+.bp-step circle {
+  fill: var(--down);
+  stroke: var(--panel-solid);
+  stroke-width: 2;
+}
+.bp-step.upstream circle {
+  fill: var(--up);
+}
+.bp-step text {
+  fill: #fff;
+  font: 800 11px var(--ui);
+  text-anchor: middle;
+  pointer-events: none;
+}
+.bp-step {
+  animation: step-pop 0.35s ease-out;
+}
+@keyframes step-pop {
+  from {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+
+/* ---------- Trace panel ---------- */
+.trace-dir {
+  display: inline-flex;
+  margin: 2px 0 8px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.trace-dir button {
+  padding: 3px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+}
+.trace-dir button[aria-checked="true"] {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+.trace-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.trace-pos {
+  min-width: 82px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  text-align: center;
+}
+.trace-nav {
+  width: 28px;
+  padding: 3px 0;
+}
+.trace-play {
+  margin-left: auto;
+}
+.trace-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.trace-step {
+  margin: 6px 0;
+  padding: 6px 8px;
+  border-left: 3px solid var(--down);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--down) 6%, transparent);
+  transition: opacity 0.25s;
+}
+.trace-step.upstream {
+  border-left-color: var(--up);
+  background: color-mix(in srgb, var(--up) 6%, transparent);
+}
+.trace-step.current {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.trace-step.future {
+  opacity: 0.4;
+}
+.trace-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+.trace-num {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--down);
+  font-size: 11px;
+  font-weight: 800;
+}
+.trace-step.upstream .trace-num {
+  background: var(--up);
+}
+.trace-step ul {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.trace-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 4px;
+  width: 100%;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.trace-link:hover {
+  color: var(--accent);
+}
+.trace-link code {
+  flex-basis: 100%;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+.trace-arrow {
+  color: var(--ink-soft);
+}

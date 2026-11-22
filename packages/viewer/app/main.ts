@@ -2,6 +2,7 @@ import "./theme.css";
 import "./scene.css";
 import "./panels.css";
 import "./toolbar.css";
+import "./blueprint.css";
 import {
   GraphIndex,
   buildView,
@@ -31,9 +32,13 @@ import {
   swatchFor,
   type ColorMode,
 } from "./palette.js";
+import { Blueprint } from "./blueprint.js";
+import { blueprintLayout } from "./blueprint-layout.js";
 import { focusView, nodeViewLayout } from "./node-view.js";
+import { buildTrace, limitLineage, stepNumbers, type TraceDirection } from "./trace.js";
+import { renderTraceSection } from "./trace-ui.js";
 import { iconButton, Panels } from "./panels.js";
-import { Scene, type NodeStyle } from "./scene.js";
+import { Scene, type NodeStyle, type Selection } from "./scene.js";
 import { decodeState, encodeState, type ViewState } from "./state-url.js";
 
 const root = document.getElementById("app")!;
@@ -139,6 +144,12 @@ function start(model: Model): void {
   let view: GraphView = { nodes: [], edges: [] };
   let seq = 0;
   let focusKey: string | undefined;
+  // Step-by-step trace of the selected node (reset whenever the selection changes).
+  const trace = { for: "", direction: "both" as TraceDirection, step: 0, playing: false, timer: 0 };
+  const stopTrace = (): void => {
+    window.clearInterval(trace.timer);
+    trace.playing = false;
+  };
 
   const cycles = fileCycles(index);
   const cyclesFor = (id: string): string[][] => {
@@ -147,20 +158,34 @@ function start(model: Model): void {
   };
 
   // ---- DOM skeleton ----
-  const svg = s("svg", { class: "stage", role: "application", "aria-label": "Architecture graph" });
-  const scene = new Scene(svg, {
-    select: (sel) => {
+  const svg = s("svg", {
+    class: "stage stage-graph",
+    role: "application",
+    "aria-label": "Architecture graph",
+  });
+  const bpSvg = s("svg", {
+    class: "stage stage-nodes",
+    role: "application",
+    "aria-label": "Architecture nodes",
+  });
+  // Both views share the same handlers, so selection, focus and collapse behave identically.
+  const viewEvents = {
+    select: (sel: Selection | undefined): void => {
       state.selected = sel;
       paint();
       writeHash();
     },
-    // Double-click: in node view it moves the focus; otherwise it expands packages and folders.
-    activate: (id, expandable) => {
+    // Double-click: in focus it moves the focus; otherwise it expands packages and folders.
+    activate: (id: string, expandable: boolean): void => {
       if (state.focus) void setFocus(id);
       else if (expandable) void expand(id);
     },
-    collapse: (id) => void collapse(id),
-  });
+    collapse: (id: string): void => void collapse(id),
+  };
+  const scene = new Scene(svg, viewEvents);
+  const blueprint = new Blueprint(bpSvg, viewEvents);
+  /** The renderer of the view on screen, for camera actions shared by both views. */
+  const active = (): Scene | Blueprint => (state.view === "nodes" ? blueprint : scene);
 
   const searchInput = h("input", {
     type: "search",
@@ -187,6 +212,16 @@ function start(model: Model): void {
   const extBox = h("input", { type: "checkbox" });
   const unrBox = h("input", { type: "checkbox" });
   const themeBtn = h("button", { type: "button" }, "Theme");
+  const segGraph = h(
+    "button",
+    { type: "button", role: "radio", title: "Orbs, live physics and segment boxes (V)" },
+    "Graph",
+  );
+  const segNodes = h(
+    "button",
+    { type: "button", role: "radio", title: "Structured cards with routed arrows (V)" },
+    "Nodes",
+  );
   const fitBtn = h("button", { type: "button" }, "Fit");
   const shakeBtn = h(
     "button",
@@ -240,11 +275,13 @@ function start(model: Model): void {
   const statsBox = h("div", { class: "stats" });
   const minimap = h("canvas", { class: "minimap", width: 168, height: 112, "aria-hidden": "true" });
   scene.attachMinimap(minimap);
+  blueprint.attachMinimap(minimap);
   const minimapWrap = h("div", { class: "minimap-wrap" }, minimap);
   const canvas = h(
     "main",
     { class: "canvas" },
     svg,
+    bpSvg,
     legendBox,
     statsBox,
     minimapWrap,
@@ -257,7 +294,7 @@ function start(model: Model): void {
           { type: "button", "aria-label": t === "+" ? "Zoom in" : "Zoom out" },
           t,
         );
-        b.addEventListener("click", () => scene.zoomBy(t === "+" ? 1.25 : 0.8));
+        b.addEventListener("click", () => active().zoomBy(t === "+" ? 1.25 : 0.8));
         return b;
       }),
     ),
@@ -278,6 +315,17 @@ function start(model: Model): void {
       "Display",
       field("Color by", colorSel),
       field("Lineage depth", depthSel),
+      h(
+        "label",
+        { class: "menu-field graph-only" },
+        h("span", null, "Graph layout"),
+        h(
+          "div",
+          { class: "seg small", role: "radiogroup", "aria-label": "Graph layout" },
+          segLayered,
+          segForce,
+        ),
+      ),
       field("Theme", themeBtn),
     ),
     menuSection(
@@ -295,7 +343,8 @@ function start(model: Model): void {
         { class: "shortcuts" },
         ...[
           ["/", "Search"],
-          ["F", "Node view of the selection"],
+          ["V", "Switch Graph / Nodes view"],
+          ["F", "Focus on the selection"],
           ["[  ]", "Overview / Inspector panel"],
           ["M", "Minimap"],
           ["Esc", "Close / clear selection"],
@@ -327,13 +376,13 @@ function start(model: Model): void {
   const focusDepth = h("span", { class: "muted" }, "");
   const focusExit = h(
     "button",
-    { type: "button", class: "focus-exit", "aria-label": "Exit node view" },
+    { type: "button", class: "focus-exit", "aria-label": "Exit focus" },
     "Exit",
   );
   const focusPill = h(
     "div",
     { class: "focus-pill", role: "status", hidden: "" },
-    h("span", { class: "focus-label" }, "Node view"),
+    h("span", { class: "focus-label" }, "Focus"),
     focusName,
     focusDepth,
     focusExit,
@@ -345,7 +394,12 @@ function start(model: Model): void {
       { class: "top" },
       h("h1", null, h("span", { class: "logo" }), "BUILDRAX"),
       h("div", { class: "search" }, searchInput, results),
-      h("div", { class: "seg", role: "radiogroup", "aria-label": "Layout" }, segLayered, segForce),
+      h(
+        "div",
+        { class: "seg view-seg", role: "radiogroup", "aria-label": "View" },
+        segGraph,
+        segNodes,
+      ),
       focusPill,
       h("div", { class: "top-right" }, fitBtn, menuWrap),
     ),
@@ -366,7 +420,7 @@ function start(model: Model): void {
       minimapWrap,
       legend: legendBox,
     },
-    () => scene.wakeMinimap(),
+    () => active().wakeMinimap(),
   );
   canvas.querySelector(".zoom")?.append(panels.minimapToggle);
 
@@ -396,7 +450,24 @@ function start(model: Model): void {
       sel?.type === "node" && view.nodes.some((n) => n.id === sel.id)
         ? computeLineage(view, sel.id, state.depth)
         : undefined;
-    scene.setHighlight({ selected: sel, lineage, focusKey });
+    if ((sel?.type === "node" ? sel.id : "") !== trace.for) {
+      stopTrace();
+      trace.for = sel?.type === "node" ? sel.id : "";
+      trace.step = 0;
+    }
+    const steps = lineage ? buildTrace(view, lineage, trace.direction) : [];
+    const maxStep = steps.reduce((m, st) => Math.max(m, st.n), 0);
+    if (trace.step > maxStep) trace.step = 0;
+    // Highlight only the direction and steps the user is looking at.
+    const shown = lineage ? limitLineage(lineage, trace.direction, trace.step) : undefined;
+    const visibleSteps = steps.filter((st) => trace.step === 0 || st.n <= trace.step);
+    scene.setHighlight({ selected: sel, lineage: shown, focusKey });
+    blueprint.setHighlight({
+      selected: sel,
+      lineage: shown,
+      focusKey,
+      steps: stepNumbers(visibleSteps),
+    });
     renderInspector(inspectorBox, {
       index,
       view,
@@ -409,9 +480,54 @@ function start(model: Model): void {
       focusId: state.focus,
       cyclesFor,
     });
+    if (sel?.type === "node" && lineage) {
+      put(
+        inspectorBox,
+        renderTraceSection({
+          steps,
+          step: trace.step,
+          direction: trace.direction,
+          playing: trace.playing,
+          nameOf: (id) => index.node(id)?.name ?? id,
+          onDirection: (d) => {
+            trace.direction = d;
+            trace.step = 0;
+            paint();
+          },
+          onStep: (n) => {
+            stopTrace();
+            trace.step = n;
+            paint();
+          },
+          onPlay: () => {
+            if (trace.playing) {
+              stopTrace();
+              return paint();
+            }
+            trace.playing = true;
+            trace.step = 1;
+            paint();
+            trace.timer = window.setInterval(() => {
+              if (trace.step >= maxStep) {
+                stopTrace();
+                trace.step = 0;
+              } else trace.step++;
+              paint();
+            }, 1400);
+          },
+          onPick: (link, st) => {
+            stopTrace();
+            trace.step = st.n;
+            paint();
+            active().centerOn(st.direction === "downstream" ? link.to : link.from, true);
+          },
+        }),
+      );
+    }
     if (sel?.type === "node") put(inspectorBox, renderResearchSection(research, index, sel.id));
     if (sel) put(inspectorBox, renderNotesSection({ type: sel.type, id: sel.id }, store, index));
     scene.setBadges(nodeBadges(store.list(), index), edgeBadges(store.list()));
+    blueprint.setBadges(nodeBadges(store.list(), index));
     renderNotesPanel(notesBox, {
       store,
       model,
@@ -541,7 +657,15 @@ function start(model: Model): void {
       h(
         "span",
         null,
-        state.focus ? "node view" : state.layout === "force" ? "live physics" : "layered",
+        state.view === "nodes"
+          ? state.focus
+            ? "nodes · focus"
+            : "nodes"
+          : state.focus
+            ? "graph · focus"
+            : state.layout === "force"
+              ? "live physics"
+              : "layered",
       ),
     );
   };
@@ -559,39 +683,70 @@ function start(model: Model): void {
       : { specs: [], groupOf: new Map() };
     const style = styleFor(view, state.color);
     const radii = new Map([...style].map(([id, st]) => [id, st.r] as const));
-    const positions = focusLineage
-      ? nodeViewLayout(view, focusLineage, radii)
-      : await layoutView(view, radii, boxes ? groups : undefined);
+    const nodesView = state.view === "nodes";
+    // Nodes view: structured cards in frames with routed arrows. Graph view: orbs and physics.
+    const blueprintL = nodesView
+      ? await blueprintLayout(view, boxes ? groups : undefined)
+      : undefined;
+    const positions = nodesView
+      ? new Map()
+      : focusLineage
+        ? nodeViewLayout(view, focusLineage, radii)
+        : await layoutView(view, radii, boxes ? groups : undefined);
     if (my !== seq) return;
     syncFocus();
+    syncView();
     if (state.selected?.type === "node" && !view.nodes.some((n) => n.id === state.selected!.id))
       state.selected = undefined;
-    scene.setMotion(state.motion);
-    scene.setGraph(
-      {
-        view,
-        mode: focusLineage ? "layered" : state.layout,
-        positions,
-        style,
-        ancestors: (id) => index.ancestors(id),
-        groups: groups.specs,
-        cluster: boxes,
-      },
-      { fit: opts.fit },
-    );
+    if (blueprintL) {
+      blueprint.setGraph(
+        { view, layout: blueprintL, style, groups: groups.specs },
+        { fit: opts.fit },
+      );
+    } else {
+      scene.setMotion(state.motion);
+      scene.setGraph(
+        {
+          view,
+          mode: focusLineage ? "layered" : state.layout,
+          positions,
+          style,
+          ancestors: (id) => index.ancestors(id),
+          groups: groups.specs,
+          cluster: boxes,
+        },
+        { fit: opts.fit },
+      );
+    }
     paint();
     renderLegend();
     if (opts.center) {
       const id = opts.center;
-      if (state.layout === "layered") scene.centerOn(id, true);
+      if (nodesView || state.layout === "layered") active().centerOn(id, true);
       else setTimeout(() => scene.centerOn(id, true), 500);
     }
     writeHash();
   }
 
+  /** Show the canvas of the current view; only it draws the minimap. */
+  function syncView(): void {
+    const nodes = state.view === "nodes";
+    document.body.classList.toggle("view-nodes", nodes);
+    scene.setActive(!nodes);
+    blueprint.setActive(nodes);
+    segGraph.setAttribute("aria-checked", String(!nodes));
+    segNodes.setAttribute("aria-checked", String(nodes));
+  }
+  function setView(v: ViewState["view"]): void {
+    if (state.view === v) return;
+    state.view = v;
+    void refresh({ fit: true });
+  }
+
   const restyle = (): void => {
     const style = styleFor(view, state.color);
     scene.restyle(style);
+    blueprint.restyle(style);
     renderLegend();
     writeHash();
   };
@@ -610,7 +765,7 @@ function start(model: Model): void {
     syncControls();
     await refresh({ center: id });
   }
-  /** Enter node view on a node (or re-centre it on another node while already in it). */
+  /** Focus on a node: only it and its neighbourhood (or move the focus while already focused). */
   async function setFocus(id: string): Promise<void> {
     ensureVisible(id);
     state.focus = id;
@@ -627,7 +782,7 @@ function start(model: Model): void {
   function syncFocus(): void {
     const on = !!state.focus;
     focusPill.hidden = !on;
-    document.body.classList.toggle("node-view", on);
+    document.body.classList.toggle("focus-mode", on);
     if (on) {
       focusName.textContent = index.node(state.focus!)?.name ?? state.focus!;
       focusDepth.textContent =
@@ -730,6 +885,8 @@ function start(model: Model): void {
       if (ev.key === "[") panels.toggle("left");
       else if (ev.key === "]") panels.toggle("right");
       else if (ev.key === "m" || ev.key === "M") panels.setMinimap(!panels.prefs.minimap);
+      else if (ev.key === "v" || ev.key === "V")
+        setView(state.view === "nodes" ? "graph" : "nodes");
     }
   });
   searchInput.addEventListener("input", () => {
@@ -774,7 +931,9 @@ function start(model: Model): void {
     state.selected = undefined;
     void refresh({ fit: true });
   });
-  fitBtn.addEventListener("click", () => scene.fit(true));
+  fitBtn.addEventListener("click", () => active().fit(true));
+  segGraph.addEventListener("click", () => setView("graph"));
+  segNodes.addEventListener("click", () => setView("nodes"));
   shakeBtn.addEventListener("click", () => scene.reheat());
   unpinBtn.addEventListener("click", () => scene.unpinAll());
   segLayered.addEventListener("click", () => setLayout("layered"));

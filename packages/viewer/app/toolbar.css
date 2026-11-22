@@ -166,8 +166,9 @@ kbd {
   padding: 2px 10px;
   border-radius: 999px;
 }
-body.node-view .seg,
-body.node-view .live-only {
+body.focus-mode .live-only,
+body.view-nodes .live-only,
+body.view-nodes .graph-only {
   display: none;
 }
 .actions button.primary {

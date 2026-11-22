@@ -130,7 +130,7 @@ export function renderInspector(root: HTMLElement, ctx: InspectorCtx): void {
   const focusBtn = h(
     "button",
     { type: "button", class: "primary", title: "Show only this node and what connects to it (F)" },
-    inFocus ? "Exit node view" : "Open node view",
+    inFocus ? "Exit focus" : "Focus on this node",
   );
   focusBtn.addEventListener("click", () => ctx.onFocus(sel.id));
   actions.append(focusBtn);

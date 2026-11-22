@@ -1121,3 +1121,198 @@ describe("node view", () => {
     expect(decodeState(`#${encodeState(DEFAULT_STATE)}`).focus).toBeUndefined();
   });
 });
+
+import { buildTrace, limitLineage, stepNumbers } from "../app/trace.js";
+
+describe("step-by-step trace", () => {
+  const ve = (from: string, to: string) => ({
+    id: `${from}=>${to}`,
+    from,
+    to,
+    count: 1,
+    kinds: ["imports" as const],
+    evidence: [{ kind: "verified" as const, file: `${from}.ts`, startLine: 3 }],
+    inCycle: false,
+  });
+  const vn = (id: string) => ({
+    id,
+    kind: "file" as const,
+    name: id,
+    expandable: false,
+    fileCount: 0,
+    inCycle: false,
+  });
+  // up2 -> up1 -> S -> d1 -> d2 ; S -> d1b ; d2 -> S (cycle back-edge) ; z isolated
+  const view = {
+    nodes: ["up2", "up1", "S", "d1", "d1b", "d2", "z"].map(vn),
+    edges: [
+      ve("up2", "up1"),
+      ve("up1", "S"),
+      ve("S", "d1"),
+      ve("S", "d1b"),
+      ve("d1", "d2"),
+      ve("d2", "S"),
+    ],
+  };
+
+  it("orders steps by hop, downstream first, with evidence", () => {
+    const steps = buildTrace(view, computeLineage(view, "S", 0));
+    expect(
+      steps.map((s) => `${s.direction[0]}${s.n}:${s.links.map((l) => l.edgeId).join(",")}`),
+      // d2 -> S closes a cycle: d2 already appears as a downstream step, so it is not repeated.
+    ).toEqual(["d1:S=>d1,S=>d1b", "d2:d1=>d2", "u1:up1=>S", "u2:up2=>up1"]);
+    expect(steps[0]!.links[0]!.evidence).toEqual({ kind: "verified", file: "S.ts", startLine: 3 });
+  });
+
+  it("filters by direction and is deterministic", () => {
+    const l = computeLineage(view, "S", 0);
+    expect(buildTrace(view, l, "upstream").every((s) => s.direction === "upstream")).toBe(true);
+    expect(JSON.stringify(buildTrace(view, l))).toBe(JSON.stringify(buildTrace(view, l)));
+  });
+
+  it("limits the highlighted lineage to the steps played so far", () => {
+    const l = computeLineage(view, "S", 0);
+    const one = limitLineage(l, "both", 1);
+    expect([...one.roles.keys()].sort()).toEqual(["S", "d1", "d1b", "up1"]);
+    expect(one.edges.has("d1=>d2")).toBe(false);
+    const down = limitLineage(l, "downstream", 0);
+    expect(down.roles.has("up1")).toBe(false);
+    expect(down.roles.has("d2")).toBe(true);
+  });
+
+  it("numbers each traced arrow with its hop", () => {
+    const nums = stepNumbers(buildTrace(view, computeLineage(view, "S", 0)));
+    expect(nums.get("S=>d1")).toEqual({ n: 1, direction: "downstream" });
+    expect(nums.get("up2=>up1")).toEqual({ n: 2, direction: "upstream" });
+  });
+});
+
+import { blueprintLayout, CARD_H } from "../app/blueprint-layout.js";
+
+describe("node view (blueprint) layout", () => {
+  const ev = [{ kind: "verified" as const }];
+  const n = (
+    id: string,
+    kind: "project" | "module" | "file" | "external",
+    parent?: string,
+    extra: object = {},
+  ) => ({ id, kind, name: id.split(/[:/]/).pop()!, parent, evidence: ev, ...extra });
+  const idx = new GraphIndex({
+    schemaVersion: "buildrax-ir/v1",
+    meta: {
+      repo: "r",
+      scannedAt: "t",
+      generator: { name: "buildrax", version: "0" },
+      languages: [],
+    },
+    nodes: [
+      n("project:r", "project"),
+      n("module:api", "module", "project:r", { meta: { package: true } }),
+      n("module:api/routes", "module", "module:api"),
+      n("file:api/server.ts", "file", "module:api"),
+      n("file:api/routes/a.ts", "file", "module:api/routes"),
+      n("file:api/routes/b.ts", "file", "module:api/routes"),
+      n("module:worker", "module", "project:r", { meta: { package: true } }),
+      n("file:worker/w.ts", "file", "module:worker"),
+      n("external:zod", "external", "project:r"),
+      n("external:pg", "external", "project:r"),
+    ],
+    edges: [
+      {
+        id: "1",
+        from: "file:api/server.ts",
+        to: "file:api/routes/a.ts",
+        kind: "imports",
+        evidence: ev,
+      },
+      {
+        id: "2",
+        from: "file:api/routes/a.ts",
+        to: "file:api/routes/b.ts",
+        kind: "imports",
+        evidence: ev,
+      },
+      {
+        id: "3",
+        from: "file:api/routes/b.ts",
+        to: "file:worker/w.ts",
+        kind: "imports",
+        evidence: ev,
+      },
+      { id: "4", from: "file:worker/w.ts", to: "external:zod", kind: "depends-on", evidence: ev },
+      { id: "5", from: "file:api/server.ts", to: "external:pg", kind: "depends-on", evidence: ev },
+    ],
+  });
+  const expanded = new Set(["module:api", "module:api/routes", "module:worker"]);
+  const view = buildView(idx, { expanded });
+  const groups = buildGroups(idx, view, expanded, () => 212);
+  const onEdge = (p: { x: number; y: number }, b: { x: number; y: number; w: number; h: number }) =>
+    p.x >= b.x - 1.5 && p.x <= b.x + b.w + 1.5 && p.y >= b.y - 1.5 && p.y <= b.y + b.h + 1.5;
+
+  it("routes every arrow from its source card to its target card, inside and across frames", async () => {
+    const L = await blueprintLayout(view, groups);
+    expect(L.cards.size).toBe(view.nodes.length);
+    for (const e of view.edges) {
+      const r = L.routes.get(e.id)!;
+      expect(r, e.id).toBeTruthy();
+      expect(onEdge(r[0]!, L.cards.get(e.from)!), `${e.id} start`).toBe(true);
+      expect(onEdge(r[r.length - 1]!, L.cards.get(e.to)!), `${e.id} end`).toBe(true);
+      // orthogonal: every segment is horizontal or vertical
+      for (let i = 1; i < r.length; i++)
+        expect(Math.abs(r[i]!.x - r[i - 1]!.x) < 0.5 || Math.abs(r[i]!.y - r[i - 1]!.y) < 0.5).toBe(
+          true,
+        );
+    }
+  });
+
+  it("puts cards inside their frames, nested frames inside parents, and sibling frames apart", async () => {
+    const L = await blueprintLayout(view, groups);
+    const inside = (a: { x: number; y: number; w: number; h: number }, b: typeof a) =>
+      a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h;
+    expect(inside(L.cards.get("file:api/routes/a.ts")!, L.frames.get("module:api/routes")!)).toBe(
+      true,
+    );
+    expect(inside(L.frames.get("module:api/routes")!, L.frames.get("module:api")!)).toBe(true);
+    const a = L.frames.get("module:api")!,
+      w = L.frames.get("module:worker")!;
+    expect(a.x < w.x + w.w && w.x < a.x + a.w && a.y < w.y + w.h && w.y < a.y + a.h).toBe(false);
+    expect(L.cards.get("file:api/server.ts")!.h).toBe(CARD_H);
+  });
+});
+
+import { frameMinWidth } from "../app/blueprint-layout.js";
+
+describe("node view frames fit their headers", () => {
+  it("never makes a frame narrower than its title and caption", async () => {
+    const ev = [{ kind: "verified" as const }];
+    const mk = (id: string, kind: "project" | "external", parent?: string) => ({
+      id,
+      kind,
+      name: id.split(":").pop()!,
+      parent,
+      evidence: ev,
+    });
+    const idx = new GraphIndex({
+      schemaVersion: "buildrax-ir/v1",
+      meta: {
+        repo: "r",
+        scannedAt: "t",
+        generator: { name: "buildrax", version: "0" },
+        languages: [],
+      },
+      nodes: [
+        mk("project:r", "project"),
+        mk("external:a", "external", "project:r"),
+        mk("external:b", "external", "project:r"),
+      ],
+      edges: [],
+    });
+    const view = buildView(idx, { expanded: new Set() });
+    const groups = buildGroups(idx, view, new Set(), () => 36);
+    const L = await blueprintLayout(view, groups);
+    const spec = groups.specs[0]!;
+    expect(L.frames.get(spec.id)!.w).toBeGreaterThanOrEqual(
+      frameMinWidth(spec.label, spec.sub, false) - 1,
+    );
+  });
+});
