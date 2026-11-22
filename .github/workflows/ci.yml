@@ -1,8 +1,10 @@
 name: CI
 on:
+  # Every branch is checked on push (feature branches included), plus pull requests and manual runs.
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
