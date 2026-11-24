@@ -82,6 +82,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  overflow-x: clip;
 }
 img {
   max-width: 100%;
@@ -513,7 +514,7 @@ body.scrolled .nav {
 }
 .scan-body {
   display: grid;
-  grid-template-columns: 168px 1fr;
+  grid-template-columns: 168px minmax(0, 1fr);
   min-height: 340px;
 }
 .files {
@@ -663,7 +664,7 @@ body.scrolled .nav {
 /* stats */
 .stats {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   margin-top: 72px;
@@ -792,7 +793,7 @@ section {
 /* tour (GIFs) */
 .tour-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border-top: 1px solid var(--line);
 }
 .tt {
@@ -1292,7 +1293,7 @@ section {
 }
 .stories {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
 }
 .story {
@@ -1404,7 +1405,7 @@ section {
 /* principles */
 .princ {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-top: 1px solid var(--line);
 }
 .pr {
@@ -1451,7 +1452,7 @@ section {
 /* quick start */
 .steps {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 .step {
@@ -1539,14 +1540,14 @@ footer {
   .hero-grid,
   .split,
   .sec-head {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 40px;
   }
   .sticky {
     position: static;
   }
   .stats {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .stat:nth-child(4) {
     border-left: 0;
@@ -1559,7 +1560,7 @@ footer {
     border-top: 0;
   }
   .explorer {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .ex-graph {
     border-right: 0;
@@ -1602,13 +1603,13 @@ footer {
     padding-top: calc(var(--nav) + 40px);
   }
   .scan-body {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .files {
     display: none;
   }
   .stats {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   .stat,
   .stat:first-child {
@@ -1627,7 +1628,7 @@ footer {
     padding-left: 14px;
   }
   .tour-tabs {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   .tt:nth-child(3) {
     padding-left: 0;
@@ -1640,7 +1641,7 @@ footer {
     display: none;
   }
   .row {
-    grid-template-columns: 32px 1fr;
+    grid-template-columns: 32px minmax(0, 1fr);
     gap: 6px 14px;
   }
   .row .a {
@@ -1649,7 +1650,7 @@ footer {
   .stories,
   .steps,
   .princ {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .pr,
   .pr + .pr {
@@ -1727,4 +1728,29 @@ h2 {
   font-size: 0.72rem;
   color: var(--accent);
   background: rgba(var(--accent-rgb), 0.1);
+}
+
+/* ── mobile stability ──────────────────────────────────────
+   Long commands must scroll inside their pill, never widen the page.
+   Phone browsers grow the layout viewport to fit wide content, which
+   made the whole page pan sideways. */
+html {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+.pill-cmd {
+  min-width: 0;
+}
+.pill-cmd code {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.story,
+.step,
+.stage-foot,
+.ex-side {
+  min-width: 0;
+}
+.stage-foot .pill-cmd {
+  max-width: 100%;
 }
