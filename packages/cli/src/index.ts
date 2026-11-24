@@ -10,6 +10,7 @@ import { formatPlan, formatResearch, researchCommand, researchPlan } from "./com
 import { startServer } from "./commands/serve.js";
 import { diffCommand, formatDiff, formatDiffMarkdown } from "./commands/diff.js";
 import { formatRescan, watchRepo } from "./commands/watch.js";
+import { flowCommand, formatFlows, formatRoutes, routesCommand } from "./commands/flows.js";
 import { openFile, viewCommand } from "./commands/view.js";
 import { createInterface } from "node:readline/promises";
 import { credentialStatus } from "@buildrax/pricing";
@@ -40,6 +41,7 @@ export { notesCommand, formatNotes } from "./commands/notes.js";
 export { startServer } from "./commands/serve.js";
 export { diffCommand, formatDiff, formatDiffMarkdown, scanAtRef } from "./commands/diff.js";
 export { watchRepo, formatRescan } from "./commands/watch.js";
+export { flowCommand, formatFlows, formatRoutes, routesCommand } from "./commands/flows.js";
 export type { RescanEvent, Watcher } from "./commands/watch.js";
 export { traceModel, traceCommand, formatTrace, resolveTarget } from "./commands/trace.js";
 export { formatPlan, researchCommand, researchPlan } from "./commands/research.js";
@@ -274,6 +276,31 @@ export function buildProgram(): Command {
         }
       },
     );
+
+  program
+    .command("routes")
+    .argument("[path]", "repository containing .buildrax/model.json", ".")
+    .option("--reaching <component>", "only endpoints whose flow reaches it (e.g. a database)")
+    .option("--json", "print as JSON")
+    .description("list the endpoints the scan found (API routes and pages)")
+    .action(async (repo: string, opts: { json?: boolean; reaching?: string }) => {
+      const routes = await routesCommand(repo, { reaching: opts.reaching });
+      console.log(opts.json ? JSON.stringify(routes, null, 2) : formatRoutes(routes));
+    });
+
+  program
+    .command("flow")
+    .argument("<endpoint>", '"METHOD /path", a path (all methods) or a route id')
+    .argument("[path]", "repository containing .buildrax/model.json", ".")
+    .option("--depth <n>", "how many hops to follow from the handler's file", "6")
+    .option("--json", "print as JSON")
+    .description("follow an endpoint to the code, services, queues and databases it can reach")
+    .action(async (endpoint: string, repo: string, opts: { depth: string; json?: boolean }) => {
+      const { flows } = await flowCommand(repo, endpoint, { depth: Number(opts.depth) });
+      console.log(
+        opts.json ? JSON.stringify(flows, null, 2) : await formatFlows(repo, flows, endpoint),
+      );
+    });
 
   program
     .command("trace")

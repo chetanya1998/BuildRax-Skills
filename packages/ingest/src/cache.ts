@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { Lang } from "./languages.js";
 import type { RawImport } from "./parser.js";
+import type { FileFacts } from "./routes/facts.js";
 
 /**
  * Per-file parse cache for incremental scans. Parsing is the expensive step; everything after it
@@ -17,6 +18,7 @@ export interface ParseEntry {
   lang: Lang;
   lines: number;
   imports: RawImport[];
+  facts: FileFacts;
 }
 
 interface CacheFile {
@@ -58,7 +60,7 @@ export class ParseCache {
   /** Cached parse for this exact content, if any. */
   get(rel: string, hash: string, lang: Lang): ParseEntry | undefined {
     const e = this.prev[rel];
-    if (e && e.hash === hash && e.lang === lang && Array.isArray(e.imports)) {
+    if (e && e.hash === hash && e.lang === lang && Array.isArray(e.imports) && e.facts) {
       this.hits++;
       this.next[rel] = e;
       return e;

@@ -151,8 +151,9 @@ because scanning is fast and deterministic. Committing remains possible for team
 
 ### API and data-flow views (IR v3)
 
-1. Routes per framework → `route:<METHOD> <path>` nodes linked to their handlers; unknown or
-   computed paths are `unresolved`.
+1. Routes per framework: **done** (Next.js app/pages, Express, Fastify, Hono, Koa, NestJS,
+   FastAPI, Flask; prefixes followed across files; tsconfig `paths` resolved), plus
+   `buildrax routes` and a file-level `buildrax flow`. Next: Django `urls.py`, tRPC, server actions.
 2. Data and messaging steps: ORM and client calls classified as `reads` / `writes` to detected
    databases; BullMQ, Celery, SQS, Kafka and RabbitMQ as `publishes` / `consumes` with the queue
    name when it is a literal; HTTP calls to the project's own routes.

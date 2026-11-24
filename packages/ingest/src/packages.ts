@@ -10,6 +10,8 @@ export interface PackageInfo {
   /** Package name from the manifest, when readable. */
   name?: string;
   ecosystem: "npm" | "python";
+  /** Declared dependency names (package.json dependencies, dev and peer). */
+  deps?: string[];
 }
 
 /** Detect package roots from manifests only (package.json, pyproject.toml). Nothing is executed. */
@@ -23,18 +25,31 @@ export async function detectPackages(
     if (base !== "package.json" && base !== "pyproject.toml") continue;
     const dir = posix.dirname(f) === "." ? "" : posix.dirname(f);
     let name: string | undefined;
+    let deps: string[] | undefined;
     try {
       const text = await fs.readFile(path.join(root, f), "utf8");
       if (base === "package.json") {
-        const n = (JSON.parse(text) as { name?: unknown }).name;
-        if (typeof n === "string") name = n;
+        const j = JSON.parse(text) as Record<string, unknown>;
+        if (typeof j.name === "string") name = j.name;
+        const names = new Set<string>();
+        for (const k of ["dependencies", "devDependencies", "peerDependencies"]) {
+          const d = j[k];
+          if (d && typeof d === "object") for (const n of Object.keys(d)) names.add(n);
+        }
+        deps = [...names].sort();
       } else {
         name = /^\s*name\s*=\s*["']([^"']+)["']/m.exec(text)?.[1];
       }
     } catch {
       /* unreadable or invalid manifest: keep going without a name */
     }
-    out.push({ dir, manifest: f, name, ecosystem: base === "package.json" ? "npm" : "python" });
+    out.push({
+      dir,
+      manifest: f,
+      name,
+      ecosystem: base === "package.json" ? "npm" : "python",
+      ...(deps ? { deps } : {}),
+    });
   }
   return out;
 }

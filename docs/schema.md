@@ -46,6 +46,15 @@ Added without a format change (optional `meta` fields; older readers ignore them
   `package.json` `engines.node`, `.nvmrc`, `.node-version`, `.python-version` and `pyproject.toml`
   `requires-python`; `version` is the oldest version the declaration allows.
 
+### Routes (endpoints)
+
+`route` nodes (`route:<package dir>:<METHOD> <path>`, or `route:<file>:<line>:<METHOD>` when the
+path is computed at runtime) are children of the file that defines them, with `verified` evidence
+(or `unresolved` for computed paths). `meta`: `method` (`GET`… , `ANY`, `PAGE` for UI pages,
+`WS`), `path` (with every router prefix applied), `framework`, `type` (`api` | `page`),
+`handler` when the handler is a named function. Detected for Next.js, Express, Fastify, Hono,
+Koa, NestJS, FastAPI and Flask. No format change: `route` was already a node kind.
+
 ## Edges
 
 `{ id: "<from>-><kind>-><to>", from, to, kind, evidence[] }`. Kinds: `imports`, `depends-on`,

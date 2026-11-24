@@ -2,7 +2,11 @@
 
 - Languages: TypeScript, JavaScript and Python imports only. Functions, classes, routes, databases
   and data flow are not extracted yet.
-- Imports through tsconfig `paths` aliases are reported as `unresolved`, not guessed.
+- tsconfig/jsconfig `paths` and `baseUrl` aliases are resolved; `extends` only for relative configs.
+- Endpoints: Next.js (app/pages routers), Express, Fastify, Hono, Koa, NestJS, FastAPI, Flask. Route
+  prefixes are followed across files through imports; runtime-built paths are listed as computed.
+  Flows are file-level (what the handler's file can reach), not one exact runtime path; database
+  reads vs writes and queue publish/consume are not separated yet.
 - Dynamic imports with computed paths, plugin systems and dependency injection are invisible.
 - Python absolute imports are resolved from the package root, `src/` and the repo root only.
 - Standard-library and Node built-in imports are intentionally not shown as dependencies.

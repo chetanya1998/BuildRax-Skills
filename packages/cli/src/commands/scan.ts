@@ -17,6 +17,7 @@ export interface ScanSummary {
     modules: number;
     external: number;
     unresolved: number;
+    routes: number;
   };
   cycles: string[][];
   hubs: { id: string; fanIn: number; fanOut: number }[];
@@ -70,6 +71,7 @@ export function summarize(model: Model, modelPath: string): ScanSummary {
       modules: count("module"),
       external: count("external"),
       unresolved: count("unresolved"),
+      routes: count("route"),
     },
     cycles: fileCycles(index).map((c) => c.map((id) => index.node(id)?.path ?? id)),
     hubs: hubs(index, "file", 5),
@@ -81,7 +83,7 @@ export function formatSummary(s: ScanSummary): string {
   const lines = [
     `Scanned ${s.repo}  (${s.languages.join(", ") || "no supported languages"})`,
     `  ${c.files} files · ${c.modules} modules · ${c.external} external · ${c.unresolved} unresolved`,
-    `  ${c.nodes} nodes · ${c.edges} edges`,
+    `  ${c.nodes} nodes · ${c.edges} edges${c.routes ? ` · ${c.routes} endpoint(s) (buildrax routes)` : ""}`,
     s.cycles.length
       ? `  ${s.cycles.length} circular dependenc${s.cycles.length === 1 ? "y" : "ies"}:`
       : "  no circular dependencies",

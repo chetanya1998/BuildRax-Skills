@@ -1,6 +1,6 @@
 ---
 name: buildrax
-description: Map this repository's architecture with evidence, trace dependencies and change impact, find circular dependencies, and open an interactive architecture viewer. Use when asked about architecture, system design, how parts connect, what depends on X, what breaks if X changes, circular imports, what the project would cost to run or to scale as a product, or for an architecture diagram. The scan is local and static and uses no LLM tokens.
+description: Map this repository's architecture with evidence, list its API endpoints and follow request flows, trace dependencies and change impact, find circular dependencies, and open an interactive architecture viewer. Use when asked about architecture, system design, how parts connect, what depends on X, what breaks if X changes, circular imports, what the project would cost to run or to scale as a product, or for an architecture diagram. The scan is local and static and uses no LLM tokens.
 ---
 
 # BuildRAX
@@ -22,16 +22,21 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
    and removed components, links, circular dependencies and changed infrastructure.
    **Impact / dependencies** with `buildrax trace <file|module|id> [--direction up|down] [--depth N]`.
    `up` = what depends on it (what could break if it changes); `down` = what it depends on.
-5. **Show the user** `buildrax view --open` (static file) or `buildrax serve --open` (live, lets
+5. **APIs and request flows** ("what does POST /orders touch?", "which endpoints hit the orders
+   database?"): `buildrax routes` lists endpoints with `file:line`; `buildrax flow "POST /orders"`
+   follows one to the files, services, queues and databases it can reach, as numbered steps;
+   `buildrax routes --reaching database:postgres` lists the endpoints that reach a component.
+   Say that flows are static and file-level.
+6. **Show the user** `buildrax view --open` (static file) or `buildrax serve --open` (live, lets
    them save their notes into the repo).
-6. **Outside facts** (security advisories for pinned versions, end-of-life dates, latest versions,
+7. **Outside facts** (security advisories for pinned versions, end-of-life dates, latest versions,
    deprecations, docs): first run `buildrax research` (shows
    what would be sent, sends nothing). Only run `buildrax research --online` after the user agrees.
-7. **Cost** ("what does this cost", "what if it became a product"): follow `references/cost.md`.
+8. **Cost** ("what does this cost", "what if it became a product"): follow `references/cost.md`.
    In short: ask the user for the stack before `--mode product`, run `buildrax cost` (no network),
    and only add `--online` (AWS list prices) after the user agrees.
 
-Add `--json` to `scan`, `digest`, `context`, `trace`, `notes`, `research`, `cost` when you need to parse output.
+Add `--json` to `scan`, `digest`, `context`, `trace`, `routes`, `flow`, `notes`, `research`, `cost` when you need to parse output.
 More detail: `references/commands.md`, `references/answering-questions.md`, `references/limits.md`,
 `references/cost.md`.
 

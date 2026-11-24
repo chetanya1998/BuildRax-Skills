@@ -1,0 +1,6 @@
+{
+  // Next.js default alias
+  "compilerOptions": {
+    "paths": { "@/*": ["./src/*"] }, // trailing comma below
+  },
+}

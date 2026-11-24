@@ -23,6 +23,7 @@ buildrax view fixtures/sample-monorepo --open
 | `scan [--watch]`                            | static, incremental scan to `.buildrax/model.json` (no LLM tokens, no code execution); `--watch` rescans on changes |
 | `digest` / `context "<question>"`           | compact, token-bounded context for agents (notes excluded)                                                          |
 | `trace <target> [--direction up\|down]`     | transitive dependencies / change impact with `file:line`                                                            |
+| `routes` / `flow "<METHOD> /path"`          | endpoints found by the scan; follow one to the code, services and databases it reaches                              |
 | `diff [--since <git ref>]`                  | architecture changes since the last scan or a commit (links, cycles, infra)                                         |
 | `view` / `serve [--watch]`                  | read-only viewer; `serve` saves your sticky notes to `.buildrax/notes.json`; `--watch` rescans and offers a refresh |
 | `notes`                                     | list your notes and flags                                                                                           |
@@ -94,7 +95,12 @@ question-specific `context` pack is about 3,900 tokens.
   deploy/config files and SDK imports, not from runtime behaviour.
 - Cost: AWS only, on-demand list prices, capacity from editable assumptions (not measurements);
   SaaS prices must be added to `.buildrax/prices.json` with source and date. See `docs/cost.md`.
-- tsconfig `paths` aliases are reported as unresolved rather than guessed.
+- tsconfig/jsconfig `paths` and `baseUrl` aliases are resolved (`@/lib/db`); `extends` is followed
+  for relative configs only.
+- Endpoints: Next.js (app and pages routers), Express, Fastify, Hono, Koa, NestJS, FastAPI, Flask.
+  Paths built at runtime are listed as computed, never guessed. `buildrax flow` is file-level: it
+  shows everything the handler's file can reach, not a single runtime path (function-level detail
+  is next).
 - Scans are incremental: unchanged files are not re-parsed (the model is identical to a full scan).
 - Research: advisories (OSV.dev) need a lockfile pin; end-of-life checks cover Node.js, Python,
   PostgreSQL, MySQL, MongoDB, Redis, Valkey, Next.js, React, Express, Vue, Angular, NestJS, Nuxt

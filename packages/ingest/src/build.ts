@@ -11,6 +11,9 @@ import {
 } from "@buildrax/ir";
 import { languageLabel, type Lang } from "./languages.js";
 import type { RawImport } from "./parser.js";
+import type { FileFacts } from "./routes/facts.js";
+import { buildRoutes, pythonBindingTarget, type Bindings } from "./routes/build.js";
+import { aliasCandidates, type AliasConfig } from "./tsconfig.js";
 import { groupDirFor, owningPackage, type PackageInfo } from "./packages.js";
 import {
   isNodeBuiltin,
@@ -19,6 +22,7 @@ import {
   npmPackageName,
   resolvePython,
   resolveRelativeJs,
+  resolveRepoPathJs,
 } from "./resolve.js";
 
 const posix = path.posix;
@@ -28,6 +32,8 @@ export interface SourceFile {
   lang: Lang;
   lines: number;
   imports: RawImport[];
+  /** Endpoint facts from the same parse (absent in hand-built inputs). */
+  facts?: FileFacts;
 }
 
 export interface BuildInput {
@@ -37,6 +43,8 @@ export interface BuildInput {
   allFiles: readonly string[];
   sources: readonly SourceFile[];
   packages: readonly PackageInfo[];
+  /** tsconfig/jsconfig path aliases (nearest config first). */
+  aliases?: readonly AliasConfig[];
 }
 
 function addEvidence(list: Evidence[], ev: Evidence): void {
@@ -142,6 +150,21 @@ export function buildModel(input: BuildInput): Model {
     return id;
   };
 
+  // Local import names → the repo file they come from (to follow router mounts across files).
+  const bindings: Bindings = new Map();
+  const externalImports = new Map<string, Set<string>>();
+  const bind = (file: string, locals: readonly string[] | undefined, target: string): void => {
+    if (!locals?.length) return;
+    const m = bindings.get(file) ?? new Map<string, string>();
+    for (const l of locals) m.set(l, target);
+    bindings.set(file, m);
+  };
+  const usesExternal = (file: string, name: string): void => {
+    const set = externalImports.get(file) ?? new Set<string>();
+    set.add(name);
+    externalImports.set(file, set);
+  };
+
   for (const s of input.sources) {
     const from = nodeId("file", s.path);
     const pkg = ownerOf.get(s.path);
@@ -159,8 +182,16 @@ export function buildModel(input: BuildInput): Model {
         const res = resolvePython(s.path, imp.specifier, imp.names ?? [], roots, files);
         for (const t of res.targets)
           if (sourceSet.has(t)) link(from, "imports", nodeId("file", t), ev);
-        if (res.external)
+        const local = res.targets.filter((t) => sourceSet.has(t));
+        if (local.length && imp.locals)
+          imp.locals.forEach((l, i) => {
+            const t = imp.names?.length ? pythonBindingTarget(imp.names[i] ?? l, local) : local[0];
+            if (t) bind(s.path, [l], t);
+          });
+        if (res.external) {
+          usesExternal(s.path, res.external.toLowerCase());
           link(from, "depends-on", ensureTarget("external", res.external, ev, "pypi"), ev);
+        }
         if (res.unresolved) {
           const uev: Evidence = { ...ev, kind: "unresolved" };
           link(from, "depends-on", ensureTarget("unresolved", imp.specifier, uev), uev);
@@ -168,10 +199,27 @@ export function buildModel(input: BuildInput): Model {
         continue;
       }
       const spec = imp.specifier;
-      if (isRelativeSpecifier(spec)) {
+      // tsconfig/jsconfig paths and baseUrl (`@/lib/db`, `components/Button`).
+      const aliased =
+        !isRelativeSpecifier(spec) && input.aliases?.length
+          ? aliasCandidates(input.aliases, s.path, spec)
+              .map((c) => resolveRepoPathJs(c, files))
+              .find((t): t is string => !!t)
+          : undefined;
+      if (aliased) {
+        if (sourceSet.has(aliased)) {
+          link(from, "imports", nodeId("file", aliased), {
+            ...ev,
+            detail: `${spec} (tsconfig paths)`,
+          });
+          bind(s.path, imp.locals, aliased);
+        }
+      } else if (isRelativeSpecifier(spec)) {
         const target = resolveRelativeJs(s.path, spec, files);
-        if (target && sourceSet.has(target)) link(from, "imports", nodeId("file", target), ev);
-        else if (!target) {
+        if (target && sourceSet.has(target)) {
+          link(from, "imports", nodeId("file", target), ev);
+          bind(s.path, imp.locals, target);
+        } else if (!target) {
           const uev: Evidence = { ...ev, kind: "unresolved" };
           link(from, "depends-on", ensureTarget("unresolved", spec, uev), uev);
         }
@@ -191,10 +239,33 @@ export function buildModel(input: BuildInput): Model {
             kind: "config",
             detail: `workspace package ${name}`,
           });
-        else link(from, "depends-on", ensureTarget("external", name, ev, "npm"), ev);
+        else {
+          usesExternal(s.path, name);
+          link(from, "depends-on", ensureTarget("external", name, ev, "npm"), ev);
+        }
       }
     }
   }
+
+  // Endpoints (routes) from framework conventions, with prefixes followed across files.
+  for (const r of buildRoutes(
+    input.sources.map((s) => ({
+      path: s.path,
+      lang: s.lang,
+      facts: s.facts ?? {
+        routes: [],
+        mounts: [],
+        prefixes: {},
+        httpExports: [],
+        useServer: false,
+        receivers: [],
+      },
+      imports: [...(externalImports.get(s.path) ?? [])],
+    })),
+    input.packages,
+    bindings,
+  ))
+    nodes.set(r.id, r);
 
   const byId = <T extends { id: string }>(a: T, b: T): number =>
     a.id < b.id ? -1 : a.id > b.id ? 1 : 0;

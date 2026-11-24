@@ -44,7 +44,12 @@ export function npmPackageName(spec: string): string {
   return spec.startsWith("@") ? parts.slice(0, 2).join("/") : parts[0]!;
 }
 
-/** Aliases we cannot resolve without tsconfig `paths` support. */
+/** Resolve a repo-relative path (no extension needed) to an existing TS/JS file. */
+export function resolveRepoPathJs(rel: string, files: ReadonlySet<string>): string | undefined {
+  return resolveRelativeJs("_", `./${rel}`, files);
+}
+
+/** Specifiers that look like aliases (used when no tsconfig `paths` entry resolves them). */
 export function looksLikePathAlias(spec: string): boolean {
   return spec.startsWith("@/") || spec.startsWith("~/") || spec.startsWith("#");
 }
