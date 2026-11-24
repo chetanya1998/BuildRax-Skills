@@ -8,7 +8,7 @@ Scope and open decisions: docs/scope.md.
 
 ## Stack
 
-pnpm workspaces, Node >= 20, TypeScript strict, ESM only. tsup (packages), vitest, eslint + prettier.
+pnpm workspaces, Node >= 22, TypeScript strict, ESM only. tsup (packages), vitest, eslint + prettier.
 
 ## Package dependency rules (no cycles)
 

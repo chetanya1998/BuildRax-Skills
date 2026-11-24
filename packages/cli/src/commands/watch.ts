@@ -21,7 +21,7 @@ export interface Watcher {
 /**
  * Rescan incrementally whenever files change. Events are debounced, scans never overlap (changes
  * during a scan queue exactly one more), and folders the scanner ignores never trigger one.
- * Uses the OS's recursive file watching (Node ≥ 20 on Linux, macOS and Windows).
+ * Uses the OS's recursive file watching (Node ≥ 22 on Linux, macOS and Windows).
  */
 export function watchRepo(
   repo: string,

@@ -5,6 +5,6 @@ export default defineConfig({
   format: ["esm"],
   dts: { entry: ["src/index.ts"] },
   clean: true,
-  target: "node20",
+  target: "node22",
   banner: { js: "#!/usr/bin/env node" },
 });
