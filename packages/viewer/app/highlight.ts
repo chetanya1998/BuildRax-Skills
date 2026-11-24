@@ -28,6 +28,8 @@ export function tokenizeLine(
   language: string | undefined,
   state: LexState = {},
 ): { toks: Tok[]; state: LexState } {
+  // Config excerpts (YAML, HCL, TOML…): shown as plain text, never guessed at.
+  if (language === "plain") return { toks: line ? [{ k: "plain", v: line }] : [], state };
   const py = language === "python";
   const kw = py ? PY_KW : JS_KW;
   const toks: Tok[] = [];

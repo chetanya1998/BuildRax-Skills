@@ -2,6 +2,11 @@
 export interface CodeSource {
   readonly mode: "embedded" | "server" | "none";
   get(path: string): Promise<string | undefined>;
+  /**
+   * A redacted excerpt of a deploy/config file around an evidence line (compose, Terraform,
+   * Kubernetes…). Only lines next to recorded evidence exist; secret-looking values are masked.
+   */
+  excerpt?(file: string, line: number): Promise<{ start: number; lines: string[] } | undefined>;
 }
 
 export class NoSource implements CodeSource {

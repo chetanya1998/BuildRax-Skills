@@ -24,41 +24,9 @@ export interface FlowsViewOptions {
   codeWindow?: FloatingCode;
   /** Why code cannot be shown (e.g. built with --no-source), when it cannot. */
   codeUnavailable?: string;
-  onToggleCode: (on: boolean) => void;
 }
-
-export const CODE_TOOLTIP =
-  "When on, clicking an endpoint, a box or a step opens a floating window with the source lines " +
-  "behind it, highlighted. Drag it by its header, resize it from the corner, close it with Esc. " +
-  "Code is read from this page (or from buildrax serve on your machine) and never sent anywhere. " +
-  "When off, clicks jump to the node in the graph.";
 
 const codeOn = (o: FlowsViewOptions): boolean => o.ui.code && !!o.codeWindow && !o.codeUnavailable;
-
-/** The Code view switch with its tooltip (shown on hover and keyboard focus). */
-function codeToggle(o: FlowsViewOptions): HTMLElement {
-  const disabled = !!o.codeUnavailable || !o.codeWindow;
-  const box = h("input", {
-    type: "checkbox",
-    role: "switch",
-    "aria-describedby": "flows-code-tip",
-    ...(o.ui.code && !disabled ? { checked: "" } : {}),
-    ...(disabled ? { disabled: "" } : {}),
-  });
-  box.addEventListener("change", () => o.onToggleCode(box.checked));
-  return h(
-    "label",
-    { class: `code-toggle${disabled ? " disabled" : ""}` },
-    box,
-    h("span", null, "Code view"),
-    h("span", { class: "info", tabindex: 0, "aria-hidden": "true" }, "?"),
-    h(
-      "span",
-      { class: "tip", role: "tooltip", id: "flows-code-tip" },
-      disabled ? (o.codeUnavailable ?? "No source is available in this viewer.") : CODE_TOOLTIP,
-    ),
-  );
-}
 
 /** A click on a box or step: open its code when Code view is on, else jump to the graph. */
 function pick(
@@ -450,7 +418,6 @@ export function renderFlowsView(el: HTMLElement, o: FlowsViewOptions): void {
                   { class: "muted" },
                   `${r.framework} · ${r.file ?? ""}${r.line ? `:${r.line}` : ""}${r.handler ? ` · ${r.handler}` : ""}`,
                 ),
-                codeToggle(o),
               ),
               h(
                 "p",

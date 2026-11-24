@@ -1,4 +1,6 @@
 import type { Flow, GraphIndex } from "@buildrax/graph";
+import type { CodeSection, CodeView } from "./canvas-code.js";
+import { excerptRange } from "./code-logic.js";
 import type { CodeSource } from "./code-source.js";
 import { codeBlock } from "./code-ui.js";
 import { h } from "./dom.js";
@@ -88,6 +90,20 @@ export function codeTargetFor(
   );
 }
 
+/** A Flows target as a window view (one file, scrolled to its line). */
+export function targetView(t: CodeTarget): CodeView {
+  return {
+    title: t.title,
+    nodeId: t.nodeId,
+    sections: [
+      { kind: "file", file: t.file, marks: t.marks, ...(t.line ? { focus: t.line } : {}) },
+    ],
+  };
+}
+
+const languageOf = (file: string): string =>
+  /\.py$/.test(file) ? "python" : /\.(tsx?|mts|cts)$/.test(file) ? "typescript" : "javascript";
+
 const RECT_KEY = "buildrax:flows-code-rect";
 
 function loadRect(): FloatRect {
@@ -129,7 +145,7 @@ export class FloatingCode {
   private readonly graphBtn: HTMLButtonElement;
   private rect: FloatRect;
   private seq = 0;
-  private current?: CodeTarget;
+  private current?: CodeView;
   onShowInGraph?: (nodeId: string) => void;
   onClose?: () => void;
 
@@ -167,7 +183,7 @@ export class FloatingCode {
     );
 
     this.graphBtn.addEventListener("click", () => {
-      if (this.current) this.onShowInGraph?.(this.current.nodeId);
+      if (this.current?.nodeId) this.onShowInGraph?.(this.current.nodeId);
     });
     close.addEventListener("click", () => this.close());
     this.el.addEventListener("keydown", (ev) => {
@@ -224,37 +240,121 @@ export class FloatingCode {
     });
   }
 
+  /** Flows: one file target. */
   async show(t: CodeTarget): Promise<void> {
+    return this.showView(targetView(t));
+  }
+
+  /** Any view: whole files, excerpts around lines, or a file list. */
+  async showView(v: CodeView): Promise<void> {
     const my = ++this.seq;
-    this.current = t;
-    this.title.textContent = t.title;
-    this.title.title = t.title;
+    this.current = v;
+    this.title.textContent = v.title;
+    this.title.title = v.title;
+    this.graphBtn.hidden = !v.nodeId;
     this.el.hidden = false;
     this.place();
-    this.body.replaceChildren(h("p", { class: "muted" }, `Loading ${t.file}…`));
-    const text = await this.source.get(t.file);
-    if (my !== this.seq) return; // a newer click won
-    if (text === undefined) {
-      this.body.replaceChildren(
-        h("p", { class: "muted" }, `${t.file}${t.line ? `:${t.line}` : ""}`),
-        h(
-          "p",
-          { class: "muted" },
-          this.source.mode === "server"
-            ? "The local server could not read this file."
-            : "This viewer was built without this file's source (buildrax view --no-source, or the file was too large).",
-        ),
-      );
-      return;
-    }
-    const language = /\.py$/.test(t.file)
-      ? "python"
-      : /\.(tsx?|mts|cts)$/.test(t.file)
-        ? "typescript"
-        : "javascript";
+    const alive = (): boolean => my === this.seq;
     this.body.replaceChildren(
-      codeBlock({ path: t.file, text, language, marks: new Map(t.marks), maxLines: 2000 }),
+      ...(v.note ? [h("p", { class: "muted fc-note" }, v.note)] : []),
+      ...v.sections.map((sec) => this.section(sec, alive)),
+      ...(v.sections.length
+        ? []
+        : [h("p", { class: "muted" }, "Nothing to show for this selection.")]),
     );
+  }
+
+  /** Opening a file from a file list (set by the page, which knows the model). */
+  onOpenFile?: (path: string) => void;
+
+  private section(sec: CodeSection, alive: () => boolean): HTMLElement {
+    if (sec.kind === "files") {
+      return h(
+        "div",
+        { class: "fc-files" },
+        ...(sec.label ? [h("div", { class: "fc-label" }, sec.label)] : []),
+        ...sec.files.map((f) => {
+          const b = h(
+            "button",
+            { type: "button", class: "fc-file" },
+            h("span", null, f.path),
+            f.lines !== undefined ? h("span", { class: "muted" }, `${f.lines} lines`) : null,
+          );
+          b.addEventListener("click", () => this.onOpenFile?.(f.path));
+          return b;
+        }),
+      );
+    }
+    const box = h(
+      "div",
+      { class: "fc-section" },
+      h("p", { class: "muted" }, `Loading ${sec.file}…`),
+    );
+    const head =
+      sec.kind === "excerpt" && sec.label ? h("div", { class: "fc-label" }, sec.label) : null;
+    const load: Promise<string | { start: number; lines: string[] } | undefined> =
+      sec.kind === "excerpt" && sec.config ? this.configExcerpt(sec) : this.source.get(sec.file);
+    void load.then((text) => {
+      if (!alive()) return;
+      if (text === undefined) {
+        box.replaceChildren(h("p", { class: "muted" }, this.missing(sec)));
+        return;
+      }
+      if (sec.kind === "file") {
+        if (typeof text !== "string") return;
+        box.replaceChildren(
+          codeBlock({
+            path: sec.file,
+            text,
+            language: languageOf(sec.file),
+            marks: new Map(sec.marks),
+            maxLines: 2000,
+          }),
+        );
+        return;
+      }
+      if (typeof text !== "string") {
+        // Redacted config excerpt: { start, lines }
+        const ex = text as { start: number; lines: string[] };
+        box.replaceChildren(
+          codeBlock({
+            path: sec.file,
+            text: ex.lines.join("\n"),
+            language: "plain",
+            marks: new Map([[sec.line - ex.start + 1, sec.mark]]),
+            lineOffset: ex.start - 1,
+          }),
+        );
+        return;
+      }
+      const total = text.split("\n").length;
+      box.replaceChildren(
+        codeBlock({
+          path: sec.file,
+          text,
+          language: languageOf(sec.file),
+          range: excerptRange(total, sec.line, 3),
+          marks: new Map([[sec.line, sec.mark]]),
+        }),
+      );
+    });
+    return head ? h("div", null, head, box) : box;
+  }
+
+  private missing(sec: Exclude<CodeSection, { kind: "files" }>): string {
+    const where = `${sec.file}${sec.kind === "excerpt" ? `:${sec.line}` : ""}`;
+    if (sec.kind === "excerpt" && sec.config)
+      return `${where} (deploy/config file). Its lines are not included in this viewer.`;
+    return this.source.mode === "server"
+      ? `${where}: the local server could not read this file.`
+      : `${where}: this viewer was built without this file's source (--no-source, or too large).`;
+  }
+
+  /** Config excerpts come from the source's redacted excerpt store (stage 2); none yet. */
+  private async configExcerpt(
+    sec: Extract<CodeSection, { kind: "excerpt" }>,
+  ): Promise<{ start: number; lines: string[] } | undefined> {
+    return this.source.excerpt?.(sec.file, sec.line);
   }
 
   close(): void {

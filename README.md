@@ -73,6 +73,11 @@ In the Graph view:
 - **Click a node** to light up everything upstream (orange) and downstream (blue) with animated
   flow along the links; the camera glides to it. A minimap and zoom controls help navigation.
 - **Code tab** shows that node's code plus the connecting lines and files on both sides.
+- **Code view** (switch in the top bar, `K`; off by default, remembered; hover its `?`): one
+  switch for every view. When on, clicking a node or arrow, an endpoint in Flows, or stepping
+  through a trace opens a floating window with the code behind it: a file with its links marked
+  and the lines that use it, the lines that create an arrow, every import of a package, where a
+  database or queue is used and declared, a package's files to open.
 - Light/dark/auto themes (remembered), sticky notes and flags for your own reference, and a
   _motion_ toggle. The OS "reduce motion" setting is honoured (static layout, no particles).
 - **Make room for the graph**: each sidebar can be hidden (a small tab on the canvas edge brings

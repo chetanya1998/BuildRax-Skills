@@ -23,6 +23,8 @@ interface BlockOpts {
   range?: { start: number; end: number };
   /** Cap for full-file blocks; the rest is behind a "show all" button. */
   maxLines?: number;
+  /** Shown line numbers start after this many lines (for excerpts of a larger file). */
+  lineOffset?: number;
 }
 
 const loc = (e: Evidence): string =>
@@ -41,7 +43,7 @@ export function codeBlock(o: BlockOpts): HTMLElement {
       const row = h(
         "div",
         { class: `row${mark ? " mark" : ""}` },
-        h("span", { class: "ln" }, String(n)),
+        h("span", { class: "ln" }, String(n + (o.lineOffset ?? 0))),
         h(
           "span",
           { class: "src" },

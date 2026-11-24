@@ -678,3 +678,43 @@ body.view-cost .map-toggle {
 .fc-body .cb-body {
   max-height: none;
 }
+.top-right .code-toggle {
+  margin: 0 6px 0 0;
+}
+.fc-note {
+  margin: 2px 2px 8px;
+  font-size: 11.5px;
+}
+.fc-label {
+  font: 600 10.5px var(--ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 10px 2px 4px;
+}
+.fc-section + .fc-section,
+.fc-section + div,
+div + .fc-section {
+  margin-top: 8px;
+}
+.fc-files {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fc-file {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink);
+  font: 11.5px var(--font);
+  cursor: pointer;
+}
+.fc-file:hover {
+  background: var(--paper);
+}

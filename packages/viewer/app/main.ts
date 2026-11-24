@@ -26,6 +26,9 @@ import { parseResearch, renderResearchSection } from "./research-ui.js";
 import { parseCost, renderCostSection, renderCostView } from "./cost-ui.js";
 import { renderFlowsView, type FlowsUi } from "./flows-ui.js";
 import { FloatingCode } from "./flows-code.js";
+import { fileView, selectionView, traceStepView } from "./canvas-code.js";
+import { codeSwitch } from "./code-switch.js";
+import type { TraceStep } from "./trace.js";
 import { startLiveUpdates, type LiveConfig } from "./live.js";
 import type { Assumptions } from "@buildrax/cost";
 import { radiusFor } from "./geometry.js";
@@ -178,6 +181,7 @@ function start(model: Model): void {
   const viewEvents = {
     select: (sel: Selection | undefined): void => {
       state.selected = sel;
+      forceCode = true; // a click on the canvas always (re)opens the code window
       paint();
       writeHash();
     },
@@ -277,7 +281,8 @@ function start(model: Model): void {
   const flowsUi: FlowsUi = {
     route: state.route,
     filter: "",
-    code: readFlag("buildrax:flows-code"),
+    // One Code view switch for every view (the old Flows-only setting is migrated).
+    code: readFlag("buildrax:code-view") || readFlag("buildrax:flows-code"),
   };
   const store = createStore(model, (msg) => void (notesStatus.textContent = msg));
   const inspectorBox = h("div", { class: "tab-body", "aria-live": "polite" });
@@ -307,6 +312,53 @@ function start(model: Model): void {
   // Floating code window for the Flows view (one per page, created only if source can be read).
   const flowsCode = source.mode === "none" ? undefined : new FloatingCode(source);
   if (flowsCode) document.body.append(flowsCode.el);
+  const CODE_UNAVAILABLE =
+    "Code view is unavailable: this viewer was built with buildrax view --no-source. Rebuild it without that flag, or use buildrax serve.";
+  // What the code window currently shows on the canvas, to avoid reloading on every repaint.
+  let codeKey = "";
+  let closedCodeKey = "";
+  let forceCode = false;
+  const syncCanvasCode = (sel: Selection | undefined, steps: TraceStep[]): void => {
+    const force = forceCode;
+    forceCode = false;
+    if (!flowsCode || !flowsUi.code || state.flows || state.cost) return;
+    const key = sel ? `${sel.type}:${sel.id}|${trace.step}|${trace.direction}` : "";
+    if (!force && (key === codeKey || key === closedCodeKey)) return;
+    codeKey = key;
+    closedCodeKey = "";
+    if (!sel) return void flowsCode.close();
+    // While stepping through the trace, show the lines behind the current step.
+    const current = trace.step > 0 ? steps.filter((st) => st.n === trace.step) : [];
+    const v = current.length
+      ? traceStepView(index, {
+          n: trace.step,
+          direction: current[0]!.direction,
+          links: current.flatMap((st) => st.links),
+        })
+      : selectionView(index, view, sel);
+    if (v) void flowsCode.showView(v);
+  };
+  const codeSw = codeSwitch({
+    on: flowsUi.code,
+    unavailable: flowsCode ? undefined : CODE_UNAVAILABLE,
+    onToggle: (on) => setCodeView(on),
+  });
+  function setCodeView(on: boolean): void {
+    flowsUi.code = on;
+    codeSw.set(on);
+    try {
+      window.localStorage.setItem("buildrax:code-view", on ? "on" : "off");
+    } catch {
+      /* not remembered */
+    }
+    codeKey = "";
+    if (!on) flowsCode?.close();
+    if (state.flows) paintFlows();
+    else if (on) {
+      forceCode = true;
+      paint();
+    }
+  }
   const legendBox = h("div", { class: "legend", "aria-label": "Color legend" });
   const statsBox = h("div", { class: "stats" });
   const minimap = h("canvas", { class: "minimap", width: 168, height: 112, "aria-hidden": "true" });
@@ -383,6 +435,7 @@ function start(model: Model): void {
           ["/", "Search"],
           ["V", "Switch Graph / Nodes view"],
           ["E", "Flows view (endpoints)"],
+          ["K", "Code view on/off"],
           ["C", "Cost view"],
           ["F", "Focus on the selection"],
           ["[  ]", "Overview / Inspector panel"],
@@ -443,7 +496,7 @@ function start(model: Model): void {
         segCost,
       ),
       focusPill,
-      h("div", { class: "top-right" }, fitBtn, menuWrap),
+      h("div", { class: "top-right" }, codeSw.el, fitBtn, menuWrap),
     ),
     bodyEl,
   );
@@ -583,6 +636,7 @@ function start(model: Model): void {
       onJump: (note) => void jumpToNote(note.target),
     });
     syncTabs();
+    syncCanvasCode(sel, steps);
     if (state.panel === "code") {
       const my = ++codeSeq;
       renderCodePanel(
@@ -825,6 +879,7 @@ function start(model: Model): void {
   /** The Cost view covers the canvas; the graph underneath keeps its state. */
   function setCost(on: boolean): void {
     state.cost = on;
+    if (on) flowsCode?.close();
     if (on) {
       state.flows = false;
       paintCost();
@@ -846,38 +901,34 @@ function start(model: Model): void {
         void selectNode(id);
       },
       codeWindow: flowsCode,
-      codeUnavailable: flowsCode
-        ? undefined
-        : "Code view is unavailable: this viewer was built with buildrax view --no-source. Rebuild it without that flag, or use buildrax serve.",
-      onToggleCode: (on) => {
-        flowsUi.code = on;
-        try {
-          window.localStorage.setItem("buildrax:flows-code", on ? "on" : "off");
-        } catch {
-          /* not remembered */
-        }
-        if (!on) flowsCode?.close();
-        paintFlows();
-      },
+      codeUnavailable: flowsCode ? undefined : CODE_UNAVAILABLE,
     });
   };
   if (flowsCode) {
     flowsCode.onShowInGraph = (id) => {
-      flowsCode.close();
-      setFlows(false);
+      if (state.flows) {
+        flowsCode.close();
+        setFlows(false);
+      }
       void selectNode(id);
     };
     flowsCode.onClose = () => {
+      closedCodeKey = codeKey;
       if (flowsUi.picked) {
         flowsUi.picked = undefined;
         if (state.flows) paintFlows();
       }
     };
+    flowsCode.onOpenFile = (path) => {
+      const v = fileView(index, `file:${path}`);
+      if (v) void flowsCode.showView(v);
+    };
   }
   /** The Flows view covers the canvas like Cost; the graph keeps its state. */
   function setFlows(on: boolean): void {
     state.flows = on;
-    if (!on) flowsCode?.close();
+    flowsCode?.close(); // the canvas and Flows each open their own content
+    codeKey = "";
     if (on) {
       state.cost = false;
       paintFlows();
@@ -1032,6 +1083,7 @@ function start(model: Model): void {
         setView(state.view === "nodes" ? "graph" : "nodes");
       else if (ev.key === "c" || ev.key === "C") setCost(!state.cost);
       else if (ev.key === "e" || ev.key === "E") setFlows(!state.flows);
+      else if ((ev.key === "k" || ev.key === "K") && flowsCode) setCodeView(!flowsUi.code);
     }
   });
   searchInput.addEventListener("input", () => {
