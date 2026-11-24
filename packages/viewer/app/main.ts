@@ -307,6 +307,7 @@ function start(model: Model): void {
     readJson("buildrax-config") as { server?: boolean; token?: string } | undefined,
     readJson("buildrax-sources"),
     (url, init) => fetch(url, init),
+    readJson("buildrax-excerpts"),
   );
   let codeSeq = 0;
   // Floating code window for the Flows view (one per page, created only if source can be read).

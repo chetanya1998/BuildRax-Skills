@@ -23,6 +23,24 @@ Guarantees enforced in code and tests:
 - The agent running a skill may itself send what you show it to its model provider. BuildRAX keeps
   what it shows the agent small (digest/context) and excludes notes.
 
+## Config-file lines in the Code view
+
+The viewer's Code view can show where a database, queue or service is **declared** (compose,
+Terraform, Kubernetes, platform files, lockfiles). It never shows whole config files:
+
+- only ±3 lines around a line the scan recorded as evidence are read back;
+- values of secret-looking keys (`password`, `token`, `secret`, `…_key`, credentials, `…_url`,
+  connection strings) are replaced with `••••••`, as are passwords inside URLs
+  (`postgres://user:••••••@host`), well-known token shapes (AWS keys, `sk-…`, GitHub and Slack
+  tokens, JWTs, private keys) and long base64-like runs; references such as `var.db_password` or
+  `${DB_PASSWORD}` stay visible because they are not secrets;
+- a real `.env` is never read (the scanner never opens it either);
+- `buildrax view` embeds these redacted excerpts (not with `--no-source`); `buildrax serve`
+  returns one only for a recorded evidence line, with the session token.
+
+Masking is pattern-based: review a config file before sharing a `view.html` built from it if it
+holds secrets under unusual names.
+
 ## Optional cloud credentials (`cost --use-credentials`)
 
 Off by default and used only for the run that passes the flag, together with `--online`.

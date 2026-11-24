@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import { validateNotes } from "@buildrax/ir";
 import { loadModel, loadNotes, saveNotes } from "./data.js";
 import { readModelFile } from "./sources.js";
+import { readExcerpt } from "./excerpts.js";
 import { buildViewerHtml } from "./view.js";
 import { watchRepo, type RescanEvent } from "./watch.js";
 
@@ -124,6 +125,17 @@ export async function startServer(
           if (text === undefined)
             return send(res, 404, JSON.stringify({ error: "not a scanned source file" }));
           return send(res, 200, JSON.stringify({ path: rel, text }));
+        }
+        if (url.pathname === "/api/excerpt" && req.method === "GET") {
+          // Only lines around recorded evidence in config files, redacted.
+          const file = url.searchParams.get("file") ?? "";
+          const line = Number(url.searchParams.get("line"));
+          const ex = Number.isInteger(line)
+            ? await readExcerpt(repo, await loadModel(repo), file, line)
+            : undefined;
+          if (!ex)
+            return send(res, 404, JSON.stringify({ error: "not a recorded config evidence line" }));
+          return send(res, 200, JSON.stringify(ex));
         }
         if (url.pathname === "/api/notes" && req.method === "GET")
           return send(res, 200, JSON.stringify(await loadNotes(repo)));

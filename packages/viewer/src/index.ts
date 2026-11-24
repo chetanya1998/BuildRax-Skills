@@ -37,6 +37,8 @@ export interface InjectExtras {
   config?: { server: true; token: string; version?: number; watch?: boolean };
   /** Source text by repo-relative path, for the Code tab in static files. */
   sources?: Record<string, string>;
+  /** Redacted config-file excerpts around evidence lines, keyed `file:line`. */
+  excerpts?: Record<string, { start: number; lines: string[] }>;
   /** Cost report plus the prices it may need, for the Cost view (`buildrax cost`). */
   cost?: { report: unknown; prices: unknown };
 }
@@ -49,5 +51,6 @@ export function injectModel(html: string, model: Model, extras: InjectExtras = {
   if (extras.config) out = setScript(out, "buildrax-config", extras.config);
   if (extras.sources) out = setScript(out, "buildrax-sources", extras.sources);
   if (extras.cost) out = setScript(out, "buildrax-cost", extras.cost);
+  if (extras.excerpts) out = setScript(out, "buildrax-excerpts", extras.excerpts);
   return out;
 }

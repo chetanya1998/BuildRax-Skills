@@ -323,6 +323,7 @@ export class FloatingCode {
             language: "plain",
             marks: new Map([[sec.line - ex.start + 1, sec.mark]]),
             lineOffset: ex.start - 1,
+            title: `${sec.file}:${ex.start}-${ex.start + ex.lines.length - 1} · config, secrets masked`,
           }),
         );
         return;

@@ -4,6 +4,7 @@ import path from "node:path";
 import { injectModel, viewerTemplatePath } from "@buildrax/viewer";
 import { loadModel, loadNotes, loadResearch } from "./data.js";
 import { collectSources } from "./sources.js";
+import { collectExcerpts } from "./excerpts.js";
 import { costPathFor, costPricesPathFor } from "./cost.js";
 
 /** The last `buildrax cost` report and its prices, when both exist and parse. */
@@ -31,11 +32,14 @@ export async function buildViewerHtml(
   opts: { embedSource?: boolean } = {},
 ): Promise<string> {
   const model = await loadModel(repoPath);
-  const [notes, research, template, sources] = await Promise.all([
+  const embed = !config && opts.embedSource !== false;
+  const [notes, research, template, sources, excerpts] = await Promise.all([
     loadNotes(repoPath),
     loadResearch(repoPath),
     fs.readFile(viewerTemplatePath(), "utf8"),
-    !config && opts.embedSource !== false ? collectSources(repoPath, model) : undefined,
+    embed ? collectSources(repoPath, model) : undefined,
+    // Redacted config-file lines around recorded evidence (never whole files).
+    embed ? collectExcerpts(repoPath, model) : undefined,
   ]);
   const cost = await loadCostForViewer(repoPath);
   return injectModel(template, model, {
@@ -43,6 +47,7 @@ export async function buildViewerHtml(
     research,
     config,
     sources: sources?.files,
+    excerpts,
     cost,
   });
 }

@@ -17,11 +17,29 @@ export class NoSource implements CodeSource {
 }
 
 /** Static-file mode: sources were embedded by `buildrax view`. */
+type Excerpt = { start: number; lines: string[] };
+const isExcerpt = (v: unknown): v is Excerpt =>
+  !!v &&
+  typeof v === "object" &&
+  typeof (v as Excerpt).start === "number" &&
+  Array.isArray((v as Excerpt).lines) &&
+  (v as Excerpt).lines.every((l) => typeof l === "string");
+
 export class EmbeddedSource implements CodeSource {
   readonly mode = "embedded" as const;
-  constructor(private readonly files: Readonly<Record<string, string>>) {}
+  constructor(
+    private readonly files: Readonly<Record<string, string>>,
+    private readonly excerpts: Readonly<Record<string, unknown>> = {},
+  ) {}
   async get(path: string): Promise<string | undefined> {
     return Object.prototype.hasOwnProperty.call(this.files, path) ? this.files[path] : undefined;
+  }
+  async excerpt(file: string, line: number): Promise<Excerpt | undefined> {
+    const key = `${file}:${line}`;
+    const v = Object.prototype.hasOwnProperty.call(this.excerpts, key)
+      ? this.excerpts[key]
+      : undefined;
+    return isExcerpt(v) ? v : undefined;
   }
 }
 
@@ -54,12 +72,24 @@ export class ServerSource implements CodeSource {
     }
     return hit;
   }
+  /** Redacted config excerpt; the server only answers for recorded evidence lines. */
+  excerpt(file: string, line: number): Promise<Excerpt | undefined> {
+    const url = `/api/excerpt?file=${encodeURIComponent(file)}&line=${line}`;
+    return this.fetchFn(url, { headers: { "x-buildrax-token": this.token } })
+      .then(async (res) => {
+        if (!res.ok) return undefined;
+        const body: unknown = await res.json();
+        return isExcerpt(body) ? body : undefined;
+      })
+      .catch(() => undefined);
+  }
 }
 
 export function createCodeSource(
   config: { server?: boolean; token?: string } | undefined,
   embedded: unknown,
   fetchFn: FetchLike,
+  excerpts?: unknown,
 ): CodeSource {
   if (config?.server && typeof config.token === "string")
     return new ServerSource(config.token, fetchFn);
@@ -67,7 +97,10 @@ export function createCodeSource(
     const files: Record<string, string> = {};
     for (const [k, v] of Object.entries(embedded as Record<string, unknown>))
       if (typeof v === "string") files[k] = v;
-    return new EmbeddedSource(files);
+    return new EmbeddedSource(
+      files,
+      excerpts && typeof excerpts === "object" ? (excerpts as Record<string, unknown>) : {},
+    );
   }
   return new NoSource();
 }

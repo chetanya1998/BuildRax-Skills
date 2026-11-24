@@ -25,6 +25,8 @@ interface BlockOpts {
   maxLines?: number;
   /** Shown line numbers start after this many lines (for excerpts of a larger file). */
   lineOffset?: number;
+  /** Header text instead of the default "path (N lines)". */
+  title?: string;
 }
 
 const loc = (e: Evidence): string =>
@@ -63,9 +65,11 @@ export function codeBlock(o: BlockOpts): HTMLElement {
     }
   };
   draw(range.start, range.end);
-  const label = o.range
-    ? `${o.path}:${range.start}-${range.end}`
-    : `${o.path} (${total} line${total === 1 ? "" : "s"})`;
+  const label =
+    o.title ??
+    (o.range
+      ? `${o.path}:${range.start}-${range.end}`
+      : `${o.path} (${total} line${total === 1 ? "" : "s"})`);
   const block = h("div", { class: "codeblock" }, h("div", { class: "cb-head" }, label), body);
   // Bring the first highlighted line into view once the block is attached.
   queueMicrotask(() => {

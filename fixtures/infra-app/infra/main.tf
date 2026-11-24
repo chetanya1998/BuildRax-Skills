@@ -4,11 +4,14 @@ resource "aws_db_instance" "main" {
   instance_class    = "db.t4g.small"
   allocated_storage = 20
   multi_az          = false
+  username          = "app"
+  password          = "not-a-real-tf-password"
 }
 
 resource "aws_db_instance" "replica" {
   engine         = "postgres"
   instance_class = var.replica_class
+  password       = var.db_password
 }
 
 resource "aws_elasticache_cluster" "cache" {
