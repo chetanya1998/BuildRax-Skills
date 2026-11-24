@@ -1,6 +1,6 @@
 ---
 name: buildrax
-description: Map this repository's architecture with evidence, trace dependencies and change impact, find circular dependencies, and open an interactive architecture viewer. Use when asked about architecture, system design, how parts connect, what depends on X, what breaks if X changes, circular imports, or for an architecture diagram. The scan is local and static and uses no LLM tokens.
+description: Map this repository's architecture with evidence, trace dependencies and change impact, find circular dependencies, and open an interactive architecture viewer. Use when asked about architecture, system design, how parts connect, what depends on X, what breaks if X changes, circular imports, what the project would cost to run or to scale as a product, or for an architecture diagram. The scan is local and static and uses no LLM tokens.
 ---
 
 # BuildRAX
@@ -24,9 +24,13 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
    them save their notes into the repo).
 6. **Outside facts** (latest versions, deprecations, docs): first run `buildrax research` (shows
    what would be sent, sends nothing). Only run `buildrax research --online` after the user agrees.
+7. **Cost** ("what does this cost", "what if it became a product"): follow `references/cost.md`.
+   In short: ask the user for the stack before `--mode product`, run `buildrax cost` (no network),
+   and only add `--online` (AWS list prices) after the user agrees.
 
-Add `--json` to `scan`, `digest`, `context`, `trace`, `notes`, `research` when you need to parse output.
-More detail: `references/commands.md`, `references/answering-questions.md`, `references/limits.md`.
+Add `--json` to `scan`, `digest`, `context`, `trace`, `notes`, `research`, `cost` when you need to parse output.
+More detail: `references/commands.md`, `references/answering-questions.md`, `references/limits.md`,
+`references/cost.md`.
 
 ## Rules
 
@@ -36,7 +40,9 @@ More detail: `references/commands.md`, `references/answering-questions.md`, `ref
 - **Say how sure it is.** Evidence is `verified` (from code), `config` (manifests), `inferred`
   (heuristic grouping) or `unresolved` (target not found). Report `unresolved` imports as such.
 - **Static analysis cannot see** dynamic imports, dependency injection, runtime wiring, or load.
-  No edge does not prove no dependency. Never claim runtime behaviour (latency, throughput, cost).
+  No edge does not prove no dependency. Never claim runtime behaviour (latency, throughput).
+- **Cost figures are estimates** and only come from `buildrax cost`. Always give the range, the
+  assumptions and the missing prices. Never invent a price.
 - **Notes belong to the user.** Read them with `buildrax notes` if asked. Do not create, edit or
   delete notes. `digest` and `context` leave them out on purpose; do not paste them elsewhere.
 - **Research is read-only facts.** Registry data describes the latest release, not necessarily the

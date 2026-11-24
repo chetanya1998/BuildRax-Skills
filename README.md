@@ -4,7 +4,8 @@ AI-native architecture intelligence for your repository: a deterministic, local 
 code-linked architecture graph, shown in a read-only interactive viewer (with sticky notes and
 flags for your own reference). Agent skills stay thin and use compact, token-bounded context.
 
-> Status: first vertical slice (repo -> IR -> graph -> read-only viewer). See `docs/scope.md`.
+> Status: early. Repo -> IR -> graph -> read-only viewer, infrastructure detection and a cost
+> estimator. See `docs/scope.md` and `docs/roadmap.md`.
 
 ## Try it
 
@@ -17,22 +18,30 @@ buildrax view fixtures/sample-monorepo --open
 
 ## Commands
 
-| Command                                 | Purpose                                                                     |
-| --------------------------------------- | --------------------------------------------------------------------------- |
-| `scan`                                  | static scan to `.buildrax/model.json` (no LLM tokens, no code execution)    |
-| `digest` / `context "<question>"`       | compact, token-bounded context for agents (notes excluded)                  |
-| `trace <target> [--direction up\|down]` | transitive dependencies / change impact with `file:line`                    |
-| `view` / `serve`                        | read-only viewer; `serve` saves your sticky notes to `.buildrax/notes.json` |
-| `notes`                                 | list your notes and flags                                                   |
-| `research [--online]`                   | dependency facts from npm/PyPI; plan-only unless `--online`                 |
-| `install-skill`                         | install the agent skill for Claude Code, Codex, Antigravity                 |
+| Command                                     | Purpose                                                                       |
+| ------------------------------------------- | ----------------------------------------------------------------------------- |
+| `scan`                                      | static scan to `.buildrax/model.json` (no LLM tokens, no code execution)      |
+| `digest` / `context "<question>"`           | compact, token-bounded context for agents (notes excluded)                    |
+| `trace <target> [--direction up\|down]`     | transitive dependencies / change impact with `file:line`                      |
+| `view` / `serve`                            | read-only viewer; `serve` saves your sticky notes to `.buildrax/notes.json`   |
+| `notes`                                     | list your notes and flags                                                     |
+| `research [--online]`                       | dependency facts from npm/PyPI; plan-only unless `--online`                   |
+| `cost [--mode current\|product] [--online]` | monthly cost per traffic tier from dated AWS list prices (see `docs/cost.md`) |
+| `install-skill`                             | install the agent skill for Claude Code, Codex, Antigravity                   |
 
 The viewer is one offline HTML file with two views of the same architecture (switch with the
-**Graph | Nodes** buttons or `V`; selection, panels, notes and the Code tab are shared):
+**Graph | Nodes** buttons or `V`; selection, panels, notes and the Code tab are shared) and a
+**Cost** view (`C`):
 
 - **Nodes view**: a structured diagram. Rectangular cards in left-to-right layers, frames for
   services and folders, and right-angled arrows routed around the cards. Nothing moves on its own.
 - **Graph view**: animated orbs, live physics and dotted segment boxes, for exploring.
+- **Cost view** (after `buildrax cost`): the traffic tiers side by side, a stacked chart, the
+  breakdown per component with low–high ranges, what changes between tiers, bottlenecks, which
+  assumptions matter most, missing prices and dated price sources. Edit any assumption to
+  recompute in the page (nothing is saved; the equivalent CLI command is shown).
+- **Infrastructure** found by the scan (databases, caches, queues, storage, hosted APIs, compute)
+  has its own segment box, colours and icons; the Inspector shows a priced node's monthly cost.
 - **Step-by-step trace**: select a node and the Inspector's _Trace_ explains how it connects, one
   hop at a time (what it uses, what uses it), with the file:line of each link. Arrows in the Nodes
   view carry matching step numbers; step through with ◀ ▶ or press _Play_; filter to _Uses_ or
@@ -68,9 +77,9 @@ In the Graph view:
 - **Compact top bar**: search, the Graph/Nodes switch, _Fit_ and a **Menu** that holds the rest
   (color, depth, Graph layout, theme, what to show, graph actions and the shortcut list).
 
-See `docs/roadmap.md` for what comes next (infrastructure detection and the cost estimator).
+See `docs/roadmap.md` for what comes next.
 
-See `docs/privacy.md` and `docs/agents.md`.
+See `docs/privacy.md`, `docs/cost.md`, `docs/schema.md` and `docs/agents.md`.
 
 ## Measured on this repo (estimates, chars / 4)
 
@@ -79,7 +88,10 @@ question-specific `context` pack is about 3,900 tokens.
 
 ## Known limits
 
-- TS/JS/Python imports only; no functions, routes, databases or data flow yet.
+- TS/JS/Python imports only; no functions, routes or data flow yet. Infrastructure comes from
+  deploy/config files and SDK imports, not from runtime behaviour.
+- Cost: AWS only, on-demand list prices, capacity from editable assumptions (not measurements);
+  SaaS prices must be added to `.buildrax/prices.json` with source and date. See `docs/cost.md`.
 - tsconfig `paths` aliases are reported as unresolved rather than guessed.
 - Full rescan every time (no incremental cache yet).
 - Research uses npm/PyPI registry data only: no security advisories and no pinned-version

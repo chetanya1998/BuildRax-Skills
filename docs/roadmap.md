@@ -4,8 +4,8 @@ Decisions agreed with the product owner (2026-11-22) and the work they imply. Or
 each step builds on the previous one.
 
 1. **Graph and Nodes views + step-by-step trace** — done (see README).
-2. **Infrastructure detection** — teach the scanner what the project runs on.
-3. **Cost estimator** — two modes (_current project_ and _as a product_), real published prices.
+2. **Infrastructure detection** — done (IR v2, `docs/schema.md`).
+3. **Cost estimator** — done for AWS (`docs/cost.md`); see _Cost: next_ below.
 4. Pinned versions from lockfiles → security advisories in research.
 5. Incremental scanning; large-graph benchmark (settles the open viewer-technology decision).
 6. Verify the agent skill in real Claude Code, Codex and Antigravity sessions.
@@ -97,3 +97,18 @@ assumed. The user's own contract prices or discounts (`.buildrax/cost.json`) ove
 - Viewer **Cost** tab: tiers side by side, per-component breakdown, stacked chart, assumptions
   editor, cost badges/colouring on both views, sources with dates.
 - Skill: cost questions always state assumptions and ask for missing stack / traffic details.
+
+## Cost: next
+
+Shipped (2026-11-24): pure cost model, AWS public price files and optional signed Price List API,
+`buildrax cost` (both modes, tiers, assumptions, sensitivity), viewer Cost view, skill guidance.
+
+Still open:
+
+- OS keychain storage for credentials (today: environment only, nothing stored).
+- A checker that flags `.buildrax/prices.json` entries older than N days or whose page changed.
+- Versioned tier templates (architecture per tier) editable as files; today the tier logic is code
+  with editable numeric assumptions.
+- More components: SQS, CloudFront, NAT gateway, CloudWatch logs, backups, OpenSearch; reserved /
+  savings-plan pricing; Azure Retail Prices and Google Cloud Billing Catalog.
+- Cost badges on nodes in the Graph and Nodes views (the Inspector shows cost today).

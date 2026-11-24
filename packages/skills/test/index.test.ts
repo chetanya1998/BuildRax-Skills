@@ -23,7 +23,7 @@ describe("skill source", () => {
     expect(description.length).toBeGreaterThan(40);
     expect(description.length).toBeLessThanOrEqual(1024);
     expect(text.split("\n").length).toBeLessThan(200);
-    for (const ref of ["commands.md", "answering-questions.md", "limits.md"]) {
+    for (const ref of ["commands.md", "answering-questions.md", "limits.md", "cost.md"]) {
       await expect(
         fs.access(path.join(skillSourceDir(), "references", ref)),
       ).resolves.toBeUndefined();
@@ -77,6 +77,7 @@ describe("installSkill", () => {
       "references",
       "references/answering-questions.md",
       "references/commands.md",
+      "references/cost.md",
       "references/limits.md",
     ]);
     expect((await installSkill(base())).map((r) => r.status)).toEqual(["updated", "updated"]);

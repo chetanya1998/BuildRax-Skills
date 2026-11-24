@@ -10,3 +10,8 @@
 - Research covers npm and PyPI registry facts. Security advisories and the pinned version of each
   dependency are not used yet, so "is my version affected" cannot be answered.
 - Token figures printed by the tools are estimates (about 4 characters per token).
+- Cost: AWS only (Fargate, RDS PostgreSQL/MySQL, ElastiCache, S3, ALB, data transfer, SES), on-demand
+  list prices. No reserved/savings plans, free tiers, request charges, NAT, logging or support
+  plans. SaaS prices must be researched into `.buildrax/prices.json`. Detected queues other than
+  workers, search and auth services are listed but not priced. Capacity comes from editable
+  assumptions, not from measurements.
