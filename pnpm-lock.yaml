@@ -138,6 +138,9 @@ importers:
 
   packages/viewer:
     dependencies:
+      '@buildrax/cost':
+        specifier: workspace:*
+        version: link:../cost
       '@buildrax/graph':
         specifier: workspace:*
         version: link:../graph

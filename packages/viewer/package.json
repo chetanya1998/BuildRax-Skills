@@ -21,6 +21,7 @@
     "dev": "vite"
   },
   "dependencies": {
+    "@buildrax/cost": "workspace:*",
     "@buildrax/graph": "workspace:*",
     "@buildrax/ir": "workspace:*"
   },

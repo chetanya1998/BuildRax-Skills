@@ -12,6 +12,7 @@ import {
   parseAssumptions,
   parseTiers,
   scanCommand,
+  viewCommand,
 } from "../src/index.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -72,6 +73,17 @@ describe("cost command", () => {
     await fs.access(path.join(tmp, ".buildrax", "cache", "pricing", "aws-us-east-1.json"));
     // The repo's own deploy files are not uploaded anywhere: only price list URLs were requested.
     expect(urls.every((u) => u.includes("/offers/v1.0/aws/"))).toBe(true);
+  });
+
+  it("the viewer embeds the last report and only the prices it can use", async () => {
+    await costCommand(tmp, { mode: "current", online: true, fetchFn: fakeAws([]) });
+    const html = await fs.readFile(await viewCommand(tmp, { source: false }), "utf8");
+    const m = /<script id="buildrax-cost" type="application\/json">([\s\S]*?)<\/script>/.exec(html);
+    const cost = JSON.parse(m![1]!);
+    expect(cost.report.schemaVersion).toBe("buildrax-cost/v1");
+    expect(
+      cost.prices.records.some((r: { key: string }) => r.key.startsWith("aws.rds.mysql.")),
+    ).toBe(false);
   });
 
   it("product mode honours stack answers and rejects unknown ones", async () => {

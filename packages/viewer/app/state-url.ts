@@ -14,6 +14,8 @@ export interface ViewState {
   focus?: string;
   /** Graph view (orbs, physics) or Nodes view (structured cards and routed arrows). */
   view: "graph" | "nodes";
+  /** The Cost view is open over the canvas. */
+  cost: boolean;
   /** Canvas layout: structured layers or live physics. */
   layout: "layered" | "force";
   color: "package" | "kind" | "language" | "heat";
@@ -31,6 +33,7 @@ export const DEFAULT_STATE: ViewState = {
   theme: "auto",
   panel: "inspector",
   view: "graph",
+  cost: false,
   layout: "force",
   color: "package",
   cluster: true,
@@ -64,6 +67,7 @@ export function decodeState(hash: string): ViewState {
       panel: v.panel === "code" ? "code" : "inspector",
       focus: typeof v.focus === "string" && v.focus ? v.focus : undefined,
       view: v.view === "nodes" ? "nodes" : "graph",
+      cost: v.cost === true,
       layout: v.layout === "layered" ? "layered" : "force",
       color:
         v.color === "kind" || v.color === "language" || v.color === "heat" ? v.color : "package",

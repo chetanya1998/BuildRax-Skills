@@ -4,6 +4,22 @@ import path from "node:path";
 import { injectModel, viewerTemplatePath } from "@buildrax/viewer";
 import { loadModel, loadNotes, loadResearch } from "./data.js";
 import { collectSources } from "./sources.js";
+import { costPathFor, costPricesPathFor } from "./cost.js";
+
+/** The last `buildrax cost` report and its prices, when both exist and parse. */
+async function loadCostForViewer(
+  repo: string,
+): Promise<{ report: unknown; prices: unknown } | undefined> {
+  try {
+    const [report, prices] = await Promise.all([
+      fs.readFile(costPathFor(repo), "utf8"),
+      fs.readFile(costPricesPathFor(repo), "utf8"),
+    ]);
+    return { report: JSON.parse(report), prices: JSON.parse(prices) };
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Build the viewer HTML for a repo (shared by `view` and `serve`). Static files embed the scanned
@@ -21,7 +37,14 @@ export async function buildViewerHtml(
     fs.readFile(viewerTemplatePath(), "utf8"),
     !config && opts.embedSource !== false ? collectSources(repoPath, model) : undefined,
   ]);
-  return injectModel(template, model, { notes, research, config, sources: sources?.files });
+  const cost = await loadCostForViewer(repoPath);
+  return injectModel(template, model, {
+    notes,
+    research,
+    config,
+    sources: sources?.files,
+    cost,
+  });
 }
 
 /** Build `.buildrax/view.html` from the existing model. The file works offline. */

@@ -1,4 +1,5 @@
 import type { GraphIndex, GraphView } from "@buildrax/graph";
+import { INFRA_KINDS } from "@buildrax/ir";
 
 /** One dotted code-segmentation box on the canvas. */
 export interface GroupSpec {
@@ -10,7 +11,7 @@ export interface GroupSpec {
   /** Enclosing box (nested segmentation: service > folder). */
   parent?: string;
   depth: number;
-  kind: "container" | "external" | "unresolved";
+  kind: "container" | "external" | "unresolved" | "infra";
   /** Model node to collapse when the box's header "−" is clicked. */
   collapseId?: string;
 }
@@ -23,6 +24,10 @@ export interface Groups {
 
 export const EXTERNAL_GROUP = "group:external";
 export const UNRESOLVED_GROUP = "group:unresolved";
+export const INFRA_GROUP = "group:infra";
+const INFRA = new Set<string>(INFRA_KINDS);
+/** Infrastructure detected from deploy/config files and SDK usage (databases, queues, …). */
+export const isInfraKind = (kind: string): boolean => INFRA.has(kind);
 
 /**
  * Decide the segmentation boxes for the nodes currently on screen. Every expanded container
@@ -56,7 +61,7 @@ export function buildGroups(
   };
 
   for (const vn of view.nodes) {
-    if (vn.kind === "external" || vn.kind === "unresolved") continue;
+    if (vn.kind === "external" || vn.kind === "unresolved" || INFRA.has(vn.kind)) continue;
     const chain = index.ancestors(vn.id).filter(isBox); // nearest first
     groupOf.set(vn.id, chain[0]);
     chain.forEach((gid, i) => ensure(gid, chain[i + 1]));
@@ -73,6 +78,18 @@ export function buildGroups(
       kind: "external",
     });
     for (const e of externals) groupOf.set(e.id, EXTERNAL_GROUP);
+  }
+  const infra = view.nodes.filter((n) => INFRA.has(n.kind));
+  if (infra.length >= 2) {
+    specs.set(INFRA_GROUP, {
+      id: INFRA_GROUP,
+      label: "Infrastructure",
+      sub: `${infra.length} services`,
+      hue: 190,
+      depth: 0,
+      kind: "infra",
+    });
+    for (const n of infra) groupOf.set(n.id, INFRA_GROUP);
   }
   const unresolved = view.nodes.filter((n) => n.kind === "unresolved");
   if (unresolved.length >= 1) {

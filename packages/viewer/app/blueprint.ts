@@ -1,4 +1,5 @@
 import type { GraphView, ViewNode } from "@buildrax/graph";
+import { INFRA_ICONS } from "./icons.js";
 import type { BlueprintLayout, Box } from "./blueprint-layout.js";
 import { put, s } from "./dom.js";
 import { easeInOutCubic, type Pt } from "./geometry.js";
@@ -33,6 +34,7 @@ const ICONS: Record<string, string> = {
   file: "M-4,-6 L2,-6 L5,-3 L5,6 L-4,6 Z M2,-6 L2,-3 L5,-3 M-2,0 L3,0 M-2,3 L3,3",
   external: "M-6,0 A6,6 0 1 0 6,0 A6,6 0 1 0 -6,0 M-6,0 L6,0 M0,-6 Q-4,0 0,6 M0,-6 Q4,0 0,6",
   unresolved: "M-3,-3 Q-3,-6 0,-6 Q3,-6 3,-3 Q3,-1 0,1 L0,3 M0,6 L0,6.5",
+  ...INFRA_ICONS,
 };
 
 const truncate = (t: string, max: number): string =>

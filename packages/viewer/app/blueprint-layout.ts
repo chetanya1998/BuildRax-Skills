@@ -1,4 +1,5 @@
 import ElkBundled from "elkjs/lib/elk.bundled.js";
+import { isInfraKind } from "./groups.js";
 import type { ELK as ElkApi, ElkExtendedEdge, ElkNode } from "elkjs/lib/elk-api.js";
 import type { GraphView } from "@buildrax/graph";
 import type { Pt } from "./geometry.js";
@@ -95,7 +96,8 @@ export async function blueprintLayout(view: GraphView, groups?: Groups): Promise
     if (frame) (frame.children ??= []).push(leaf);
     else {
       leaf.layoutOptions = {
-        "elk.partitioning.partition": n.kind === "external" || n.kind === "unresolved" ? "1" : "0",
+        "elk.partitioning.partition":
+          n.kind === "external" || n.kind === "unresolved" || isInfraKind(n.kind) ? "1" : "0",
       };
       root.children!.push(leaf);
     }

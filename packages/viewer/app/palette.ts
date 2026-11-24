@@ -1,4 +1,5 @@
 import type { GraphIndex } from "@buildrax/graph";
+import { isInfraKind } from "./groups.js";
 
 export type ColorMode = "package" | "kind" | "language" | "heat";
 export const COLOR_MODES: readonly ColorMode[] = ["package", "kind", "language", "heat"];
@@ -17,6 +18,18 @@ const KIND_HUE: Record<string, number> = {
   route: 320,
   service: 250,
   database: 100,
+  compute: 190,
+  hosting: 172,
+  cache: 8,
+  queue: 52,
+  storage: 30,
+  cdn: 300,
+  email: 330,
+  payments: 140,
+  llm: 282,
+  messaging: 64,
+  search: 226,
+  auth: 350,
 };
 
 const LANG_HUE: Record<string, number> = { typescript: 212, javascript: 48, python: 148 };
@@ -111,6 +124,8 @@ export function swatchFor(
       key: "kind:unresolved",
       label: "unresolved import",
     };
+  if (isInfraKind(n.kind))
+    return { hue: KIND_HUE[n.kind] ?? 190, sat: 70, key: "kind:infra", label: "infrastructure" };
   const pkg = packageOf(ctx.index, n.id);
   if (!pkg) return { hue: 215, sat: 25, key: "pkg:-", label: "repository" };
   return {

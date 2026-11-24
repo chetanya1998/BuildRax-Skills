@@ -3,6 +3,7 @@ import "./scene.css";
 import "./panels.css";
 import "./toolbar.css";
 import "./blueprint.css";
+import "./cost.css";
 import {
   GraphIndex,
   buildView,
@@ -22,6 +23,8 @@ import { relocateNotes, renderNotesPanel, renderNotesSection } from "./notes-ui.
 import { layoutView } from "./layout.js";
 import { computeLineage } from "./lineage.js";
 import { parseResearch, renderResearchSection } from "./research-ui.js";
+import { parseCost, renderCostSection, renderCostView } from "./cost-ui.js";
+import type { Assumptions } from "@buildrax/cost";
 import { radiusFor } from "./geometry.js";
 import { buildGroups, type Groups } from "./groups.js";
 import {
@@ -222,6 +225,11 @@ function start(model: Model): void {
     { type: "button", role: "radio", title: "Structured cards with routed arrows (V)" },
     "Nodes",
   );
+  const segCost = h(
+    "button",
+    { type: "button", role: "radio", title: "Monthly cost per traffic tier (C)" },
+    "Cost",
+  );
   const fitBtn = h("button", { type: "button" }, "Fit");
   const shakeBtn = h(
     "button",
@@ -246,6 +254,9 @@ function start(model: Model): void {
   const notesStatus = h("p", { class: "warn", role: "status" });
   const notesBox = h("div", { class: "notes-box" });
   const research = parseResearch(readJson("buildrax-research"));
+  const costData = parseCost(readJson("buildrax-cost"));
+  const costUi: { tier: number; edits: Partial<Assumptions> } = { tier: 0, edits: {} };
+  const costBox = h("div", { class: "cost-view", hidden: "", "aria-label": "Cost estimate" });
   const store = createStore(model, (msg) => void (notesStatus.textContent = msg));
   const inspectorBox = h("div", { class: "tab-body", "aria-live": "polite" });
   const codeBox = h("div", { class: "tab-body code-box" });
@@ -282,6 +293,7 @@ function start(model: Model): void {
     { class: "canvas" },
     svg,
     bpSvg,
+    costBox,
     legendBox,
     statsBox,
     minimapWrap,
@@ -344,6 +356,7 @@ function start(model: Model): void {
         ...[
           ["/", "Search"],
           ["V", "Switch Graph / Nodes view"],
+          ["C", "Cost view"],
           ["F", "Focus on the selection"],
           ["[  ]", "Overview / Inspector panel"],
           ["M", "Minimap"],
@@ -399,6 +412,7 @@ function start(model: Model): void {
         { class: "seg view-seg", role: "radiogroup", "aria-label": "View" },
         segGraph,
         segNodes,
+        segCost,
       ),
       focusPill,
       h("div", { class: "top-right" }, fitBtn, menuWrap),
@@ -524,7 +538,12 @@ function start(model: Model): void {
         }),
       );
     }
-    if (sel?.type === "node") put(inspectorBox, renderResearchSection(research, index, sel.id));
+    if (sel?.type === "node")
+      put(
+        inspectorBox,
+        renderCostSection(costData, model, costUi.edits, sel.id, () => setCost(true)),
+        renderResearchSection(research, index, sel.id),
+      );
     if (sel) put(inspectorBox, renderNotesSection({ type: sel.type, id: sel.id }, store, index));
     scene.setBadges(nodeBadges(store.list(), index), edgeBadges(store.list()));
     blueprint.setBadges(nodeBadges(store.list(), index));
@@ -731,16 +750,50 @@ function start(model: Model): void {
   /** Show the canvas of the current view; only it draws the minimap. */
   function syncView(): void {
     const nodes = state.view === "nodes";
+    const cost = state.cost;
     document.body.classList.toggle("view-nodes", nodes);
-    scene.setActive(!nodes);
-    blueprint.setActive(nodes);
-    segGraph.setAttribute("aria-checked", String(!nodes));
-    segNodes.setAttribute("aria-checked", String(nodes));
+    document.body.classList.toggle("view-cost", cost);
+    scene.setActive(!nodes && !cost);
+    blueprint.setActive(nodes && !cost);
+    costBox.hidden = !cost;
+    segGraph.setAttribute("aria-checked", String(!nodes && !cost));
+    segNodes.setAttribute("aria-checked", String(nodes && !cost));
+    segCost.setAttribute("aria-checked", String(cost));
   }
   function setView(v: ViewState["view"]): void {
-    if (state.view === v) return;
+    const wasCost = state.cost;
+    state.cost = false;
+    if (state.view === v) {
+      if (wasCost) {
+        syncView();
+        writeHash();
+      }
+      return;
+    }
     state.view = v;
     void refresh({ fit: true });
+  }
+  const paintCost = (): void => {
+    renderCostView(costBox, {
+      data: costData,
+      model,
+      ui: costUi,
+      onChange: () => {
+        paintCost();
+        paint();
+      },
+      onSelectNode: (id) => {
+        setCost(false);
+        void selectNode(id);
+      },
+    });
+  };
+  /** The Cost view covers the canvas; the graph underneath keeps its state. */
+  function setCost(on: boolean): void {
+    state.cost = on;
+    if (on) paintCost();
+    syncView();
+    writeHash();
   }
 
   const restyle = (): void => {
@@ -887,6 +940,7 @@ function start(model: Model): void {
       else if (ev.key === "m" || ev.key === "M") panels.setMinimap(!panels.prefs.minimap);
       else if (ev.key === "v" || ev.key === "V")
         setView(state.view === "nodes" ? "graph" : "nodes");
+      else if (ev.key === "c" || ev.key === "C") setCost(!state.cost);
     }
   });
   searchInput.addEventListener("input", () => {
@@ -934,6 +988,7 @@ function start(model: Model): void {
   fitBtn.addEventListener("click", () => active().fit(true));
   segGraph.addEventListener("click", () => setView("graph"));
   segNodes.addEventListener("click", () => setView("nodes"));
+  segCost.addEventListener("click", () => setCost(true));
   shakeBtn.addEventListener("click", () => scene.reheat());
   unpinBtn.addEventListener("click", () => scene.unpinAll());
   segLayered.addEventListener("click", () => setLayout("layered"));
@@ -965,7 +1020,9 @@ function start(model: Model): void {
     state.theme === "dark" ? "Dark" : state.theme === "light" ? "Light" : "Auto (system)";
   setTheme();
   syncControls();
-  void refresh({ fit: true });
+  void refresh({ fit: true }).then(() => {
+    if (state.cost) setCost(true);
+  });
 }
 
 const embedded = readEmbedded();
