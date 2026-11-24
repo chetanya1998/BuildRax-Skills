@@ -71,6 +71,7 @@ function nextRoutes(
     if (stem === "route")
       return facts.httpExports.map((m) => ({
         ...base,
+        line: facts.exportLines?.[m] ?? 1,
         method: m,
         path: nextRoutePath(dirs),
         handler: m,

@@ -1,11 +1,18 @@
 import { listRoutes, routeFlow, type Flow, type GraphIndex, type RouteInfo } from "@buildrax/graph";
 import { h, s } from "./dom.js";
+import { codeTargetFor, type FloatingCode } from "./flows-code.js";
 
 export interface FlowsUi {
   /** Selected route id. */
   route?: string;
   filter: string;
+  /** Code view enabled by the user: clicks open the floating code window. */
+  code: boolean;
+  /** Box or step whose code is shown (highlighted in the diagram). */
+  picked?: Pick;
 }
+
+type Pick = { kind: "node"; id: string } | { kind: "step"; n: number };
 
 export interface FlowsViewOptions {
   index: GraphIndex;
@@ -13,6 +20,62 @@ export interface FlowsViewOptions {
   onChange: () => void;
   /** Leave the Flows view and select the node in the graph. */
   onSelectNode: (id: string) => void;
+  /** Floating code window; absent when the viewer has no way to read source. */
+  codeWindow?: FloatingCode;
+  /** Why code cannot be shown (e.g. built with --no-source), when it cannot. */
+  codeUnavailable?: string;
+  onToggleCode: (on: boolean) => void;
+}
+
+export const CODE_TOOLTIP =
+  "When on, clicking an endpoint, a box or a step opens a floating window with the source lines " +
+  "behind it, highlighted. Drag it by its header, resize it from the corner, close it with Esc. " +
+  "Code is read from this page (or from buildrax serve on your machine) and never sent anywhere. " +
+  "When off, clicks jump to the node in the graph.";
+
+const codeOn = (o: FlowsViewOptions): boolean => o.ui.code && !!o.codeWindow && !o.codeUnavailable;
+
+/** The Code view switch with its tooltip (shown on hover and keyboard focus). */
+function codeToggle(o: FlowsViewOptions): HTMLElement {
+  const disabled = !!o.codeUnavailable || !o.codeWindow;
+  const box = h("input", {
+    type: "checkbox",
+    role: "switch",
+    "aria-describedby": "flows-code-tip",
+    ...(o.ui.code && !disabled ? { checked: "" } : {}),
+    ...(disabled ? { disabled: "" } : {}),
+  });
+  box.addEventListener("change", () => o.onToggleCode(box.checked));
+  return h(
+    "label",
+    { class: `code-toggle${disabled ? " disabled" : ""}` },
+    box,
+    h("span", null, "Code view"),
+    h("span", { class: "info", tabindex: 0, "aria-hidden": "true" }, "?"),
+    h(
+      "span",
+      { class: "tip", role: "tooltip", id: "flows-code-tip" },
+      disabled ? (o.codeUnavailable ?? "No source is available in this viewer.") : CODE_TOOLTIP,
+    ),
+  );
+}
+
+/** A click on a box or step: open its code when Code view is on, else jump to the graph. */
+function pick(
+  o: FlowsViewOptions,
+  index: GraphIndex,
+  flow: Flow,
+  p: Pick,
+  fallbackNode: string,
+): void {
+  if (codeOn(o)) {
+    const t = codeTargetFor(index, flow, p);
+    o.ui.picked = p;
+    if (t) void o.codeWindow!.show(t);
+    o.onChange();
+    return;
+  }
+  o.onSelectNode(fallbackNode);
 }
 
 const METHOD_HUE: Record<string, number> = {
@@ -150,6 +213,7 @@ function routeList(routes: RouteInfo[], o: FlowsViewOptions): HTMLElement {
           );
           b.addEventListener("click", () => {
             o.ui.route = r.id;
+            o.ui.picked = undefined;
             o.onChange();
           });
           return b;
@@ -285,7 +349,9 @@ function diagram(index: GraphIndex, flow: Flow, o: FlowsViewOptions): SVGSVGElem
       ),
       s("title", null, `${n.label}\n${n.sub}`),
     );
-    const open = (): void => o.onSelectNode(n.lane === "endpoint" ? flow.entry : n.id);
+    const open = (): void =>
+      pick(o, index, flow, { kind: "node", id: n.id }, n.lane === "endpoint" ? flow.entry : n.id);
+    if (o.ui.picked?.kind === "node" && o.ui.picked.id === n.id) g.classList.add("picked");
     g.addEventListener("click", open);
     g.addEventListener("keydown", (ev) => {
       if ((ev as KeyboardEvent).key === "Enter") open();
@@ -296,18 +362,23 @@ function diagram(index: GraphIndex, flow: Flow, o: FlowsViewOptions): SVGSVGElem
   return svg;
 }
 
-function stepList(index: GraphIndex, flow: Flow): HTMLElement {
+function stepList(index: GraphIndex, flow: Flow, o: FlowsViewOptions): HTMLElement {
   const name = (id: string) => {
     const n = index.node(id);
     return n?.kind === "file" ? (n.path ?? n.name) : `${n?.name ?? id}${n ? ` (${n.kind})` : ""}`;
   };
+  const clickable = codeOn(o);
   return h(
     "ol",
-    { class: "flow-steps" },
-    ...flow.steps.map((st) =>
-      h(
+    { class: `flow-steps${clickable ? " clickable" : ""}` },
+    ...flow.steps.map((st) => {
+      const picked = o.ui.picked?.kind === "step" && o.ui.picked.n === st.n;
+      const li = h(
         "li",
-        null,
+        {
+          class: picked ? "picked" : undefined,
+          ...(clickable ? { tabindex: 0, title: "Show the code for this step" } : {}),
+        },
         h("span", { class: "muted" }, `hop ${st.hop} · `),
         `${name(st.from)} `,
         h("b", null, st.kind),
@@ -319,8 +390,16 @@ function stepList(index: GraphIndex, flow: Flow): HTMLElement {
               ` ${st.evidence.file}${st.evidence.startLine ? `:${st.evidence.startLine}` : ""}`,
             )
           : null,
-      ),
-    ),
+      );
+      if (clickable) {
+        const go = (): void => pick(o, index, flow, { kind: "step", n: st.n }, st.to);
+        li.addEventListener("click", go);
+        li.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter") go();
+        });
+      }
+      return li;
+    }),
   );
 }
 
@@ -371,6 +450,7 @@ export function renderFlowsView(el: HTMLElement, o: FlowsViewOptions): void {
                   { class: "muted" },
                   `${r.framework} · ${r.file ?? ""}${r.line ? `:${r.line}` : ""}${r.handler ? ` · ${r.handler}` : ""}`,
                 ),
+                codeToggle(o),
               ),
               h(
                 "p",
@@ -387,7 +467,7 @@ export function renderFlowsView(el: HTMLElement, o: FlowsViewOptions): void {
               h("div", { class: "flow-scroll" }, diagram(o.index, flow, o)),
               h("h3", null, "Steps"),
               flow.steps.length
-                ? stepList(o.index, flow)
+                ? stepList(o.index, flow, o)
                 : h(
                     "p",
                     { class: "muted" },
@@ -396,7 +476,7 @@ export function renderFlowsView(el: HTMLElement, o: FlowsViewOptions): void {
               h(
                 "p",
                 { class: "muted small" },
-                "Static and file-level: everything the handler's file can reach through imports, not one runtime path. Click a box to see it in the graph.",
+                "Static and file-level: everything the handler's file can reach through imports, not one runtime path. Click a box to see it in the graph, or turn on Code view to read its code here.",
               ),
             )
           : h("p", null, "Select an endpoint."),

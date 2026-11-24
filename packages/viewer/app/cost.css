@@ -513,3 +513,168 @@ body.view-cost .map-toggle {
 .cost-view .small {
   font-size: 11px;
 }
+
+/* ---- Flows: Code view switch, tooltip and floating code window ---- */
+.code-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.code-toggle.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.code-toggle input {
+  appearance: none;
+  width: 30px;
+  height: 17px;
+  border-radius: 99px;
+  background: var(--line);
+  position: relative;
+  cursor: inherit;
+  transition: background 0.15s;
+  margin: 0;
+}
+.code-toggle input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--panel-solid);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s;
+}
+.code-toggle input:checked {
+  background: var(--accent);
+}
+.code-toggle input:checked::after {
+  transform: translateX(13px);
+}
+.code-toggle input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.code-toggle .info {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  font-size: 10px;
+  color: var(--ink-soft);
+}
+.code-toggle .tip {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  width: 300px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11.5px;
+  line-height: 1.45;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-3px);
+  transition:
+    opacity 0.12s,
+    transform 0.12s;
+  pointer-events: none;
+}
+.code-toggle:hover .tip,
+.code-toggle:focus-within .tip {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.flow-node.picked rect:first-child {
+  stroke: var(--up);
+  stroke-width: 2.4;
+}
+.flow-steps.clickable li {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0 4px;
+}
+.flow-steps.clickable li:hover,
+.flow-steps li.picked {
+  background: color-mix(in srgb, var(--up) 16%, transparent);
+}
+.floating-code {
+  position: fixed;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  min-height: 160px;
+  resize: both;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-solid);
+  box-shadow: var(--shadow);
+}
+.floating-code[hidden] {
+  display: none;
+}
+.fc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px 7px 12px;
+  border-bottom: 1px solid var(--line);
+  cursor: grab;
+  font: 600 12px var(--ui);
+  color: var(--ink);
+  touch-action: none;
+}
+.fc-head:active {
+  cursor: grabbing;
+}
+.fc-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-head button {
+  font: inherit;
+  font-weight: 500;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.fc-head .fc-close {
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px 8px;
+}
+.fc-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+}
+.fc-body .codeblock {
+  margin: 0;
+}
+.fc-body .cb-body {
+  max-height: none;
+}

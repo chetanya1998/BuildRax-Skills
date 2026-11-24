@@ -41,7 +41,11 @@ The viewer is one offline HTML file with two views of the same architecture (swi
 - **Flows view** (`E`): every endpoint the scan found (Next.js, Express, Fastify, Hono, Koa,
   NestJS, FastAPI, Flask), grouped by framework and filterable. Pick one to see what it reaches,
   lane by lane: endpoint → handler file → code (by hop) → infrastructure (databases, queues, …) →
-  packages, with numbered steps and `file:line` evidence. Click any box to jump to it in the graph.
+  packages, with numbered steps and `file:line` evidence. Click any box to jump to it in the graph,
+  or switch on **Code view** (off by default, remembered; hover its `?` for what it does) to read the
+  code instead: clicking the endpoint, a box or a step opens a floating window with the relevant
+  lines highlighted (drag it by its header, resize from the corner, `Esc` closes). Disabled with
+  an explanation when the viewer was built with `--no-source`.
 - **Cost view** (after `buildrax cost`): the traffic tiers side by side, a stacked chart, the
   breakdown per component with low–high ranges, what changes between tiers, bottlenecks, which
   assumptions matter most, missing prices and dated price sources. Edit any assumption to

@@ -29,7 +29,7 @@ describe("routes and flow commands", () => {
   it("lists endpoints with framework and file:line", async () => {
     const text = formatRoutes(await routesCommand(tmp));
     expect(text).toMatch(/^22 API endpoint\(s\), 1 page\(s\)/);
-    expect(text).toMatch(/GET\s+\/api\/orders\s+nextjs\s+web\/src\/app\/api\/orders\/route\.ts:1/);
+    expect(text).toMatch(/GET\s+\/api\/orders\s+nextjs\s+web\/src\/app\/api\/orders\/route\.ts:2/);
     expect(text).toMatch(/\(computed path\)/);
   });
 

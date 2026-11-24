@@ -72,7 +72,7 @@ export interface ScanStats {
 }
 
 /** Changes whenever parsing could produce different output: scanner version and grammars. */
-export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@2;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
+export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@3;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
 
 /** Scan a repository statically and return its Architecture IR. Never executes repo code. */
 export async function scan(repoPath: string, options: ScanOptions = {}): Promise<Model> {

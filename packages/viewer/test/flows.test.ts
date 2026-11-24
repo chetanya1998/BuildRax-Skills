@@ -86,3 +86,58 @@ describe("flows in the URL", () => {
     expect(decodeState("#%7B%22flows%22%3A%22yes%22%7D").flows).toBe(false);
   });
 });
+
+describe("code behind a click in the Flows view", async () => {
+  const { codeTargetFor } = await import("../app/flows-code.js");
+  const m2 = {
+    ...model,
+    nodes: model.nodes.map((n) =>
+      n.kind === "route"
+        ? { ...n, evidence: [{ kind: "verified", file: "api/orders.ts", startLine: 7 }] }
+        : n,
+    ),
+    edges: [
+      e("file:api/orders.ts", "imports", "file:lib/a.ts"),
+      {
+        ...e("file:lib/a.ts", "uses", "database:postgres"),
+        evidence: [{ kind: "verified", file: "lib/a.ts", startLine: 3 }],
+      },
+      {
+        ...e("file:lib/a.ts", "depends-on", "external:pg"),
+        evidence: [{ kind: "verified", file: "lib/a.ts", startLine: 3 }],
+      },
+    ],
+  } as unknown as Model;
+  const index = new GraphIndex(m2);
+  const flow = routeFlow(index, "route:.:GET /orders")!;
+
+  it("endpoint → the handler line; step → the linking line", () => {
+    expect(codeTargetFor(index, flow, { kind: "node", id: "route:.:GET /orders" })).toMatchObject({
+      file: "api/orders.ts",
+      line: 7,
+      marks: [[7, "GET /orders"]],
+      nodeId: "file:api/orders.ts",
+    });
+    const step = flow.steps.find((s) => s.to === "database:postgres")!;
+    expect(codeTargetFor(index, flow, { kind: "step", n: step.n })).toMatchObject({
+      file: "lib/a.ts",
+      line: 3,
+      nodeId: "database:postgres",
+    });
+  });
+
+  it("file box → whole file with its outgoing links marked, one label per line", () => {
+    const t = codeTargetFor(index, flow, { kind: "node", id: "file:lib/a.ts" })!;
+    expect(t.marks).toHaveLength(1);
+    expect(t.marks[0]![0]).toBe(3);
+    expect(t.marks[0]![1]).toMatch(/depends-on pg · \d+\. uses PostgreSQL/);
+  });
+
+  it("infrastructure box → where the flow reaches it", () => {
+    expect(codeTargetFor(index, flow, { kind: "node", id: "database:postgres" })).toMatchObject({
+      title: expect.stringMatching(/^PostgreSQL: reached in step \d+$/),
+      file: "lib/a.ts",
+      line: 3,
+    });
+  });
+});

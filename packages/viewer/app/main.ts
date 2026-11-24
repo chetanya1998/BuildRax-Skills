@@ -25,6 +25,7 @@ import { computeLineage } from "./lineage.js";
 import { parseResearch, renderResearchSection } from "./research-ui.js";
 import { parseCost, renderCostSection, renderCostView } from "./cost-ui.js";
 import { renderFlowsView, type FlowsUi } from "./flows-ui.js";
+import { FloatingCode } from "./flows-code.js";
 import { startLiveUpdates, type LiveConfig } from "./live.js";
 import type { Assumptions } from "@buildrax/cost";
 import { radiusFor } from "./geometry.js";
@@ -265,7 +266,19 @@ function start(model: Model): void {
   const costUi: { tier: number; edits: Partial<Assumptions> } = { tier: 0, edits: {} };
   const costBox = h("div", { class: "cost-view", hidden: "", "aria-label": "Cost estimate" });
   const flowsBox = h("div", { class: "cost-view flows-view", hidden: "", "aria-label": "Flows" });
-  const flowsUi: FlowsUi = { route: state.route, filter: "" };
+  const readFlag = (key: string): boolean => {
+    try {
+      return window.localStorage.getItem(key) === "on";
+    } catch {
+      return false;
+    }
+  };
+  // Code view in Flows is opt-in and remembered in this browser.
+  const flowsUi: FlowsUi = {
+    route: state.route,
+    filter: "",
+    code: readFlag("buildrax:flows-code"),
+  };
   const store = createStore(model, (msg) => void (notesStatus.textContent = msg));
   const inspectorBox = h("div", { class: "tab-body", "aria-live": "polite" });
   const codeBox = h("div", { class: "tab-body code-box" });
@@ -291,6 +304,9 @@ function start(model: Model): void {
     (url, init) => fetch(url, init),
   );
   let codeSeq = 0;
+  // Floating code window for the Flows view (one per page, created only if source can be read).
+  const flowsCode = source.mode === "none" ? undefined : new FloatingCode(source);
+  if (flowsCode) document.body.append(flowsCode.el);
   const legendBox = h("div", { class: "legend", "aria-label": "Color legend" });
   const statsBox = h("div", { class: "stats" });
   const minimap = h("canvas", { class: "minimap", width: 168, height: 112, "aria-hidden": "true" });
@@ -829,11 +845,39 @@ function start(model: Model): void {
         setFlows(false);
         void selectNode(id);
       },
+      codeWindow: flowsCode,
+      codeUnavailable: flowsCode
+        ? undefined
+        : "Code view is unavailable: this viewer was built with buildrax view --no-source. Rebuild it without that flag, or use buildrax serve.",
+      onToggleCode: (on) => {
+        flowsUi.code = on;
+        try {
+          window.localStorage.setItem("buildrax:flows-code", on ? "on" : "off");
+        } catch {
+          /* not remembered */
+        }
+        if (!on) flowsCode?.close();
+        paintFlows();
+      },
     });
   };
+  if (flowsCode) {
+    flowsCode.onShowInGraph = (id) => {
+      flowsCode.close();
+      setFlows(false);
+      void selectNode(id);
+    };
+    flowsCode.onClose = () => {
+      if (flowsUi.picked) {
+        flowsUi.picked = undefined;
+        if (state.flows) paintFlows();
+      }
+    };
+  }
   /** The Flows view covers the canvas like Cost; the graph keeps its state. */
   function setFlows(on: boolean): void {
     state.flows = on;
+    if (!on) flowsCode?.close();
     if (on) {
       state.cost = false;
       paintFlows();

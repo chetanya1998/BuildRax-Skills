@@ -36,6 +36,8 @@ export interface FileFacts {
   prefixes: Record<string, string>;
   /** Next.js route handlers exported by name (`export async function GET`). */
   httpExports: string[];
+  /** Line of each exported route handler. */
+  exportLines?: Record<string, number>;
   /** File starts with the "use server" directive (Next.js server actions). */
   useServer: boolean;
   /** App/router objects created in this file (`const app = express()`, `router = APIRouter()`). */
@@ -134,7 +136,11 @@ export function jsFacts(root: Node): FileFacts {
         : decl.type === "lexical_declaration"
           ? decl.namedChildren.map((v) => v?.childForFieldName("name")?.text)
           : [];
-    for (const n of names) if (n && HTTP_EXPORTS.has(n)) f.httpExports.push(n);
+    for (const n of names)
+      if (n && HTTP_EXPORTS.has(n)) {
+        f.httpExports.push(n);
+        (f.exportLines ??= {})[n] = lineOf(decl);
+      }
   }
 
   for (const call of root.descendantsOfType("call_expression")) {
