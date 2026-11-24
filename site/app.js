@@ -1,178 +1,439 @@
-(()=>{
+(() => {
 'use strict';
-const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS = 'http://www.w3.org/2000/svg';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const wait = ms => new Promise(r => setTimeout(r, reduce ? 0 : ms));
+const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+const svgEl = (parent, tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
 
-/* theme + nav */
-$('#theme').onclick=()=>{const r=document.documentElement,t=r.dataset.theme==='dark'?'light':'dark';r.dataset.theme=t;store.set('bx-theme',t)};
-$('#burger').onclick=e=>{const o=$('#links').classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',o)};
-$$('#links a').forEach(a=>a.addEventListener('click',()=>$('#links').classList.remove('open')));
+/* ── theme, menu, nav state ───────────────────────────── */
+$('#theme').addEventListener('click', () => {
+  const r = document.documentElement;
+  const cur = r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  store.set('bx-theme', r.dataset.theme);
+});
+const menu = $('#menu'), links = $('#links');
+menu.addEventListener('click', () => { const o = links.classList.toggle('open'); menu.setAttribute('aria-expanded', o); });
+$$('a', links).forEach(a => a.addEventListener('click', () => { links.classList.remove('open'); menu.setAttribute('aria-expanded', false); }));
+const onScroll = () => document.body.classList.toggle('scrolled', scrollY > 8);
+addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
-/* reveal + active nav + one-shot triggers */
-const once=new Map();
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');const f=once.get(e.target);if(f){f();once.delete(e.target)}io.unobserve(e.target)}}),{threshold:.18});
-$$('.rv').forEach(el=>io.observe(el));
-const secs=$$('main section[id]'),links=$$('#links a[href^="#"]');
-const so=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}),{rootMargin:'-45% 0px -50% 0px'});
-secs.forEach(s=>so.observe(s));
-const onView=(el,fn)=>{if(!el)return;once.set(el,fn);io.observe(el)};
+const navObs = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) $$('a', links).forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+}), { rootMargin: '-45% 0px -50% 0px' });
+$$('main section[id]').forEach(s => navObs.observe(s));
 
-/* hero canvas: drifting dependency graph with one red cycle */
-(()=>{
- const c=$('#bg'),x=c.getContext('2d');let W,H,nodes=[],mx=-999,my=-999,raf;
- const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
- function size(){const r=c.parentElement.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);
-  const n=Math.round(Math.min(46,W/17));nodes=Array.from({length:n},(_,i)=>({x:Math.random()*W,y:Math.random()*H*.9,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:2+Math.random()*4,h:i%7===0}))}
- function frame(t){x.clearRect(0,0,W,H);const b=css('--blue'),o=css('--org'),red=css('--red');
-  nodes.forEach(n=>{if(!reduce){n.x+=n.vx;n.y+=n.vy}if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1});
-  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){const a=nodes[i],q=nodes[j],d=Math.hypot(a.x-q.x,a.y-q.y);
-   if(d<190){const near=Math.hypot((a.x+q.x)/2-mx,(a.y+q.y)/2-my)<140;x.strokeStyle=near?o:b;x.globalAlpha=(1-d/190)*(near?.7:.22);x.lineWidth=near?1.6:1;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(q.x,q.y);x.stroke()}}
-  nodes.forEach((n,i)=>{const p=n.h?1+.25*Math.sin(t/500+i):1,g=x.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*4*p);const col=n.h?red:b;g.addColorStop(0,col);g.addColorStop(1,'transparent');x.globalAlpha=n.h?.5:.35;x.fillStyle=g;x.beginPath();x.arc(n.x,n.y,n.r*4*p,0,7);x.fill();x.globalAlpha=.9;x.fillStyle=col;x.beginPath();x.arc(n.x,n.y,n.r,0,7);x.fill()});
-  x.globalAlpha=1;if(!reduce)raf=requestAnimationFrame(frame)}
- size();addEventListener('resize',()=>{cancelAnimationFrame(raf);size();raf=requestAnimationFrame(frame)});
- c.parentElement.addEventListener('pointermove',e=>{const r=c.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top});
- document.addEventListener('visibilitychange',()=>{cancelAnimationFrame(raf);if(!document.hidden)raf=requestAnimationFrame(frame)});
- raf=requestAnimationFrame(frame);
- const tl=$('#tilt');if(!reduce&&matchMedia('(hover:hover)').matches){tl.parentElement.addEventListener('pointermove',e=>{const r=tl.getBoundingClientRect();tl.style.setProperty('--ry',((e.clientX-r.left)/r.width-.5)*6+'deg');tl.style.setProperty('--rx',(.5-(e.clientY-r.top)/r.height)*5+'deg')});tl.addEventListener('pointerleave',()=>{tl.style.setProperty('--rx','0deg');tl.style.setProperty('--ry','0deg')})}
+/* ── reveal + one-shot triggers ───────────────────────── */
+const hooks = new Map();
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add('in');
+  const f = hooks.get(e.target); if (f) { hooks.delete(e.target); f(); }
+  io.unobserve(e.target);
+}), { threshold: .15 });
+$$('.rv').forEach(el => io.observe(el));
+const whenSeen = (el, fn) => { if (!el) return; hooks.set(el, fn); io.observe(el); };
+
+function countUp(el, to, ms = 1400) {
+  const t0 = performance.now();
+  const step = t => { const p = reduce ? 1 : Math.min(1, (t - t0) / ms), v = Math.round(to * (1 - Math.pow(1 - p, 3)));
+    el.textContent = v.toLocaleString('en-US'); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+/* ── hero spotlight follows the pointer ───────────────── */
+const hero = $('#top'), spot = $('#spot');
+if (!reduce && matchMedia('(hover: hover)').matches) hero.addEventListener('pointermove', e => {
+  const r = hero.getBoundingClientRect();
+  spot.style.setProperty('--mx', (e.clientX - r.left) + 'px'); spot.style.setProperty('--my', (e.clientY - r.top) + 'px');
+});
+
+/* ── geometry: a line between two boxes, clipped to their borders ── */
+function clip(ax, ay, bx, by, hw, hh) {
+  const dx = bx - ax, dy = by - ay;
+  const s = Math.min(hw / Math.abs(dx || 1e-9), hh / Math.abs(dy || 1e-9));
+  return [ax + dx * s, ay + dy * s];
+}
+function edgePath(A, B, w, h) {
+  const [x1, y1] = clip(A.x, A.y, B.x, B.y, w / 2 + 3, h / 2 + 3);
+  const [x2, y2] = clip(B.x, B.y, A.x, A.y, w / 2 + 6, h / 2 + 6);
+  return `M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+function cyclePath(A, B, w, bend) {
+  // two facing arcs between side-by-side boxes: one above, one below
+  const dir = B.x > A.x ? 1 : -1, off = bend < 0 ? -8 : 8;
+  const sx = A.x + dir * w / 2, ex = B.x - dir * (w / 2 + 5);
+  return `M${sx} ${A.y + off} Q${(sx + ex) / 2} ${A.y + off + bend} ${ex} ${B.y + off}`;
+}
+function arrowDefs(svg, id) {
+  const d = svgEl(svg, 'defs', {});
+  d.innerHTML = `<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 1L9 5L0 9z" fill="context-stroke"/></marker>`;
+}
+
+/* Real data: fixtures/sample-monorepo, from `buildrax scan` and model.json */
+const FILES = ['packages/api/src/server.ts', 'packages/api/src/routes/orders.ts', 'packages/api/src/services/billing.ts', 'packages/api/src/services/orders.ts',
+  'packages/shared/src/index.ts', 'packages/shared/src/types.ts', 'services/worker/worker/__init__.py', 'services/worker/worker/helpers.py', 'services/worker/worker/jobs.py', 'services/worker/worker/main.py'];
+
+/* ── hero motion graphic: the scan, drawn live ─────────── */
+(() => {
+  const svg = $('#scanSvg'), list = $('#scanFiles'), status = $('#scanStatus'), bar = $('#scanBar'), clock = $('#scanClock');
+  arrowDefs(svg, 'sa');
+  const W = 106, H = 34;
+  const N = {
+    miss:   { x: 62,  y: 40,  t: 'missing.js', k: 'UNRESOLVED', c: 'un', f: 0 },
+    server: { x: 200, y: 40,  t: 'server.ts', k: 'API', f: 0 },
+    express:{ x: 338, y: 40,  t: 'express', k: 'EXTERNAL', c: 'ext', f: 0 },
+    routes: { x: 120, y: 128, t: 'routes/orders', k: 'API', f: 1 },
+    shared: { x: 320, y: 128, t: '@sample/shared', k: 'WORKSPACE', f: 4 },
+    sord:   { x: 80,  y: 222, t: 'orders.ts', k: 'SERVICES', f: 3 },
+    bill:   { x: 250, y: 222, t: 'billing.ts', k: 'SERVICES', f: 2 },
+    stripe: { x: 338, y: 302, t: 'stripe', k: 'EXTERNAL', c: 'ext', f: 2 },
+    jobs:   { x: 62,  y: 302, t: 'jobs.py', k: 'WORKER', f: 8 },
+    redis:  { x: 186, y: 302, t: 'redis', k: 'EXTERNAL', c: 'ext', f: 8 },
+  };
+  const E = [['server', 'routes'], ['server', 'express'], ['server', 'shared'], ['server', 'miss', 'un'], ['routes', 'bill'], ['routes', 'sord'],
+    ['bill', 'sord', 'cy'], ['sord', 'bill', 'cy'], ['bill', 'stripe'], ['jobs', 'redis']];
+  const eg = svgEl(svg, 'g', {}), ng = svgEl(svg, 'g', {});
+  const edges = E.map(([a, b, c]) => {
+    const d = c === 'cy' ? cyclePath(N[a], N[b], W, a === 'bill' ? -40 : 40) : edgePath(N[a], N[b], W, H);
+    return { p: svgEl(eg, 'path', { d, class: 'e', 'marker-end': 'url(#sa)' }), c };
+  });
+  for (const k in N) {
+    const n = N[k], g = svgEl(ng, 'g', { class: 'n ' + (n.c || '') });
+    svgEl(g, 'rect', { x: n.x - W / 2, y: n.y - H / 2, width: W, height: H, rx: 8 });
+    svgEl(g, 'text', { x: n.x, y: n.y - 1, 'text-anchor': 'middle' }).textContent = n.t;
+    svgEl(g, 'text', { x: n.x, y: n.y + 11, 'text-anchor': 'middle', class: 'k' }).textContent = n.k;
+    n.g = g;
+  }
+  list.innerHTML = FILES.map(f => `<li title="${esc(f)}">${esc(f.split('/').slice(-2).join('/'))}</li>`).join('');
+  const lis = $$('li', list);
+
+  function reset() {
+    lis.forEach(l => { l.className = ''; });
+    for (const k in N) N[k].g.classList.remove('on', 'cy');
+    edges.forEach(e => {
+      const L = e.p.getTotalLength();
+      e.p.classList.remove('cy', 'pulse');
+      e.p.style.transition = 'none'; e.p.style.strokeDasharray = L; e.p.style.strokeDashoffset = L;
+    });
+    bar.style.width = '0'; clock.textContent = '0.0 s'; status.textContent = 'reading manifests…';
+  }
+  let token = 0;
+  async function run() {
+    const my = ++token;
+    reset(); await wait(500);
+    for (let i = 0; i < FILES.length; i++) {
+      if (my !== token) return;
+      lis.forEach(l => l.classList.remove('cur')); lis[i].classList.add('cur', 'on');
+      status.innerHTML = 'parsing <b>' + esc(FILES[i].split('/').pop()) + '</b>';
+      bar.style.width = ((i + 1) / FILES.length * 100) + '%';
+      clock.textContent = ((i + 1) / FILES.length).toFixed(1) + ' s';
+      for (const k in N) if (N[k].f === i) N[k].g.classList.add('on');
+      await wait(260);
+    }
+    lis.forEach(l => l.classList.remove('cur'));
+    status.textContent = 'resolving imports…';
+    for (const e of edges) {
+      if (my !== token) return;
+      e.p.style.transition = ''; e.p.style.strokeDashoffset = 0;
+      if (e.c === 'un') setTimeout(() => { e.p.style.strokeDasharray = '2 4'; }, reduce ? 0 : 900);
+      await wait(130);
+    }
+    await wait(700);
+    edges.filter(e => e.c === 'cy').forEach(e => { e.p.style.strokeDasharray = 'none'; e.p.classList.add('cy', 'pulse'); });
+    N.bill.g.classList.add('cy'); N.sord.g.classList.add('cy');
+    status.innerHTML = '<b>24 nodes · 16 edges</b> · <span class="bad">1 circular dependency</span>';
+    await wait(5200);
+    if (my === token && !reduce) run();
+  }
+  let running = false;
+  new IntersectionObserver(es => {
+    const v = es[0].isIntersecting;
+    if (v && !running) { running = true; run(); }
+    if (!v) { token++; running = false; }
+  }, { threshold: .2 }).observe($('.scan'));
 })();
 
-/* flip cards: tap to toggle on touch */
-$$('.flip').forEach(f=>f.addEventListener('click',()=>f.classList.toggle('on')));
+/* ── stats count-up ───────────────────────────────────── */
+whenSeen($('#stats'), () => $$('#stats [data-count]').forEach(el => countUp(el, +el.dataset.count)));
 
-/* interactive explorer (real edges from a scan of fixtures/sample-monorepo) */
-(()=>{
- const N={
-  server:{x:320,y:42,t:'server.ts',s:'api',p:'packages/api/src/server.ts'},
-  routes:{x:200,y:150,t:'orders.ts',s:'routes',p:'packages/api/src/routes/orders.ts'},
-  sord:{x:150,y:290,t:'orders.ts',s:'services',p:'packages/api/src/services/orders.ts'},
-  bill:{x:420,y:290,t:'billing.ts',s:'services',p:'packages/api/src/services/billing.ts'},
-  stripe:{x:560,y:385,t:'stripe',s:'external',p:'stripe'},
-  express:{x:540,y:42,t:'express',s:'external',p:'express'},
-  shared:{x:560,y:150,t:'packages/shared',s:'workspace',p:'packages/shared'},
-  miss:{x:80,y:42,t:'./missing.js',s:'unresolved',p:'./missing.js'}};
- const E=[['server','routes',4],['server','express',1],['server','shared',3],['server','miss',5],['routes','bill',2],['routes','sord',1],['bill','sord',1,'cy'],['sord','bill',1,'cy'],['bill','stripe',2]];
- const svg=$('#xg'),NS='http://www.w3.org/2000/svg';let dir='up',sel=null;
- const el=(n,a,p)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e};
- el('defs',{}).innerHTML='<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--mut)"/></marker>';
- const eEls=E.map(([a,b,l,cy],i)=>{const A=N[a],B=N[b];let d;
-  if(cy){const sgn=a==='bill'?-1:1;d=`M${A.x} ${A.y+(a==='bill'?-20:20)} Q${(A.x+B.x)/2} ${(A.y+B.y)/2+sgn*(a==='bill'?-34:34)} ${B.x+(a==='bill'?65:-70)} ${B.y+(a==='bill'?-8:8)}`;
-   d=a==='bill'?`M${A.x-70} ${A.y-8} Q${(A.x+B.x)/2} ${A.y-46} ${B.x+70} ${B.y-8}`:`M${A.x+70} ${A.y+8} Q${(A.x+B.x)/2} ${A.y+46} ${B.x-70} ${B.y+8}`}
-  else{const dx=B.x-A.x,dy=B.y-A.y,k=Math.min(Math.abs(26/(dy||1)),1.2),sy=dy>0?20:-20;d=`M${A.x} ${A.y+sy} L${B.x} ${B.y-sy}`}
-  const p=el('path',{d,class:'e'+(cy?' cy':''),'marker-end':'url(#ar)'});if(b==='miss')p.setAttribute('stroke-dasharray','3 5');return p});
- const nEls={};for(const k in N){const n=N[k],g=el('g',{class:'n',tabindex:0,role:'button','aria-label':'Select '+n.p,transform:`translate(${n.x},${n.y})`});
-  el('rect',{x:-70,y:-22,width:140,height:44,rx:10},g);el('text',{y:-2,'text-anchor':'middle'},g).textContent=n.t;el('text',{y:13,'text-anchor':'middle',class:'s'},g).textContent=n.s;
-  g.onclick=()=>pick(k);g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(k)}};nEls[k]=g}
- function walk(start,d){const seen={[start]:0},out=[],q=[start];while(q.length){const c=q.shift();E.forEach(([a,b,l],i)=>{const from=d==='up'?b:a,to=d==='up'?a:b;if(from===c&&!(to in seen)){seen[to]=seen[c]+1;out.push({k:to,hop:seen[to],l,via:from,i});q.push(to)}})}return{seen,out}}
- function pick(k){sel=k;render()}
- function render(){const L=$('#iList');L.innerHTML='';
-  Object.values(nEls).forEach(g=>g.setAttribute('class','n'));eEls.forEach((p,i)=>p.setAttribute('class','e'+(E[i][3]?' cy':'')));
-  if(!sel){$('#iName').textContent='Select a file';$('#iNote').textContent='Click any box in the graph.';$('#iCmd').textContent='buildrax trace <file> --direction up';return}
-  const {seen,out}=walk(sel,dir);Object.entries(nEls).forEach(([k,g])=>g.classList.add(k===sel?'sel':k in seen?(dir==='up'?'up':'dn'):'dim'));
-  const hit=new Set(out.map(o=>o.i));E.forEach(([a,b],i)=>{const inSet=(dir==='up'?(b in seen&&a in seen):(a in seen&&b in seen));const p=eEls[i];if(inSet&&(hit.has(i)||(a in seen&&b in seen)))p.classList.add(dir==='up'?'up':'dn');else p.classList.add('dim')});
-  const n=N[sel];$('#iName').textContent=n.p;
-  $('#iNote').textContent=out.length?(dir==='up'?`${out.length} node(s) could break if this changes:`:`${out.length} node(s) it relies on:`):(dir==='up'?'Nothing depends on this file.':'No further dependencies.');
-  out.forEach(o=>{const li=document.createElement('li');const e=E[o.i],cyc=e[3];li.className=cyc?'c':dir==='up'?'u':'d';li.style.animationDelay=o.hop*90+'ms';li.style.marginLeft=(o.hop-1)*14+'px';
-   li.innerHTML=esc(N[o.k].p)+' <span style="color:var(--mut)">:'+(o.l)+'</span>'+(cyc?' <b style="color:var(--red)">circular</b>':'');L.appendChild(li)});
-  $('#iCmd').textContent=`buildrax trace ${n.p} --direction ${dir}`}
- $('#dUp').onclick=()=>{dir='up';$('#dUp').setAttribute('aria-pressed',true);$('#dDn').setAttribute('aria-pressed',false);render()};
- $('#dDn').onclick=()=>{dir='down';$('#dDn').setAttribute('aria-pressed',true);$('#dUp').setAttribute('aria-pressed',false);render()};
- 
- onView($('#xg'),()=>setTimeout(()=>{if(!sel)pick('bill')},500));
+/* ── marquee: duplicate the track for a seamless loop ── */
+(() => { const t = $('#mq'); t.innerHTML += t.innerHTML.replace(/<span>/g, '<span aria-hidden="true">'); })();
+
+/* ── viewer tour (the real GIFs) ───────────────────────── */
+(() => {
+  const T = [
+    { k: 'Explore', d: 'The whole map', gif: 'explore.gif', file: 'view.html · Graph', cmd: 'buildrax view . --open',
+      cap: 'Open packages into segment boxes. Click one to light up what it uses (blue) and what uses it (orange), then focus on a single package.',
+      alt: 'The Graph view of this repository: packages opened into segment boxes, a package clicked to highlight what it uses and what uses it, then the Nodes view and Focus' },
+    { k: 'Trace', d: 'Impact, line by line', gif: 'trace-code.gif', file: 'view.html · Nodes · Code view', cmd: 'buildrax trace src/billing.ts --direction up',
+      cap: 'Step through how a file connects. Then turn on Code view and click a file or a database to read the exact lines. Config secrets are masked.',
+      alt: 'The Inspector trace stepped through for server.ts, then Code view showing the lines behind a file and a database' },
+    { k: 'Flows', d: 'Endpoint → database', gif: 'flows.gif', file: 'view.html · Flows', cmd: 'buildrax routes --reaching database:postgres',
+      cap: 'Every endpoint across frameworks. Follow GET /api/orders down to PostgreSQL and open each step’s code in a floating window.',
+      alt: 'The Flows view: GET /api/orders drawn in lanes down to PostgreSQL, with steps opening their code' },
+    { k: 'Cost', d: 'Price per traffic tier', gif: 'cost.gif', file: 'view.html · Cost', cmd: 'buildrax cost --mode product',
+      cap: 'Monthly estimates at five traffic tiers. Double an assumption and every tier recomputes. Prices come from dated list prices, and anything without a price feed says “price needed”.',
+      alt: 'The Cost view: five traffic tiers with monthly estimates, recomputing when an assumption is doubled' },
+  ];
+  const DUR = 22000;
+  const tabs = $('#tourTabs'), img = $('#tourImg'), load = $('#tourLoad');
+  const cache = {};
+  const fetchGif = src => cache[src] || (cache[src] = new Promise(res => { const i = new Image(); i.onload = i.onerror = () => res(src); i.src = 'assets/' + src; }));
+  T.forEach((t, i) => {
+    const b = document.createElement('button');
+    b.className = 'tt'; b.setAttribute('role', 'tab'); b.id = 'tt' + i;
+    b.innerHTML = `<span class="num">0${i + 1}</span><b>${esc(t.k)}</b><span class="d">${esc(t.d)}</span>`;
+    b.addEventListener('click', () => show(i));
+    tabs.appendChild(b);
+  });
+  let cur = 0, t0 = performance.now(), visible = false, pausedAt = 0;
+  async function show(i) {
+    cur = i; t0 = performance.now(); pausedAt = 0;
+    const t = T[i];
+    $$('.tt', tabs).forEach((b, j) => { b.setAttribute('aria-selected', j === i); b.style.setProperty('--p', '0%'); });
+    $('#tourFile').textContent = t.file; $('#tourCap').textContent = t.cap; $('#tourCmd').textContent = t.cmd;
+    if (!img.getAttribute('src').endsWith(t.gif)) {
+      load.classList.add('on');
+      await fetchGif(t.gif);
+      if (cur !== i) return;
+      img.classList.add('hide');
+      await wait(220);
+      img.src = 'assets/' + t.gif;
+      img.classList.remove('hide'); load.classList.remove('on');
+    }
+    img.alt = t.alt;
+    t0 = performance.now();
+    fetchGif(T[(i + 1) % T.length].gif); // warm the next clip
+  }
+  function tick(now) {
+    const running = visible && !document.hidden && !reduce;
+    if (running) {
+      if (pausedAt) { t0 += now - pausedAt; pausedAt = 0; }
+      const p = Math.min(1, (now - t0) / DUR);
+      $('#tt' + cur).style.setProperty('--p', (p * 100) + '%');
+      if (p >= 1) show((cur + 1) % T.length);
+    } else if (!pausedAt) pausedAt = now;
+    requestAnimationFrame(tick);
+  }
+  show(0);
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }, { threshold: .35 }).observe($('.stage'));
+  requestAnimationFrame(tick);
 })();
 
-/* feature showcase */
-(()=>{
- const F=[
- {k:'Explore',img:'graph.webp',gif:'explore.gif',t:'Explore the map',p:'Open packages into segment boxes, click one to light up what it uses (blue) and what uses it (orange), then focus on a single package.',l:['Graph and Nodes views','Circular imports in red','Overview: most connected files'],c:'buildrax view path/to/repo --open'},
- {k:'Trace',img:'nodes-trace.webp',gif:'trace-code.gif',t:'Trace and read the code',p:'Step through how a file connects, then turn on Code view and click a file or a database to see the exact lines. Config secrets are masked.',l:['Inspector trace, one hop at a time','Code view (press K) with file:line','Impact before a refactor'],c:'buildrax trace src/billing.ts --direction up'},
- {k:'Flows',img:'flows-code.webp',gif:'flows.gif',t:'Follow endpoints to the database',p:'Every endpoint across frameworks. Follow one down lanes to PostgreSQL and open each step in a floating code window.',l:['Next.js, Express, Fastify, Hono, Koa, NestJS, FastAPI, Flask','Router prefixes resolved across files','Filter routes reaching a database'],c:'buildrax routes --reaching database:postgres'},
- {k:'Cost',img:'cost.webp',gif:'cost.gif',t:'Cost by traffic tier',p:'Monthly estimates at 100, 1k, 10k, 100k and 1M users with bottlenecks per tier. Change an assumption and every tier recomputes in the page.',l:['Dated AWS list prices with source','No price feed: "price needed", never a guess','Estimates, not measured bills'],c:'buildrax cost --mode product'}];
- const tabs=$('#ftabs'),img=$('#fImg'),pp=$('#fPP'),prog=$('#fProg');let cur=0,playing=false,timer,t0;
- F.forEach((f,i)=>{const b=document.createElement('button');b.className='tab';b.setAttribute('role','tab');b.textContent=f.k;b.onclick=()=>show(i,true);tabs.appendChild(b)});
- function stop(){clearInterval(timer);prog.style.width='0'}
- function play(){const f=F[cur];playing=true;img.src='assets/'+f.gif+'?'+Date.now();pp.textContent='❚❚ Showing live demo (click to stop)';stop();t0=Date.now();timer=setInterval(()=>{prog.style.width=Math.min(100,(Date.now()-t0)/220)%100+'%'},120)}
- function pause(){playing=false;stop();img.src='assets/'+F[cur].img;pp.textContent='▶ Play demo'}
- function show(i,user){cur=i;const f=F[i];$$('.tab',tabs).forEach((b,j)=>b.setAttribute('aria-selected',j===i));
-  $('#fT').textContent=f.t;$('#fP').textContent=f.p;$('#fL').innerHTML=f.l.map(x=>'<li>'+esc(x)+'</li>').join('');$('#fC').textContent=f.c;
-  img.alt=f.t+': screenshot of the BuildRAX viewer';pause();if(user||!reduce&&started)play()}
- pp.onclick=()=>playing?pause():play();
- let started=false;show(0);
- onView($('.show'),()=>{started=true;if(!reduce)play()});
+/* ── problems ─────────────────────────────────────────── */
+(() => {
+  const P = [
+    ['Nobody knows how this fits together.', 'A map built from the code itself, not from stale diagrams. Every link points at the import that creates it.', 'Graph · Nodes · digest'],
+    ['If I change this file, what breaks?', 'Transitive impact, hop by hop, with the file:line behind each step.', 'trace --direction up'],
+    ['What does this endpoint actually touch?', 'Every route across eight frameworks, followed to the databases and services it can reach.', 'routes · flow · Flows view'],
+    ['The AI wrote files and dependencies I never designed.', 'What was added, removed or rewired since the last scan or any commit.', 'diff --since main · scan --watch'],
+    ['My agent burns tokens reading the whole repo.', 'A digest of about 420 tokens and question packs of about 4k, all with file:line anchors.', 'digest · context'],
+    ['Circular imports make every change risky.', 'Found on every scan, highlighted in red, and listed in the summary.', 'scan · Graph view'],
+    ['Which databases, queues and paid APIs do we run?', 'Detected from compose, Terraform, Kubernetes, platform files and SDK imports, each with evidence.', 'Infrastructure'],
+    ['The hosting bill is a mystery. Will it scale?', 'Monthly cost from 100 to 1M users, using dated list prices, with the bottleneck at each tier.', 'cost · Cost view'],
+    ['Are our runtimes outdated or our dependencies vulnerable?', 'Opt-in OSV.dev advisories for pinned versions, plus end-of-life dates for your runtimes.', 'research --online'],
+  ];
+  $('#rows').innerHTML = P.map(([q, a, t], i) =>
+    `<li class="row rv${i % 3 ? ' d' + (i % 3) : ''}"><span class="num">${String(i + 1).padStart(2, '0')}</span><q>${esc(q)}</q><div class="a">${esc(a)}<br><span class="tag">${esc(t)}</span></div></li>`).join('');
+  $$('#rows .rv').forEach(el => io.observe(el));
 })();
 
-/* terminal: real CLI output from fixtures/sample-monorepo */
-(()=>{
- const pre=$('#tm');
- const S=[
-  ['c','buildrax scan .'],
-  ['o',`<span class="bl">Scanned sample-monorepo</span>  (python, typescript)
+/* ── interactive explorer ──────────────────────────────── */
+(() => {
+  const svg = $('#xg'); arrowDefs(svg, 'xa');
+  const W = 150, H = 48;
+  const N = {
+    miss:   { x: 95,  y: 52,  t: 'missing.js', k: 'UNRESOLVED', p: './missing.js' },
+    server: { x: 320, y: 52,  t: 'server.ts', k: 'API', p: 'packages/api/src/server.ts' },
+    express:{ x: 545, y: 52,  t: 'express', k: 'EXTERNAL', p: 'express' },
+    routes: { x: 205, y: 172, t: 'routes/orders.ts', k: 'API', p: 'packages/api/src/routes/orders.ts' },
+    shared: { x: 545, y: 172, t: '@sample/shared', k: 'WORKSPACE', p: 'packages/shared' },
+    sord:   { x: 120, y: 300, t: 'orders.ts', k: 'SERVICES', p: 'packages/api/src/services/orders.ts' },
+    bill:   { x: 420, y: 300, t: 'billing.ts', k: 'SERVICES', p: 'packages/api/src/services/billing.ts' },
+    stripe: { x: 545, y: 395, t: 'stripe', k: 'EXTERNAL', p: 'stripe' },
+  };
+  // [from, to, line, kind]: every line number comes from model.json evidence
+  const E = [['server', 'routes', 4], ['server', 'express', 1], ['server', 'shared', 3], ['server', 'miss', 5, 'un'], ['routes', 'bill', 2], ['routes', 'sord', 1],
+    ['bill', 'sord', 1, 'cy'], ['sord', 'bill', 1, 'cy'], ['bill', 'stripe', 2]];
+  const eg = svgEl(svg, 'g', {}), ng = svgEl(svg, 'g', {});
+  const eEls = E.map(([a, b, , c]) => {
+    const d = c === 'cy' ? cyclePath(N[a], N[b], W, a === 'bill' ? -54 : 54) : edgePath(N[a], N[b], W, H);
+    const p = svgEl(eg, 'path', { d, class: 'e' + (c === 'cy' ? ' cy' : ''), 'marker-end': 'url(#xa)' });
+    if (c === 'un') p.setAttribute('stroke-dasharray', '3 5');
+    return p;
+  });
+  const nEls = {};
+  for (const k in N) {
+    const n = N[k];
+    const g = svgEl(ng, 'g', { class: 'n', tabindex: 0, role: 'button', 'aria-label': 'Select ' + n.p });
+    svgEl(g, 'rect', { x: n.x - W / 2, y: n.y - H / 2, width: W, height: H, rx: 10 });
+    svgEl(g, 'text', { x: n.x, y: n.y - 2, 'text-anchor': 'middle' }).textContent = n.t;
+    svgEl(g, 'text', { x: n.x, y: n.y + 14, 'text-anchor': 'middle', class: 'k' }).textContent = n.k;
+    g.addEventListener('click', () => pick(k));
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(k); } });
+    nEls[k] = g;
+  }
+  let dir = 'up', sel = null;
+  function walk(start) {
+    const seen = { [start]: 0 }, out = [], q = [start];
+    while (q.length) {
+      const c = q.shift();
+      E.forEach(([a, b, l, kind]) => {
+        const from = dir === 'up' ? b : a, to = dir === 'up' ? a : b;
+        // evidence lives in the importing file: `to` when walking up, `c` when walking down
+        if (from === c && !(to in seen)) { seen[to] = seen[c] + 1; out.push({ k: to, hop: seen[to], l, kind, src: dir === 'up' ? N[to].p : N[c].p }); q.push(to); }
+      });
+    }
+    return { seen, out };
+  }
+  function pick(k) { sel = k; render(); }
+  function render() {
+    const { seen, out } = walk(sel);
+    const cls = dir === 'up' ? 'up' : 'dn';
+    for (const k in nEls) nEls[k].setAttribute('class', 'n ' + (k === sel ? 'sel' : k in seen ? cls : 'dim'));
+    E.forEach(([a, b, , c], i) => eEls[i].setAttribute('class', 'e' + (c === 'cy' ? ' cy' : '') + ((a in seen && b in seen) ? ' ' + cls : ' dim')));
+    const n = N[sel];
+    $('#iName').textContent = n.p;
+    $('#iNote').textContent = out.length
+      ? (dir === 'up' ? `${out.length} node(s) could break if this changes:` : `${out.length} node(s) it relies on:`)
+      : (dir === 'up' ? 'Nothing in the repo depends on this.' : 'It depends on nothing further.');
+    $('#iList').innerHTML = out.map(o => {
+      const file = o.src.split('/').slice(-2).join('/');
+      return `<li class="${o.kind === 'cy' ? 'c' : dir === 'up' ? '' : 'd'}" style="animation-delay:${o.hop * 90}ms;margin-left:${(o.hop - 1) * 12}px"><span>${esc(N[o.k].p)}</span>${o.kind === 'cy' ? '<span class="cy">circular</span>' : `<span class="ln">${esc(file)}:${o.l}</span>`}</li>`;
+    }).join('');
+    $('#iCmd').textContent = `buildrax trace ${n.p} --direction ${dir === 'up' ? 'up' : 'down'}`;
+  }
+  const setDir = d => { dir = d; $('#dUp').setAttribute('aria-pressed', d === 'up'); $('#dDn').setAttribute('aria-pressed', d === 'down'); if (sel) render(); };
+  $('#dUp').addEventListener('click', () => setDir('up'));
+  $('#dDn').addEventListener('click', () => setDir('down'));
+  whenSeen($('.explorer'), () => setTimeout(() => { if (!sel) pick('bill'); }, reduce ? 0 : 600));
+})();
+
+/* ── terminal replay (real CLI output) ─────────────────── */
+(() => {
+  const pre = $('#tm');
+  const S = [
+    ['$', 'buildrax scan .'],
+    ['>', `<span class="p">Scanned sample-monorepo</span>  (python, typescript)
   10 files · 6 modules · 4 external · 1 unresolved
   24 nodes · 16 edges
   <span class="r">1 circular dependency:</span>
-    packages/api/src/services/billing.ts <-> packages/api/src/services/orders.ts
+    packages/api/src/services/billing.ts <-> .../services/orders.ts
   parsed 10 file(s), reused 0 unchanged, in 1.0 s
 `],
-  ['c','buildrax digest .'],
-  ['o',`BUILDRAX DIGEST repo=sm schema=buildrax-ir/v2
+    ['$', 'buildrax digest .'],
+    ['>', `BUILDRAX DIGEST repo=sample-monorepo schema=buildrax-ir/v2
 languages: python, typescript | files=10 nodes=24 edges=16
 <span class="m">static analysis only: not observed at runtime</span>
 
 MODULES
 M2 packages/api [npm @sample/api] files=4 <span class="r">CYCLE</span> -> X1 X4 M3 M5 U1
-M3 packages/shared files=2
-M4 services/worker [python] files=4 -> M1 X2 X3
+M3 packages/shared [npm @sample/shared] files=2
+M4 services/worker [python sample-worker] files=4 -> M1 X2 X3
 
-CYCLES
-packages/api/src/services/billing.ts <-> .../orders.ts
+EXTERNAL  X1 express · X2 redis · X3 requests · X4 stripe
 
 UNRESOLVED IMPORTS <span class="m">(do not assume they exist)</span>
 packages/api/src/server.ts:5 ./missing.js
 `],
-  ['c','buildrax trace packages/api/src/services/billing.ts --direction up'],
-  ['o',`Everything that depends on billing.ts (what could break if it changes)
+    ['$', 'buildrax trace packages/api/src/services/billing.ts'],
+    ['>', `Everything that depends on billing.ts (what could break if it changes)
 3 node(s), 3 file(s)
   <span class="o">packages/api/src/routes/orders.ts:2</span>
   <span class="o">packages/api/src/services/orders.ts:1</span>
     <span class="o">packages/api/src/server.ts:4</span>
 `]];
- let run=0;
- async function go(){const id=++run;pre.innerHTML='';
-  const w=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
-  for(const [k,t] of S){if(id!==run)return;
-   if(k==='c'){const line=document.createElement('div');line.innerHTML='<span class="p">$</span> <span></span><span class="caret"></span>';pre.appendChild(line);const sp=line.children[1];
-    for(const ch of t){if(id!==run)return;sp.textContent+=ch;await w(22)}await w(250);line.querySelector('.caret').remove()}
-   else{const d=document.createElement('div');d.innerHTML=t;pre.appendChild(d);d.style.animation='slide .5s both';await w(900)}
-   pre.scrollTop=pre.scrollHeight}}
- $('#replay').onclick=go;onView($('#tm'),go);
+  let run = 0;
+  async function go() {
+    const id = ++run; pre.innerHTML = '';
+    for (const [k, t] of S) {
+      if (id !== run) return;
+      const line = document.createElement('div');
+      if (k === '$') {
+        line.innerHTML = '<span class="g">❯</span> <span></span><span class="caret"></span>'; pre.appendChild(line);
+        const sp = line.children[1];
+        for (const ch of t) { if (id !== run) return; sp.textContent += ch; await wait(26); }
+        await wait(280); line.querySelector('.caret').remove();
+      } else {
+        line.innerHTML = t; line.style.animation = 'rise .5s var(--ease) both'; pre.appendChild(line); await wait(1100);
+      }
+      pre.scrollTop = pre.scrollHeight;
+    }
+    const end = document.createElement('div'); end.innerHTML = '<span class="g">❯</span> <span class="caret"></span>'; pre.appendChild(end);
+  }
+  $('#replay').addEventListener('click', go);
+  whenSeen(pre, go);
 })();
 
-/* token bars + counters */
-function count(el,to,dur,dec){const s=performance.now();(function f(t){const p=reduce?1:Math.min(1,(t-s)/dur),e=1-Math.pow(1-p,3),v=to*e;el.textContent=dec?v.toFixed(dec):Math.round(v).toLocaleString();if(p<1)requestAnimationFrame(f)})(s)}
-onView($('#tok'),()=>$$('#tok .tr').forEach((r,i)=>setTimeout(()=>{$('i',r).style.width=Math.max(.8,+$('i',r).dataset.w)+'%';count($('b',r),+$('b',r).dataset.n,1600)},i*250)));
-onView($('#trust .num').closest('.card'),()=>$$('#trust .num').forEach(n=>count(n,+n.dataset.c,1400,+n.dataset.d||0)));
+/* ── token bars ───────────────────────────────────────── */
+whenSeen($('#tokens'), () => $$('#tokens .tk').forEach((r, i) => setTimeout(() => {
+  const bar = $('i', r); bar.style.width = Math.max(.9, +bar.dataset.w) + '%';
+  const b = $('b', r); countUp(b, +b.dataset.n, 1800);
+}, reduce ? 0 : i * 260)));
 
-/* personas */
-(()=>{
- const P=[
- {n:'Indie hacker',s:[['As an indie hacker returning to a side project after two months, I want a one-screen overview of its packages and hubs, so that I can start a change without rereading everything.','buildrax view --open'],['As an indie hacker planning a launch, I want to know what the app would cost at 10k and 100k users and what breaks first, so that I can price my plan and avoid surprises.','buildrax cost --mode product']]},
- {n:'Developer',s:[['As a developer about to refactor billing.ts, I want every file that depends on it, hop by hop, with the import lines, so that I know what to retest.','buildrax trace src/billing.ts --direction up'],['As a developer reviewing a pull request, I want the architecture changes in plain words, so that I can spot a new dependency or a cycle without reading the whole diff.','buildrax diff --since origin/main --markdown']]},
- {n:'Vibe-coder',s:[['As a vibe-coder who let an AI build the backend, I want to see every endpoint and which database each one touches, so that I can check it did what I asked.','buildrax routes --reaching database:postgres'],['As a vibe-coder, I want to click an arrow and read the lines that create it, so that I can understand generated code without opening ten files.','Code view: press K, then click the arrow']]},
- {n:'Context engineer',s:[['As a context engineer, I want a bounded, evidence-linked context pack for a question, so that my agent answers from facts and spends a few thousand tokens instead of hundreds of thousands.','buildrax context "how does checkout talk to Stripe" --budget 3000'],['As a context engineer, I want the same repository to always produce the same IDs and digest, so that prompts and caches are stable across runs.','Deterministic IDs and scans, checked by tests']]},
- {n:'Founder / builder',s:[['As a solo technical founder, I want one place for the technical picture an investor, contractor or new hire asks about, so that I can answer with evidence.','buildrax view · buildrax cost · buildrax research --online'],['As a founder, I want to know which runtimes are end-of-life and which pinned versions have known advisories, so that I can fix risk early.','buildrax research --online']]},
- {n:'Team',s:[['As a team lead, I want the map rebuilt on every push with an architecture summary on each PR, so that erosion is caught in review.','See docs/ci.md'],['As a team, we want CI to fail when a PR introduces a circular dependency, so that cycles never merge unnoticed.','buildrax diff --since origin/main (optional check)']]}];
- const tl=$('#ptabs'),body=$('#pBody');
- P.forEach((p,i)=>{const b=document.createElement('button');b.setAttribute('role','tab');b.textContent=p.n;b.onclick=()=>sel(i);tl.appendChild(b)});
- function sel(i){$$('button',tl).forEach((b,j)=>b.setAttribute('aria-selected',j===i));
-  body.innerHTML='<h3>'+esc(P[i].n)+'</h3>'+P[i].s.map(([t,c])=>`<div class="story"><p style="margin:0">${esc(t)}</p><div class="cmd"><code>${esc(c)}</code><button data-copy>copy</button></div></div>`).join('');body.animate&&!reduce&&body.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:350})}
- sel(0);
+/* ── personas ─────────────────────────────────────────── */
+(() => {
+  const P = [
+    ['Indie hacker', [['returning to a side project after two months', 'a one-screen overview of its packages and hubs', 'I can start a change without rereading everything', 'buildrax view --open'],
+      ['planning a launch', 'to know what the app would cost at 10k and 100k users and what breaks first', 'I can price my plan and avoid surprises', 'buildrax cost --mode product']]],
+    ['Developer', [['about to refactor billing.ts', 'every file that depends on it, hop by hop, with the import lines', 'I know what to retest', 'buildrax trace src/billing.ts --direction up'],
+      ['reviewing a pull request', 'the architecture changes in plain words', 'I can spot a new dependency or a cycle without reading the whole diff', 'buildrax diff --since origin/main --markdown']]],
+    ['Vibe-coder', [['who let an AI build the backend', 'to see every endpoint and which database each one touches', 'I can check it did what I asked', 'buildrax routes --reaching database:postgres'],
+      ['reading generated code', 'to click an arrow and read the lines that create it', 'I understand it without opening ten files', 'Code view: press K, then click the arrow']]],
+    ['Context engineer', [['feeding an agent', 'a bounded, evidence-linked context pack for one question', 'my agent answers from facts and spends thousands of tokens instead of hundreds of thousands', 'buildrax context "how does checkout talk to Stripe" --budget 3000'],
+      ['caching prompts', 'the same repository to always produce the same IDs and digest', 'prompts and caches stay stable across runs', 'buildrax digest .']]],
+    ['Founder', [['talking to an investor or a new hire', 'one place for the architecture, infrastructure and monthly cost', 'I can answer with evidence instead of guesses', 'buildrax view . --open'],
+      ['worried about risk', 'to know which runtimes are end-of-life and which pinned versions have advisories', 'I can fix risk early', 'buildrax research --online']]],
+    ['Team', [['leading a growing codebase', 'the map rebuilt on every push, with an architecture summary on each PR', 'erosion is caught in review', 'buildrax diff --since origin/main --markdown'],
+      ['protecting main', 'CI to fail when a PR introduces a circular dependency', 'cycles never merge unnoticed', 'buildrax diff --since origin/main --fail-on-new-cycles']]],
+  ];
+  const tabs = $('#ptabs'), body = $('#pBody');
+  P.forEach(([name], i) => {
+    const b = document.createElement('button'); b.className = 'ptab'; b.setAttribute('role', 'tab'); b.textContent = name;
+    b.addEventListener('click', () => sel(i)); tabs.appendChild(b);
+  });
+  function sel(i) {
+    $$('.ptab', tabs).forEach((b, j) => b.setAttribute('aria-selected', j === i));
+    const [name, s] = P[i];
+    body.innerHTML = s.map(([who, want, so, cmd], j) => `<article class="story"><p>As a <b>${esc(name.toLowerCase())}</b> ${esc(who)}, I want <b>${esc(want)}</b>, so that ${esc(so)}.</p><span class="pill-cmd"><code id="ps${j}">${esc(cmd)}</code><button class="copy" data-copy="#ps${j}">Copy</button></span></article>`).join('');
+  }
+  sel(0);
 })();
 
-/* CI card */
-onView($('#pr'),()=>{const t=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));(async()=>{await t(900);$('#prW').style.opacity=1;await t(700);$('#prD').className='dot bad';$('#prT').textContent='architecture check: failed (1 new circular dependency)'})()});
+/* ── CI gates ─────────────────────────────────────────── */
+whenSeen($('#gates'), async () => {
+  const g = $$('#gates .gate');
+  for (let i = 0; i < g.length; i++) {
+    g[i].classList.add('on'); const b = $('.badge', g[i]); b.textContent = 'RUNNING';
+    await wait(900);
+    if (i < 2) { b.textContent = 'PASS'; b.classList.add('pass'); }
+    else { $('#gWarn').classList.add('on'); await wait(500); b.textContent = 'FAIL'; b.classList.add('fail'); }
+  }
+});
 
-/* copy buttons (delegated) */
-document.addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b)return;const txt=$('code',b.parentElement).textContent;
- (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>{b.textContent='copied ✓';setTimeout(()=>b.textContent='copy',1400)}).catch(()=>{const r=document.createRange();r.selectNodeContents($('code',b.parentElement));getSelection().removeAllRanges();getSelection().addRange(r)})});
+/* ── copy buttons ─────────────────────────────────────── */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-copy]'); if (!b) return;
+  const src = $(b.dataset.copy); if (!src) return;
+  const done = () => { b.textContent = 'Copied'; b.classList.add('ok'); setTimeout(() => { b.textContent = 'Copy'; b.classList.remove('ok'); }, 1400); };
+  if (navigator.clipboard) navigator.clipboard.writeText(src.textContent).then(done, () => {});
+  else { const r = document.createRange(); r.selectNodeContents(src); getSelection().removeAllRanges(); getSelection().addRange(r); }
+});
+
+/* ── footer wordmark fills as you reach the end ─────────── */
+(() => {
+  const wm = $('#wordmark');
+  if (reduce) { wm.style.setProperty('--fill', '100%'); return; }
+  const upd = () => {
+    const r = wm.getBoundingClientRect();
+    const p = Math.max(0, Math.min(1, (innerHeight - r.top) / (r.height + innerHeight * .35)));
+    wm.style.setProperty('--fill', (p * 100).toFixed(1) + '%');
+  };
+  addEventListener('scroll', upd, { passive: true }); upd();
+})();
 })();
