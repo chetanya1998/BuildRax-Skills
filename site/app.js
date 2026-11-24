@@ -876,7 +876,10 @@ packages/api/src/server.ts:5 ./missing.js
         b.classList.remove("ok");
       }, 1400);
     };
-    if (navigator.clipboard) navigator.clipboard.writeText(src.textContent).then(done, () => {});
+    if (navigator.clipboard)
+      navigator.clipboard
+        .writeText(src.textContent.replace(/\s+/g, " ").trim())
+        .then(done, () => {});
     else {
       const r = document.createRange();
       r.selectNodeContents(src);

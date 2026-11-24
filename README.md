@@ -236,8 +236,8 @@ without a price feed are shown as "price needed", never guessed. _Estimates, not
 Requires Node.js 22 or newer and pnpm.
 
 ```bash
-git clone https://github.com/chetanya1998/buildRax-Skills.git
-cd buildRax-Skills
+git clone https://github.com/chetanya1998/BuildRax-Skills.git
+cd BuildRax-Skills
 pnpm install && pnpm build
 alias buildrax="node $PWD/packages/cli/dist/bin.js"   # until it is published
 ```
