@@ -18,7 +18,9 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
    source files to understand the system.
 3. **Answer a question** with `buildrax context "<the question in plain words>" --budget 3000`.
    Add `--snippets` when you need the lines of code. Cite the `file:line` anchors it returns.
-4. **Impact / dependencies** with `buildrax trace <file|module|id> [--direction up|down] [--depth N]`.
+4. **What changed** (a PR, a branch, since last time): `buildrax diff --since <ref>` lists added
+   and removed components, links, circular dependencies and changed infrastructure.
+   **Impact / dependencies** with `buildrax trace <file|module|id> [--direction up|down] [--depth N]`.
    `up` = what depends on it (what could break if it changes); `down` = what it depends on.
 5. **Show the user** `buildrax view --open` (static file) or `buildrax serve --open` (live, lets
    them save their notes into the repo).

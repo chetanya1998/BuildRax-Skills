@@ -23,6 +23,7 @@ buildrax view fixtures/sample-monorepo --open
 | `scan`                                      | static scan to `.buildrax/model.json` (no LLM tokens, no code execution)      |
 | `digest` / `context "<question>"`           | compact, token-bounded context for agents (notes excluded)                    |
 | `trace <target> [--direction up\|down]`     | transitive dependencies / change impact with `file:line`                      |
+| `diff [--since <git ref>]`                  | architecture changes since the last scan or a commit (links, cycles, infra)   |
 | `view` / `serve`                            | read-only viewer; `serve` saves your sticky notes to `.buildrax/notes.json`   |
 | `notes`                                     | list your notes and flags                                                     |
 | `research [--online]`                       | dependency facts from npm/PyPI; plan-only unless `--online`                   |
@@ -93,7 +94,7 @@ question-specific `context` pack is about 3,900 tokens.
 - Cost: AWS only, on-demand list prices, capacity from editable assumptions (not measurements);
   SaaS prices must be added to `.buildrax/prices.json` with source and date. See `docs/cost.md`.
 - tsconfig `paths` aliases are reported as unresolved rather than guessed.
-- Full rescan every time (no incremental cache yet).
+- Scans are incremental: unchanged files are not re-parsed (the model is identical to a full scan).
 - Research uses npm/PyPI registry data only: no security advisories and no pinned-version
   comparison yet; findings describe the latest release.
 - Agent skill install paths are unverified against vendor docs (see `docs/agents.md`).

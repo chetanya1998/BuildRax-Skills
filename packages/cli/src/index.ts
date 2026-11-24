@@ -8,6 +8,7 @@ import { formatNotes, notesCommand } from "./commands/notes.js";
 import { formatTrace, traceCommand, type TraceDirection } from "./commands/trace.js";
 import { formatPlan, formatResearch, researchCommand, researchPlan } from "./commands/research.js";
 import { startServer } from "./commands/serve.js";
+import { diffCommand, formatDiff } from "./commands/diff.js";
 import { openFile, viewCommand } from "./commands/view.js";
 import { createInterface } from "node:readline/promises";
 import { credentialStatus } from "@buildrax/pricing";
@@ -36,6 +37,7 @@ export { scanCommand, summarize, formatSummary } from "./commands/scan.js";
 export { modelPathFor, notesPathFor, researchPathFor } from "./commands/data.js";
 export { notesCommand, formatNotes } from "./commands/notes.js";
 export { startServer } from "./commands/serve.js";
+export { diffCommand, formatDiff, scanAtRef } from "./commands/diff.js";
 export { traceModel, traceCommand, formatTrace, resolveTarget } from "./commands/trace.js";
 export { formatPlan, researchCommand, researchPlan } from "./commands/research.js";
 export type { RunningServer } from "./commands/serve.js";
@@ -50,9 +52,10 @@ export function buildProgram(): Command {
     .command("scan")
     .argument("[path]", "repository to scan", ".")
     .option("--json", "print the summary as JSON")
+    .option("--no-cache", "re-parse every file (ignore the incremental parse cache)")
     .description("scan a repository statically and write .buildrax/model.json")
-    .action(async (repo: string, opts: { json?: boolean }) => {
-      const summary = await scanCommand(repo);
+    .action(async (repo: string, opts: { json?: boolean; cache: boolean }) => {
+      const summary = await scanCommand(repo, { cache: opts.cache });
       console.log(opts.json ? JSON.stringify(summary, null, 2) : formatSummary(summary));
     });
 
@@ -221,6 +224,20 @@ export function buildProgram(): Command {
         console.log(
           `${s.stored}. To stop using environment credentials, unset AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_SESSION_TOKEN in your shell.`,
         );
+    });
+
+  program
+    .command("diff")
+    .argument("[path]", "repository containing .buildrax/model.json", ".")
+    .option("--since <ref>", "compare with the repository at a git ref (e.g. main, HEAD~5)")
+    .option("--against <model>", "compare with a saved model.json")
+    .option("--json", "print as JSON")
+    .description(
+      "architecture changes: nodes, links and circular dependencies added or removed (default: since the previous scan)",
+    )
+    .action(async (repo: string, opts: { since?: string; against?: string; json?: boolean }) => {
+      const { diff, baseline } = await diffCommand(repo, opts);
+      console.log(opts.json ? JSON.stringify(diff, null, 2) : formatDiff(diff, baseline));
     });
 
   program

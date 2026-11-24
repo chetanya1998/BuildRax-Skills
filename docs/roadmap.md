@@ -7,7 +7,8 @@ each step builds on the previous one.
 2. **Infrastructure detection** — done (IR v2, `docs/schema.md`).
 3. **Cost estimator** — done for AWS (`docs/cost.md`); see _Cost: next_ below.
 4. Pinned versions from lockfiles → security advisories in research.
-5. Incremental scanning; large-graph benchmark (settles the open viewer-technology decision).
+5. Incremental scanning (done) and `buildrax diff`; large-graph benchmark (settles the open
+   viewer-technology decision).
 6. Verify the agent skill in real Claude Code, Codex and Antigravity sessions.
 
 ## 2. Infrastructure detection (prerequisite for cost)
@@ -112,3 +113,62 @@ Still open:
 - More components: SQS, CloudFront, NAT gateway, CloudWatch logs, backups, OpenSearch; reserved /
   savings-plan pricing; Azure Retail Prices and Google Cloud Billing Catalog.
 - Cost badges on nodes in the Graph and Nodes views (the Inspector shows cost today).
+
+## Next: API/data flows, code-change sync, internet search
+
+Decisions (2026-11-24):
+
+1. **Frameworks**: the modern stacks AI assistants generate most. Next.js (app and pages routers,
+   route handlers, server actions), Express and FastAPI first; then NestJS, Fastify, Hono, tRPC,
+   Flask and Django. TypeScript and Python.
+2. **Function-level detail only when the user drills in** (file level stays the default model).
+3. **Team sync**: decide after the impact/effort check below.
+4. **Web search: the agent always asks first.**
+
+### Code-change sync
+
+Done: per-file parse cache (`.buildrax/cache/scan/`, content-hashed, output identical to a full
+scan; on this repo 1.5 s full, 0.1 s unchanged) and `buildrax diff` (since the previous scan, a git
+ref exported with `git archive` into a temp folder, or a saved model). Next: `scan --watch`,
+`serve --watch` with live viewer refresh (keeping selection, layout and notes), orphaned-note flags.
+
+**Team sync, impact and effort** (measured on this repo: 126 files, `model.json` 246 KB of
+pretty-printed JSON, 14 KB gzipped; two scans of the same commit differ only in `scannedAt`):
+
+|                    | Commit `.buildrax/model.json`                                                                                                | CI artifact (recommended)                                                |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Freshness          | Stale whenever someone forgets to rescan; needs a CI check (`scan`, then `git diff --exit-code`)                             | Always built from the commit                                             |
+| Repo impact        | ~250 KB file rewritten on every structural change; generated-file merge conflicts on parallel branches (fixed by rescanning) | None                                                                     |
+| Review value       | Architecture change visible in PRs, but buried in JSON                                                                       | `buildrax diff --since origin/main` posted as a readable PR comment      |
+| Teammates / agents | Map available straight after clone                                                                                           | Run `buildrax scan` (seconds) or download the artifact                   |
+| Effort             | ~1 day: commit-derived `scannedAt`, `.gitattributes` recipe, CI freshness check                                              | ~1 day: workflow recipe (scan, upload model and viewer, PR diff comment) |
+
+Recommendation: keep `.buildrax/` out of git and ship the CI recipe with the PR diff comment,
+because scanning is fast and deterministic. Committing remains possible for teams that want it
+(it needs the commit-derived timestamp first).
+
+### API and data-flow views (IR v3)
+
+1. Routes per framework → `route:<METHOD> <path>` nodes linked to their handlers; unknown or
+   computed paths are `unresolved`.
+2. Data and messaging steps: ORM and client calls classified as `reads` / `writes` to detected
+   databases; BullMQ, Celery, SQS, Kafka and RabbitMQ as `publishes` / `consumes` with the queue
+   name when it is a literal; HTTP calls to the project's own routes.
+3. Function-level `calls`, computed on demand for the files the user drills into (not stored for
+   the whole repo).
+4. `buildrax flow <route|queue|function>` and `buildrax flows`: numbered steps with `file:line`
+   and confidence, plus the participating services, queues and databases. Viewer **Flows** view:
+   endpoints grouped by method and path, and a swimlane (client → route → code → queue → worker →
+   database) reusing the step-by-step trace. The Cost view links endpoints to the components they
+   drive.
+
+### Internet search
+
+1. Pinned versions from lockfiles.
+2. Allowlisted public APIs: OSV.dev advisories, endoflife.date, Docker Hub tags (names and
+   versions only; `--online`; cached and dated).
+3. `buildrax research brief "<topic>"`: a privacy-safe brief (detected stack, versions, suggested
+   queries built only from public technology names) for the agent's own web search, which it runs
+   only after asking the user.
+4. `buildrax research add`: record findings (source URL, date, reliability) into `research.json`
+   or prices into `prices.json`; shown in the Inspector and Cost view; staleness check.
