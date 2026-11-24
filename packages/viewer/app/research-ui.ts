@@ -24,7 +24,13 @@ export function findingsFor(
   for (const id of scope)
     for (const e of index.out(id)) if (index.node(e.to)?.kind === "external") externals.add(e.to);
   const wanted = new Set([nodeId, ...externals]);
-  return file.findings.filter((f) => wanted.has(f.nodeId));
+  // What needs action first (advisories, end of life), then lifecycle, then registry facts.
+  const rank = (f: Finding): number =>
+    (f.recommendedAction ? 0 : 4) +
+    (f.evidenceType === "advisory" ? 0 : f.evidenceType === "lifecycle" ? 1 : 2);
+  return file.findings
+    .filter((f) => wanted.has(f.nodeId))
+    .sort((a, b) => rank(a) - rank(b) || (a.id < b.id ? -1 : 1));
 }
 
 export function parseResearch(raw: unknown): ResearchFile | undefined {
@@ -78,7 +84,7 @@ export function renderResearchSection(
     h(
       "p",
       { class: "muted" },
-      `Fetched ${file.generatedAt.slice(0, 10)}. Registry data describes the latest release, not necessarily the version you run.`,
+      `Fetched ${file.generatedAt.slice(0, 10)}. Advisories and end-of-life dates use the versions pinned in your lockfiles; other registry facts describe the latest release.`,
     ),
   );
 }

@@ -20,11 +20,14 @@ export async function researchPlan(
 
 export function formatPlan(plan: ResearchPlan): string {
   if (!plan.requests.length)
-    return "Nothing to research: no npm or PyPI dependencies were found in the model.";
+    return "Nothing to research: no npm or PyPI dependencies, runtimes or databases with versions were found in the model.";
   return [
     `Research plan: ${plan.requests.length} request(s) to ${plan.hosts.join(", ")}. Nothing has been sent.`,
-    ...plan.requests.map((r) => `  ${r.provider.padEnd(13)} ${r.subject.padEnd(24)} GET ${r.url}`),
-    "Only public package names are sent. Source code, file paths, repo name and notes never leave this machine.",
+    ...plan.requests.map(
+      (r) =>
+        `  ${r.provider.padEnd(13)} ${r.subject.padEnd(24)} ${r.method ?? "GET"} ${r.url}${r.body ? `  ${r.body}` : ""}`,
+    ),
+    "Only public package and product names, and the versions pinned in your lockfiles, are sent. Source code, file paths, repo name and notes never leave this machine.",
     "Run again with --online to fetch these.",
   ].join("\n");
 }

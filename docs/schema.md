@@ -34,6 +34,18 @@ When sources disagree, the more authoritative one wins: Terraform > Kubernetes >
 compose / Dockerfile / Prisma > SDK usage > env names. Values that are expressions (`var.size`,
 `"${...}"`) are never treated as sizes.
 
+### Versions and runtimes (optional facts, v2)
+
+Added without a format change (optional `meta` fields; older readers ignore them):
+
+- `external` nodes: `meta.version` (one pinned version) or `meta.versions` (several, e.g. in a
+  monorepo), from `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml`, `yarn.lock`,
+  `poetry.lock`, `uv.lock`, `requirements*.txt` (exact `==` pins only) and `Pipfile.lock`, with a
+  `config` evidence entry per lockfile line (`locked 4.21.2`). Ranges are never treated as versions.
+- `project` node: `meta.runtimes` = `[{ product, declared, version, file }]` from root
+  `package.json` `engines.node`, `.nvmrc`, `.node-version`, `.python-version` and `pyproject.toml`
+  `requires-python`; `version` is the oldest version the declaration allows.
+
 ## Edges
 
 `{ id: "<from>-><kind>-><to>", from, to, kind, evidence[] }`. Kinds: `imports`, `depends-on`,
@@ -52,3 +64,10 @@ directory grouping or an env variable name), `unresolved`, or `user-proposed`.
 Scanning is static: no repository code is executed. For environment files only
 `.env.example` / `.env.sample` / `.env.template` / `.env.dist` are opened, and only variable
 names are used. A real `.env` is never opened.
+
+## Research file (`buildrax-research`)
+
+`.buildrax/research.json`, written by `buildrax research --online`. `v2` adds the `lifecycle`
+evidence type (end-of-life and support dates); `v1` files are still read. Evidence types:
+`registry-metadata`, `docs-link`, `advisory` (OSV.dev, for the pinned version), `lifecycle`
+(endoflife.date). Every finding has a source URL, publisher, retrieval date and reliability.

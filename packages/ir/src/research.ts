@@ -1,13 +1,16 @@
 import { z } from "zod";
 
-export const RESEARCH_SCHEMA_VERSION = "buildrax-research/v1" as const;
+export const RESEARCH_SCHEMA_VERSION = "buildrax-research/v2" as const;
+/** v2 adds the `lifecycle` evidence type; v1 files are still read. */
+export const RESEARCH_SCHEMA_VERSIONS = ["buildrax-research/v1", RESEARCH_SCHEMA_VERSION] as const;
 
 /**
  * registry-metadata  facts reported by a package registry (e.g. latest version, deprecation)
  * docs-link          a documentation/homepage link declared by the maintainers
  * advisory           a security advisory (needs a known version to be meaningful)
+ * lifecycle          release support / end-of-life dates for a version (v2)
  */
-export const EVIDENCE_TYPES = ["registry-metadata", "docs-link", "advisory"] as const;
+export const EVIDENCE_TYPES = ["registry-metadata", "docs-link", "advisory", "lifecycle"] as const;
 export const RELIABILITY = ["high", "medium", "low"] as const;
 
 export const FindingSchema = z.object({
@@ -30,7 +33,7 @@ export const FindingSchema = z.object({
 });
 
 export const ResearchFileSchema = z.object({
-  schemaVersion: z.literal(RESEARCH_SCHEMA_VERSION),
+  schemaVersion: z.enum(RESEARCH_SCHEMA_VERSIONS),
   generatedAt: z.string(),
   findings: z.array(FindingSchema),
   /** Lookups that failed, so absence of a finding is never mistaken for "nothing found". */

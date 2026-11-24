@@ -6,8 +6,11 @@
 - Dynamic imports with computed paths, plugin systems and dependency injection are invisible.
 - Python absolute imports are resolved from the package root, `src/` and the repo root only.
 - Standard-library and Node built-in imports are intentionally not shown as dependencies.
-- Research covers npm and PyPI registry facts. Security advisories and the pinned version of each
-  dependency are not used yet, so "is my version affected" cannot be answered.
+- Research: npm/PyPI registry facts, OSV.dev advisories for versions pinned in lockfiles
+  (package-lock, pnpm, yarn, poetry, uv, requirements, Pipfile), and endoflife.date support dates
+  for runtimes, databases and major frameworks. Packages without a lockfile pin get no advisory
+  check (a version range is not a version). Python import names that differ from the
+  distribution name (`yaml` vs `PyYAML`) are not matched.
 - Token figures printed by the tools are estimates (about 4 characters per token).
 - Cost: AWS only (Fargate, RDS PostgreSQL/MySQL, ElastiCache, S3, ALB, data transfer, SES), on-demand
   list prices. No reserved/savings plans, free tiers, request charges, NAT, logging or support

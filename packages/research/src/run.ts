@@ -9,7 +9,7 @@ import {
   type ResearchFile,
 } from "@buildrax/ir";
 import { DEFAULT_PROVIDERS } from "./providers.js";
-import { extractTechnologies } from "./tech.js";
+import { extractProducts, extractTechnologies } from "./tech.js";
 import type { FetchLike, PlannedRequest, Provider, Technology } from "./types.js";
 
 export interface PlanOptions {
@@ -24,12 +24,12 @@ export function planResearch(
   opts: PlanOptions = {},
 ): { techs: Technology[]; requests: PlannedRequest[] } {
   const providers = opts.providers ?? DEFAULT_PROVIDERS;
-  const techs = extractTechnologies(model).slice(0, opts.limit ?? 50);
+  const techs = [
+    ...extractTechnologies(model).slice(0, opts.limit ?? 50),
+    ...extractProducts(model),
+  ];
   const requests: PlannedRequest[] = [];
-  for (const t of techs) {
-    const p = providers.find((x) => x.supports(t));
-    if (p) requests.push(p.request(t));
-  }
+  for (const t of techs) for (const p of providers) if (p.supports(t)) requests.push(p.request(t));
   return { techs, requests };
 }
 
@@ -46,16 +46,22 @@ export interface RunOptions extends PlanOptions {
 const MAX_BYTES = 2_000_000;
 
 async function cachedFetch(
-  url: string,
+  req: PlannedRequest,
   hosts: readonly string[],
   opts: RunOptions,
 ): Promise<unknown> {
+  const url = req.url;
   // Hard allowlist: a provider can only ever reach the hosts it declares, over https.
   const u = new URL(url);
   if (u.protocol !== "https:" || !hosts.includes(u.host))
     throw new Error(`blocked request to ${u.host}`);
   const file = opts.cacheDir
-    ? path.join(opts.cacheDir, `${createHash("sha256").update(url).digest("hex")}.json`)
+    ? path.join(
+        opts.cacheDir,
+        `${createHash("sha256")
+          .update(`${req.method ?? "GET"} ${url}\n${req.body ?? ""}`)
+          .digest("hex")}.json`,
+      )
     : undefined;
   if (file) {
     try {
@@ -68,9 +74,12 @@ async function cachedFetch(
   }
   const doFetch = opts.fetchFn ?? ((url2, init) => fetch(url2, init));
   const res = await doFetch(url, {
+    method: req.method ?? "GET",
+    ...(req.body !== undefined ? { body: req.body } : {}),
     headers: {
       accept: "application/json",
       "user-agent": "buildrax-research (open-source architecture tool)",
+      ...(req.body !== undefined ? { "content-type": "application/json" } : {}),
     },
     signal: AbortSignal.timeout(opts.timeoutMs ?? 10_000),
   });
@@ -93,26 +102,27 @@ export async function runResearch(model: Model, opts: RunOptions = {}): Promise<
   const findings: Finding[] = [];
   const errors: ResearchFile["errors"] = [];
 
+  const jobs = techs.flatMap((tech) =>
+    providers.filter((p) => p.supports(tech)).map((provider) => ({ tech, provider })),
+  );
   let next = 0;
   const worker = async (): Promise<void> => {
-    while (next < techs.length) {
-      const tech = techs[next++]!;
-      const provider = providers.find((p) => p.supports(tech));
-      if (!provider) continue;
+    while (next < jobs.length) {
+      const { tech, provider } = jobs[next++]!;
       const req = provider.request(tech);
       try {
-        const json = await cachedFetch(req.url, provider.hosts, opts);
+        const json = await cachedFetch(req, provider.hosts, opts);
         findings.push(...provider.parse(tech, json, { url: req.url, now }));
       } catch (err) {
         errors.push({
-          subject: tech.name,
+          subject: req.subject,
           provider: provider.id,
           message: err instanceof Error ? err.message : String(err),
         });
       }
     }
   };
-  await Promise.all(Array.from({ length: Math.min(opts.concurrency ?? 4, techs.length) }, worker));
+  await Promise.all(Array.from({ length: Math.min(opts.concurrency ?? 4, jobs.length) }, worker));
 
   const file: ResearchFile = {
     schemaVersion: RESEARCH_SCHEMA_VERSION,

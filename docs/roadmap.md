@@ -6,7 +6,7 @@ each step builds on the previous one.
 1. **Graph and Nodes views + step-by-step trace** — done (see README).
 2. **Infrastructure detection** — done (IR v2, `docs/schema.md`).
 3. **Cost estimator** — done for AWS (`docs/cost.md`); see _Cost: next_ below.
-4. Pinned versions from lockfiles → security advisories in research.
+4. Pinned versions from lockfiles → security advisories and end-of-life dates in research (done).
 5. Incremental scanning (done) and `buildrax diff`; large-graph benchmark (settles the open
    viewer-technology decision).
 6. Verify the agent skill in real Claude Code, Codex and Antigravity sessions.
@@ -166,9 +166,10 @@ because scanning is fast and deterministic. Committing remains possible for team
 
 ### Internet search
 
-1. Pinned versions from lockfiles.
-2. Allowlisted public APIs: OSV.dev advisories, endoflife.date, Docker Hub tags (names and
-   versions only; `--online`; cached and dated).
+1. Pinned versions from lockfiles: **done** (npm, pnpm, yarn, poetry, uv, requirements, Pipfile;
+   plus declared runtimes).
+2. Allowlisted public APIs: **done** for OSV.dev advisories and endoflife.date lifecycle dates
+   (research file v2). Docker Hub tags: later.
 3. `buildrax research brief "<topic>"`: a privacy-safe brief (detected stack, versions, suggested
    queries built only from public technology names) for the agent's own web search, which it runs
    only after asking the user.

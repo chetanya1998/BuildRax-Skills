@@ -24,7 +24,8 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
    `up` = what depends on it (what could break if it changes); `down` = what it depends on.
 5. **Show the user** `buildrax view --open` (static file) or `buildrax serve --open` (live, lets
    them save their notes into the repo).
-6. **Outside facts** (latest versions, deprecations, docs): first run `buildrax research` (shows
+6. **Outside facts** (security advisories for pinned versions, end-of-life dates, latest versions,
+   deprecations, docs): first run `buildrax research` (shows
    what would be sent, sends nothing). Only run `buildrax research --online` after the user agrees.
 7. **Cost** ("what does this cost", "what if it became a product"): follow `references/cost.md`.
    In short: ask the user for the stack before `--mode product`, run `buildrax cost` (no network),
@@ -47,8 +48,8 @@ More detail: `references/commands.md`, `references/answering-questions.md`, `ref
   assumptions and the missing prices. Never invent a price.
 - **Notes belong to the user.** Read them with `buildrax notes` if asked. Do not create, edit or
   delete notes. `digest` and `context` leave them out on purpose; do not paste them elsewhere.
-- **Research is read-only facts.** Registry data describes the latest release, not necessarily the
-  version the repo pins. Do not change code or dependencies because of it without the user asking.
+- **Research is read-only facts.** Advisories and end-of-life dates are for the versions pinned in
+  lockfiles; other registry data describes the latest release. Quote the advisory id and source. Do not change code or dependencies because of it without the user asking.
 - **Do not run repository scripts** to learn the architecture. Do not upload anything. There is no
   sync command.
 - Numbers you derive (counts, token estimates) are estimates unless the tool measured them.

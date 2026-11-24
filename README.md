@@ -26,7 +26,7 @@ buildrax view fixtures/sample-monorepo --open
 | `diff [--since <git ref>]`                  | architecture changes since the last scan or a commit (links, cycles, infra)                                         |
 | `view` / `serve [--watch]`                  | read-only viewer; `serve` saves your sticky notes to `.buildrax/notes.json`; `--watch` rescans and offers a refresh |
 | `notes`                                     | list your notes and flags                                                                                           |
-| `research [--online]`                       | dependency facts from npm/PyPI; plan-only unless `--online`                                                         |
+| `research [--online]`                       | registry facts, security advisories (OSV) for pinned versions, end-of-life dates; plan-only unless `--online`       |
 | `cost [--mode current\|product] [--online]` | monthly cost per traffic tier from dated AWS list prices (see `docs/cost.md`)                                       |
 | `install-skill`                             | install the agent skill for Claude Code, Codex, Antigravity                                                         |
 
@@ -96,8 +96,9 @@ question-specific `context` pack is about 3,900 tokens.
   SaaS prices must be added to `.buildrax/prices.json` with source and date. See `docs/cost.md`.
 - tsconfig `paths` aliases are reported as unresolved rather than guessed.
 - Scans are incremental: unchanged files are not re-parsed (the model is identical to a full scan).
-- Research uses npm/PyPI registry data only: no security advisories and no pinned-version
-  comparison yet; findings describe the latest release.
+- Research: advisories (OSV.dev) need a lockfile pin; end-of-life checks cover Node.js, Python,
+  PostgreSQL, MySQL, MongoDB, Redis, Valkey, Next.js, React, Express, Vue, Angular, NestJS, Nuxt
+  and Django.
 - Agent skill install paths are unverified against vendor docs (see `docs/agents.md`).
 - The viewer bundle is about 1.6 MB (inlined ELK layout engine). The physics itself is cheap
   (about 3 ms per step at 600 nodes) but the graph is drawn as SVG, so very large views (many

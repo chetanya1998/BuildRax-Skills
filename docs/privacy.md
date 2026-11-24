@@ -1,19 +1,20 @@
 # Privacy: what stays local and what is sent
 
-| Feature                                                                | Network                                                     | What leaves the machine                                                              |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `scan`, `digest`, `context`, `trace`, `view`, `notes`, `install-skill` | none                                                        | nothing                                                                              |
-| `serve`                                                                | localhost only (127.0.0.1)                                  | nothing; API needs a per-run token and matching Host/Origin                          |
-| `research` (no flag)                                                   | none                                                        | nothing; prints the exact requests it would make                                     |
-| `research --online`                                                    | HTTPS to `registry.npmjs.org` and `pypi.org`                | public package names in the URL path only                                            |
-| `cost` (no flag)                                                       | none                                                        | nothing; prints the price files it would download                                    |
-| `cost --online`                                                        | HTTPS GET to `pricing.us-east-1.amazonaws.com`              | the AWS service and region names in the URL path only                                |
-| `cost --online --use-credentials`                                      | HTTPS POST to `api.pricing.us-east-1.amazonaws.com`, signed | service, region and product filters; your AWS access key id as part of the signature |
+| Feature                                                                | Network                                                                    | What leaves the machine                                                                                                                                                            |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scan`, `digest`, `context`, `trace`, `view`, `notes`, `install-skill` | none                                                                       | nothing                                                                                                                                                                            |
+| `serve`                                                                | localhost only (127.0.0.1)                                                 | nothing; API needs a per-run token and matching Host/Origin                                                                                                                        |
+| `research` (no flag)                                                   | none                                                                       | nothing; prints the exact requests it would make                                                                                                                                   |
+| `research --online`                                                    | HTTPS to `registry.npmjs.org`, `pypi.org`, `api.osv.dev`, `endoflife.date` | public package names; to OSV also the version pinned in your lockfile (POST body); to endoflife.date only a product name (`nodejs`, `postgresql`…), the version is matched locally |
+| `cost` (no flag)                                                       | none                                                                       | nothing; prints the price files it would download                                                                                                                                  |
+| `cost --online`                                                        | HTTPS GET to `pricing.us-east-1.amazonaws.com`                             | the AWS service and region names in the URL path only                                                                                                                              |
+| `cost --online --use-credentials`                                      | HTTPS POST to `api.pricing.us-east-1.amazonaws.com`, signed                | service, region and product filters; your AWS access key id as part of the signature                                                                                               |
 
 Guarantees enforced in code and tests:
 
-- Package names must look like registry identifiers (`isSafePackageName`); anything else is dropped,
-  so code, paths, secrets or the repo name cannot be put into a query.
+- Package names must look like registry identifiers (`isSafePackageName`) and versions like release
+  identifiers (`isSafeVersion`); anything else is dropped, so code, paths, secrets or the repo name
+  cannot be put into a query. endoflife.date product names come from a fixed table in BuildRAX.
 - The fetcher only contacts hosts a provider declares, over HTTPS; other hosts are blocked.
 - Responses are cached under `.buildrax/cache/` (git-ignored) for 24 hours.
 - Notes are stored in `.buildrax/notes.json` (or browser storage in a static file). They are never

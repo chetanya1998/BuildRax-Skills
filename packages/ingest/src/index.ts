@@ -7,6 +7,7 @@ import { detectPackages } from "./packages.js";
 import { extractImports } from "./parser.js";
 import { walkRepo } from "./walk.js";
 import { ParseCache, hashText } from "./cache.js";
+import { readLockedVersions, readRuntimes, withVersions } from "./versions.js";
 
 export { buildModel } from "./build.js";
 export type { BuildInput, SourceFile } from "./build.js";
@@ -14,6 +15,14 @@ export { extractImports } from "./parser.js";
 export type { RawImport } from "./parser.js";
 export { walkRepo, isWatchedPath, ALWAYS_IGNORED } from "./walk.js";
 export { ParseCache, hashText } from "./cache.js";
+export {
+  readLockedVersions,
+  readRuntimes,
+  withVersions,
+  minimumVersion,
+  normalizePy,
+} from "./versions.js";
+export type { Locked, RuntimeDecl } from "./versions.js";
 export type { ParseEntry } from "./cache.js";
 export * from "./resolve.js";
 export {
@@ -100,7 +109,13 @@ export async function scan(repoPath: string, options: ScanOptions = {}): Promise
     packages,
   });
   // Infrastructure (v2): what the project runs on and pays for.
-  const result = withInfra(model, await detectInfra(root, allFiles, model));
+  const withInfraNodes = withInfra(model, await detectInfra(root, allFiles, model));
+  // Pinned versions (lockfiles) and declared runtimes, for advisories and lifecycle checks.
+  const result = withVersions(
+    withInfraNodes,
+    await readLockedVersions(root, allFiles),
+    await readRuntimes(root, allFiles),
+  );
   if (options.stats)
     Object.assign(options.stats, {
       files: sources.length,
