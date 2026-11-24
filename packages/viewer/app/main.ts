@@ -25,7 +25,7 @@ import { computeLineage } from "./lineage.js";
 import { parseResearch, renderResearchSection } from "./research-ui.js";
 import { parseCost, renderCostSection, renderCostView } from "./cost-ui.js";
 import { renderFlowsView, type FlowsUi } from "./flows-ui.js";
-import { FloatingCode } from "./flows-code.js";
+import { FloatingCode, SHEET_BELOW } from "./flows-code.js";
 import { fileView, selectionView, traceStepView } from "./canvas-code.js";
 import { codeSwitch } from "./code-switch.js";
 import type { TraceStep } from "./trace.js";
@@ -290,10 +290,22 @@ function start(model: Model): void {
   const tabInspector = h("button", { type: "button", role: "tab" }, "Inspector");
   const tabCode = h("button", { type: "button", role: "tab" }, "Code");
   const rightActions = h("div", { class: "panel-actions" });
+  // Pop the Code tab out into the floating window (shown while the Code tab is open).
+  const popOutBtn = h(
+    "button",
+    {
+      type: "button",
+      class: "pop-out",
+      title: "Pop out: show this code in a floating window over the canvas (turns Code view on)",
+      "aria-label": "Pop out the code into a floating window",
+    },
+    "⧉",
+  );
+  popOutBtn.addEventListener("click", () => popOutCode());
   const rightHead = h(
     "div",
     { class: "tabs" },
-    h("div", { class: "tab-list", role: "tablist" }, tabInspector, tabCode),
+    h("div", { class: "tab-list", role: "tablist" }, tabInspector, tabCode, popOutBtn),
     rightActions,
   );
   const right = h(
@@ -337,8 +349,96 @@ function start(model: Model): void {
           links: current.flatMap((st) => st.links),
         })
       : selectionView(index, view, sel);
-    if (v) void flowsCode.showView(v);
+    if (!v) return;
+    void flowsCode.showView(v).then(() => {
+      // Never hide what was clicked: if the window covers the node, slide the camera.
+      if (force && sel.type === "node") keepVisible(sel.id);
+    });
   };
+  const keepVisible = (id: string): void => {
+    if (!flowsCode?.open || window.innerWidth < SHEET_BELOW) return;
+    const pt = active().screenPoint(id);
+    const win = flowsCode.el.getBoundingClientRect();
+    const area = canvas.getBoundingClientRect();
+    if (!pt || !area.width) return;
+    const pad = 40;
+    const covered =
+      pt.x > win.left - pad &&
+      pt.x < win.right + pad &&
+      pt.y > win.top - pad &&
+      pt.y < win.bottom + pad;
+    if (!covered) return;
+    // Centre the node in the larger free strip beside the window.
+    const leftFree = win.left - area.left;
+    const rightFree = area.right - win.right;
+    const fx =
+      leftFree >= rightFree
+        ? Math.max(0.1, leftFree / 2 / area.width)
+        : Math.min(0.9, (win.right - area.left + rightFree / 2) / area.width);
+    active().centerOn(id, true, fx);
+  };
+
+  // Pinned copies: kept on screen with their content, up to 3; the main window keeps following.
+  const pinned: FloatingCode[] = [];
+  const syncPins = (): void => flowsCode?.setPinEnabled(pinned.length < 3);
+  const pinCurrent = (): void => {
+    const v = flowsCode?.view;
+    if (!flowsCode || !v || pinned.length >= 3) return;
+    // Side by side to the left of the main window when there is room, else cascaded.
+    const r = flowsCode.rectNow;
+    const area = canvas.getBoundingClientRect();
+    const n = pinned.length + 1;
+    const w = Math.min(r.w, Math.max(260, Math.round((r.x - area.left - 12 * n) / n)));
+    const fits = r.x - n * (w + 12) >= area.left;
+    const copy = new FloatingCode(source, {
+      pinned: true,
+      rect: fits
+        ? { x: r.x - n * (w + 12), y: r.y, w, h: r.h }
+        : {
+            x: area.left + 16 + 32 * (n - 1),
+            y: area.top + 16 + 32 * (n - 1),
+            w: Math.min(r.w, 420),
+            h: r.h,
+          },
+    });
+    copy.onShowInGraph = (id) => void selectNode(id);
+    copy.onOpenFile = (path) => {
+      const fv = fileView(index, `file:${path}`);
+      if (fv) void copy.showView(fv);
+    };
+    copy.onClose = () => {
+      pinned.splice(pinned.indexOf(copy), 1);
+      copy.el.remove();
+      syncPins();
+    };
+    document.body.append(copy.el);
+    pinned.push(copy);
+    void copy.showView(v).then(() => flowsCode.raise()); // the live window stays in front
+    syncPins();
+  };
+  // Dock: hand the code over to the Code tab; Pop out: the reverse.
+  const dockCode = (): void => {
+    flowsCode?.close();
+    if (state.flows) setFlows(false);
+    if (panels.prefs.right === "collapsed") panels.setMode("right", "docked");
+    openPanel("code");
+  };
+  const popOutCode = (): void => {
+    if (!flowsCode) return;
+    state.panel = "inspector";
+    if (!flowsUi.code) setCodeView(true);
+    else {
+      forceCode = true;
+      codeKey = "";
+      paint();
+    }
+    writeHash();
+  };
+  if (flowsCode) {
+    flowsCode.area = () => canvas.getBoundingClientRect();
+    flowsCode.onPin = pinCurrent;
+    flowsCode.onDock = dockCode;
+  }
   const codeSw = codeSwitch({
     on: flowsUi.code,
     unavailable: flowsCode ? undefined : CODE_UNAVAILABLE,
@@ -661,6 +761,7 @@ function start(model: Model): void {
     tabInspector.setAttribute("aria-selected", String(!code));
     tabCode.setAttribute("aria-selected", String(code));
     document.body.classList.toggle("code-open", code);
+    popOutBtn.hidden = !code || !flowsCode;
   };
   const openPanel = (panel: "inspector" | "code"): void => {
     state.panel = panel;

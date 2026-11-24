@@ -155,3 +155,28 @@ describe("what the code window shows on the canvas", () => {
     ]);
   });
 });
+
+describe("code window placement", async () => {
+  const { clampRect } = await import("../app/flows-code.js");
+  const vp = { w: 1440, h: 900 };
+  const canvas = { left: 240, top: 50, right: 1100, bottom: 900 };
+
+  it("a new window opens inside the canvas, top-right, not over the side panels", () => {
+    const r = clampRect({ x: -1, y: 96, w: 520, h: 420 }, vp, canvas);
+    expect(r.x + r.w).toBeLessThanOrEqual(canvas.right);
+    expect(r.x).toBeGreaterThanOrEqual(canvas.left);
+    expect(r.y).toBe(canvas.top + 16);
+  });
+
+  it("a moved window stays where the user put it, but never off screen", () => {
+    expect(clampRect({ x: 300, y: 200, w: 500, h: 400 }, vp, canvas)).toEqual({
+      x: 300,
+      y: 200,
+      w: 500,
+      h: 400,
+    });
+    const off = clampRect({ x: 5000, y: 5000, w: 500, h: 400 }, vp, canvas);
+    expect(off.x + off.w).toBeLessThanOrEqual(vp.w);
+    expect(off.y).toBeLessThanOrEqual(vp.h - 48);
+  });
+});

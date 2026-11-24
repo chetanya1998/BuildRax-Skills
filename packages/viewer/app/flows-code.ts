@@ -123,16 +123,42 @@ function saveRect(r: FloatRect): void {
   }
 }
 
-/** Keep the window on screen: at least its header stays reachable. */
-function clampToViewport(r: FloatRect): FloatRect {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const w = Math.max(MIN_FLOAT.w, Math.min(r.w, vw - 16));
-  const hgt = Math.max(MIN_FLOAT.h, Math.min(r.h, vh - 16));
-  const x = r.x < 0 ? vw - w - 24 : Math.max(8, Math.min(r.x, vw - w - 8));
-  const y = Math.max(8, Math.min(r.y, vh - 48));
-  return { x, y, w, h: hgt };
+/** Screens narrower than this show the window as a bottom sheet (no dragging). */
+export const SHEET_BELOW = 760;
+
+/**
+ * Keep the window on screen (at least its header stays reachable). A window that was never placed
+ * opens inside `area` (the canvas), at its top-right, so it does not cover the side panels.
+ */
+export function clampRect(
+  r: FloatRect,
+  viewport: { w: number; h: number },
+  area?: { left: number; top: number; right: number; bottom: number },
+): FloatRect {
+  const vw = viewport.w;
+  const vh = viewport.h;
+  let w = Math.max(MIN_FLOAT.w, Math.min(r.w, vw - 16));
+  let hgt = Math.max(MIN_FLOAT.h, Math.min(r.h, vh - 16));
+  let x = r.x;
+  let y = r.y;
+  if (r.x < 0) {
+    if (area && area.right - area.left > MIN_FLOAT.w + 32) {
+      w = Math.min(w, Math.round((area.right - area.left) * 0.55));
+      hgt = Math.min(hgt, area.bottom - area.top - 32);
+      x = area.right - w - 16;
+      y = area.top + 16;
+    } else x = vw - w - 24;
+  }
+  x = Math.max(8, Math.min(x, vw - w - 8));
+  y = Math.max(8, Math.min(y, vh - 48));
+  return { x, y, w: Math.max(MIN_FLOAT.w, w), h: Math.max(MIN_FLOAT.h, hgt) };
 }
+
+/** Stacking order shared by all code windows: the last one used is on top. */
+let topZ = 40;
+
+const clampToViewport = (r: FloatRect, area?: DOMRect): FloatRect =>
+  clampRect(r, { w: window.innerWidth, h: window.innerHeight }, area);
 
 /**
  * Floating, draggable, resizable code window. One per page; reused across re-renders so its
@@ -149,8 +175,20 @@ export class FloatingCode {
   onShowInGraph?: (nodeId: string) => void;
   onClose?: () => void;
 
-  constructor(private readonly source: CodeSource) {
-    this.rect = loadRect();
+  /** Pinned copies keep their content; they never follow clicks and do not save their place. */
+  readonly pinned: boolean;
+  /** Where an unplaced window opens (the canvas area); set by the page. */
+  area?: () => DOMRect | undefined;
+  onPin?: () => void;
+  onDock?: () => void;
+  private readonly pinBtn: HTMLButtonElement;
+
+  constructor(
+    private readonly source: CodeSource,
+    opts: { pinned?: boolean; rect?: FloatRect } = {},
+  ) {
+    this.pinned = !!opts.pinned;
+    this.rect = opts.rect ?? loadRect();
     this.title = h("span", { class: "fc-title" });
     this.graphBtn = h(
       "button",
@@ -167,17 +205,42 @@ export class FloatingCode {
       },
       "×",
     );
+    this.pinBtn = h(
+      "button",
+      {
+        type: "button",
+        class: "fc-pin",
+        "aria-label": "Pin: keep this window and open the next click in a new one",
+        title: "Pin: keep this window and open the next click in a new one (up to 3)",
+      },
+      "📌",
+    );
+    const dock = h(
+      "button",
+      { type: "button", title: "Dock: move this code into the Code tab of the right panel" },
+      "Dock",
+    );
+    this.pinBtn.addEventListener("click", () => this.onPin?.());
+    dock.addEventListener("click", () => this.onDock?.());
     const grip = h(
       "div",
       { class: "fc-head", title: "Drag to move" },
+      ...(this.pinned ? [h("span", { class: "fc-pinned", title: "Pinned" }, "📌")] : []),
       this.title,
+      ...(this.pinned ? [] : [this.pinBtn, dock]),
       this.graphBtn,
       close,
     );
     this.body = h("div", { class: "fc-body" });
     this.el = h(
       "div",
-      { class: "floating-code", role: "dialog", "aria-label": "Code", hidden: "", tabindex: -1 },
+      {
+        class: `floating-code${this.pinned ? " pinned" : ""}`,
+        role: "dialog",
+        "aria-label": this.pinned ? "Pinned code" : "Code",
+        hidden: "",
+        tabindex: -1,
+      },
       grip,
       this.body,
     );
@@ -192,9 +255,10 @@ export class FloatingCode {
         this.close();
       }
     });
+    this.el.addEventListener("pointerdown", () => this.raise());
     // Drag by the header (not its buttons).
     grip.addEventListener("pointerdown", (ev) => {
-      if ((ev.target as HTMLElement).closest("button")) return;
+      if ((ev.target as HTMLElement).closest("button") || window.innerWidth < SHEET_BELOW) return;
       ev.preventDefault();
       const start = { x: ev.clientX, y: ev.clientY, r: { ...this.rect } };
       grip.setPointerCapture(ev.pointerId);
@@ -209,7 +273,7 @@ export class FloatingCode {
       const up = (): void => {
         grip.removeEventListener("pointermove", move);
         grip.removeEventListener("pointerup", up);
-        saveRect(this.rect);
+        if (!this.pinned) saveRect(this.rect);
       };
       grip.addEventListener("pointermove", move);
       grip.addEventListener("pointerup", up);
@@ -221,7 +285,7 @@ export class FloatingCode {
       const hgt = this.el.offsetHeight;
       if (w && hgt && (w !== this.rect.w || hgt !== this.rect.h)) {
         this.rect = { ...this.rect, w, h: hgt };
-        saveRect(this.rect);
+        if (!this.pinned && window.innerWidth >= SHEET_BELOW) saveRect(this.rect);
       }
     }).observe(this.el);
   }
@@ -230,8 +294,35 @@ export class FloatingCode {
     return !this.el.hidden;
   }
 
+  /** Bring this window in front of the other code windows. */
+  raise(): void {
+    this.el.style.zIndex = String(++topZ);
+  }
+
+  /** What the window shows now (for pinning a copy, or docking it). */
+  get view(): CodeView | undefined {
+    return this.current;
+  }
+
+  get rectNow(): FloatRect {
+    return { ...this.rect };
+  }
+
+  /** Pinning is offered only while fewer than 3 windows are pinned. */
+  setPinEnabled(on: boolean): void {
+    this.pinBtn.disabled = !on;
+    this.pinBtn.title = on
+      ? "Pin: keep this window and open the next click in a new one (up to 3)"
+      : "Up to 3 windows can be pinned: close one to pin this.";
+  }
+
   private place(): void {
-    const r = (this.rect = clampToViewport(this.rect));
+    if (window.innerWidth < SHEET_BELOW) {
+      // Bottom sheet: CSS takes over the geometry.
+      for (const k of ["left", "top", "width", "height"] as const) this.el.style[k] = "";
+      return;
+    }
+    const r = (this.rect = clampToViewport(this.rect, this.area?.()));
     Object.assign(this.el.style, {
       left: `${r.x}px`,
       top: `${r.y}px`,
@@ -254,6 +345,7 @@ export class FloatingCode {
     this.graphBtn.hidden = !v.nodeId;
     this.el.hidden = false;
     this.place();
+    this.raise();
     const alive = (): boolean => my === this.seq;
     this.body.replaceChildren(
       ...(v.note ? [h("p", { class: "muted fc-note" }, v.note)] : []),

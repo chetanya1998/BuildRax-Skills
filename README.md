@@ -77,7 +77,11 @@ In the Graph view:
   switch for every view. When on, clicking a node or arrow, an endpoint in Flows, or stepping
   through a trace opens a floating window with the code behind it: a file with its links marked
   and the lines that use it, the lines that create an arrow, every import of a package, where a
-  database or queue is used and declared, a package's files to open.
+  database or queue is used and declared (config files: only nearby lines, secrets masked), a
+  package's files to open. The window opens over the canvas and moves the camera if it would
+  hide what you clicked; 📌 **Pin** keeps up to 3 windows to compare files; **Dock** moves the
+  code into the Code tab and the tab's ⧉ **Pop out** brings it back; on narrow screens it is a
+  bottom sheet.
 - Light/dark/auto themes (remembered), sticky notes and flags for your own reference, and a
   _motion_ toggle. The OS "reduce motion" setting is honoured (static layout, no particles).
 - **Make room for the graph**: each sidebar can be hidden (a small tab on the canvas edge brings

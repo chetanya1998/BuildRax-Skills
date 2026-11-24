@@ -718,3 +718,51 @@ div + .fc-section {
 .fc-file:hover {
   background: var(--paper);
 }
+.fc-head .fc-pin {
+  padding: 2px 6px;
+  font-size: 12px;
+}
+.fc-head .fc-pin:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.fc-pinned {
+  font-size: 12px;
+}
+.floating-code.pinned {
+  border-color: var(--up);
+}
+.floating-code.pinned .fc-head {
+  background: color-mix(in srgb, var(--up) 10%, transparent);
+}
+.tab-list .pop-out {
+  margin-left: 2px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 15px;
+  cursor: pointer;
+}
+.tab-list .pop-out:hover {
+  color: var(--accent);
+}
+/* Narrow screens: the code window becomes a bottom sheet. */
+@media (max-width: 759px) {
+  .floating-code {
+    left: 0 !important;
+    right: 0;
+    top: auto !important;
+    bottom: 0;
+    width: 100% !important;
+    height: 46vh !important;
+    border-radius: 14px 14px 0 0;
+    resize: none;
+  }
+  .floating-code.pinned {
+    display: none;
+  }
+  .fc-head {
+    cursor: default;
+  }
+}

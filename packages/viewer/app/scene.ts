@@ -359,13 +359,22 @@ export class Scene {
     );
   }
 
-  centerOn(id: string, animate = true): void {
+  /** `fx`: where across the canvas the node should end up (0.5 = centre). */
+  centerOn(id: string, animate = true, fx = 0.5): void {
     const n = this.nodes.get(id);
     const r = this.svg.getBoundingClientRect();
     if (!n || !r.width) return;
     const p = this.targetPos(n);
     const k = Math.min(1.6, Math.max(0.7, this.tf.k));
-    this.cameraTo({ k, x: r.width / 2 - p.x * k, y: r.height / 2 - p.y * k }, animate);
+    this.cameraTo({ k, x: r.width * fx - p.x * k, y: r.height / 2 - p.y * k }, animate);
+  }
+
+  /** Where a node is on screen (viewport coordinates), for placing windows around it. */
+  screenPoint(id: string): { x: number; y: number } | undefined {
+    const n = this.nodes.get(id);
+    const r = this.svg.getBoundingClientRect();
+    if (!n || !r.width) return undefined;
+    return { x: r.left + this.tf.x + n.x * this.tf.k, y: r.top + this.tf.y + n.y * this.tf.k };
   }
 
   zoomBy(factor: number): void {

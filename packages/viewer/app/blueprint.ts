@@ -248,7 +248,19 @@ export class Blueprint {
     );
   }
 
-  centerOn(id: string, animate = true): void {
+  /** Where a card's centre is on screen (viewport coordinates). */
+  screenPoint(id: string): { x: number; y: number } | undefined {
+    const c = this.cards.get(id);
+    const r = this.svg.getBoundingClientRect();
+    if (!c || !r.width) return undefined;
+    return {
+      x: r.left + this.tf.x + (c.box.x + c.box.w / 2) * this.tf.k,
+      y: r.top + this.tf.y + (c.box.y + c.box.h / 2) * this.tf.k,
+    };
+  }
+
+  /** `fx`: where across the canvas the node should end up (0.5 = centre). */
+  centerOn(id: string, animate = true, fx = 0.5): void {
     const c = this.cards.get(id);
     const r = this.svg.getBoundingClientRect();
     if (!c || !r.width) return;
@@ -256,7 +268,7 @@ export class Blueprint {
     this.cameraTo(
       {
         k,
-        x: r.width / 2 - (c.box.x + c.box.w / 2) * k,
+        x: r.width * fx - (c.box.x + c.box.w / 2) * k,
         y: r.height / 2 - (c.box.y + c.box.h / 2) * k,
       },
       animate,
