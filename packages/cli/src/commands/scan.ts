@@ -35,7 +35,7 @@ export async function scanCommand(repoPath: string): Promise<ScanSummary> {
   // Atomic write: temp file then rename.
   await fs.writeFile(`${modelPath}.tmp`, `${JSON.stringify(model, null, 2)}\n`);
   await fs.rename(`${modelPath}.tmp`, modelPath);
-  await fs.writeFile(path.join(dir, ".gitignore"), "view.html\n*.tmp\ncache/\n");
+  await fs.writeFile(path.join(dir, ".gitignore"), "view.html\n*.tmp\ncache/\ncost-prices.json\n");
   return summarize(model, modelPath);
 }
 

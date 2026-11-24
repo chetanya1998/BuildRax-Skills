@@ -1,0 +1,448 @@
+{
+ "formatVersion": "v1.0",
+ "offerCode": "AmazonElastiCache",
+ "products": {
+  "3GVF2GRNVGCHRPSP": {
+   "attributes": {
+    "cacheEngine": "Redis",
+    "currentGeneration": "Yes",
+    "instanceFamily": "Standard",
+    "instanceType": "cache.m7g.large",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "6.38 GiB",
+    "networkPerformance": "Up to 12.5 Gigabit",
+    "normalizationSizeFactor": "4",
+    "operation": "CreateCacheCluster:0002",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "NodeUsage:cache.m7g.large",
+    "vcpu": "2"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "3GVF2GRNVGCHRPSP"
+  },
+  "4GZWM45PWCRKKSHZ": {
+   "attributes": {
+    "cacheEngine": "Redis",
+    "instanceType": "cache.m7g.large",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "CreateCacheCluster:0002",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "USE1-ExtendedSupportYr3-NodeUsage:cache.m7g.large",
+    "year_number": "Yr3"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "4GZWM45PWCRKKSHZ"
+  },
+  "528B93K9HFA8DNZF": {
+   "attributes": {
+    "cacheEngine": "Valkey",
+    "instanceType": "cache.m7g.large",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "CreateCacheCluster:Valkey",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "USE1-SyncDurability-NodeUsage:cache.m7g.large"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "528B93K9HFA8DNZF"
+  },
+  "7WCY4HQHXUCWU9WA": {
+   "attributes": {
+    "cacheEngine": "Redis",
+    "instanceType": "cache.m7g.large",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "CreateCacheCluster:0002",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "USE1-ExtendedSupportYr1_Yr2-NodeUsage:cache.m7g.large",
+    "year_number": "Yr1_Yr2"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "7WCY4HQHXUCWU9WA"
+  },
+  "BT7FF8NJHA6V7WVP": {
+   "attributes": {
+    "cacheEngine": "Redis",
+    "currentGeneration": "Yes",
+    "instanceFamily": "Standard",
+    "instanceType": "cache.t4g.micro",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "0.5 GiB",
+    "networkPerformance": "Up to 5 Gigabit",
+    "normalizationSizeFactor": "0.5",
+    "operation": "CreateCacheCluster:0002",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "NodeUsage:cache.t4g.micro",
+    "vcpu": "2"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "BT7FF8NJHA6V7WVP"
+  },
+  "FGZVT5Y75GD83ZQN": {
+   "attributes": {
+    "cacheEngine": "Redis",
+    "instanceType": "cache.t4g.micro",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "CreateCacheCluster:0002",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "USE1-ExtendedSupportYr3-NodeUsage:cache.t4g.micro",
+    "year_number": "Yr3"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "FGZVT5Y75GD83ZQN"
+  },
+  "GUTP43BSNHYMZJ57": {
+   "attributes": {
+    "cacheEngine": "Redis",
+    "instanceType": "cache.t4g.micro",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "CreateCacheCluster:0002",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "USE1-ExtendedSupportYr1_Yr2-NodeUsage:cache.t4g.micro",
+    "year_number": "Yr1_Yr2"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "GUTP43BSNHYMZJ57"
+  },
+  "GV8CX2CTVE8PZTNN": {
+   "attributes": {
+    "cacheEngine": "Memcached",
+    "currentGeneration": "Yes",
+    "instanceFamily": "Standard",
+    "instanceType": "cache.m7g.large",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "6.38 GiB",
+    "networkPerformance": "Up to 12.5 Gigabit",
+    "normalizationSizeFactor": "4",
+    "operation": "CreateCacheCluster:0001",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "NodeUsage:cache.m7g.large",
+    "vcpu": "2"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "GV8CX2CTVE8PZTNN"
+  },
+  "JSGVEAU2ZJSWY42F": {
+   "attributes": {
+    "cacheEngine": "Valkey",
+    "currentGeneration": "Yes",
+    "instanceFamily": "Standard",
+    "instanceType": "cache.t4g.micro",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "0.5 GiB",
+    "networkPerformance": "Up to 5 Gigabit",
+    "normalizationSizeFactor": "0.4",
+    "operation": "CreateCacheCluster:Valkey",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "NodeUsage:cache.t4g.micro",
+    "vcpu": "2"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "JSGVEAU2ZJSWY42F"
+  },
+  "P3VK2HEV6XR83SCP": {
+   "attributes": {
+    "cacheEngine": "Valkey",
+    "currentGeneration": "Yes",
+    "instanceFamily": "Standard",
+    "instanceType": "cache.m7g.large",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "6.38 GiB",
+    "networkPerformance": "Up to 12.5 Gigabit",
+    "normalizationSizeFactor": "3.2",
+    "operation": "CreateCacheCluster:Valkey",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "NodeUsage:cache.m7g.large",
+    "vcpu": "2"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "P3VK2HEV6XR83SCP"
+  },
+  "VT4S25MNXV3KEMPP": {
+   "attributes": {
+    "cacheEngine": "Memcached",
+    "currentGeneration": "Yes",
+    "instanceFamily": "Standard",
+    "instanceType": "cache.t4g.micro",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "0.5 GiB",
+    "networkPerformance": "Up to 5 Gigabit",
+    "normalizationSizeFactor": "0.5",
+    "operation": "CreateCacheCluster:0001",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonElastiCache",
+    "servicename": "Amazon ElastiCache",
+    "usagetype": "NodeUsage:cache.t4g.micro",
+    "vcpu": "2"
+   },
+   "productFamily": "Cache Instance",
+   "sku": "VT4S25MNXV3KEMPP"
+  }
+ },
+ "publicationDate": "2026-11-18T17:45:28Z",
+ "terms": {
+  "OnDemand": {
+   "3GVF2GRNVGCHRPSP": {
+    "3GVF2GRNVGCHRPSP.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "3GVF2GRNVGCHRPSP.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.158 per Gen Purpose m7g.large node hour running Redis",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1580000000"
+       },
+       "rateCode": "3GVF2GRNVGCHRPSP.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "3GVF2GRNVGCHRPSP",
+     "termAttributes": {}
+    }
+   },
+   "4GZWM45PWCRKKSHZ": {
+    "4GZWM45PWCRKKSHZ.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "4GZWM45PWCRKKSHZ.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.253 per Hr for ExtendedSupportYr3-NodeUsage:cache.m7g.large in US East (N. Virginia)",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.2530000000"
+       },
+       "rateCode": "4GZWM45PWCRKKSHZ.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "4GZWM45PWCRKKSHZ",
+     "termAttributes": {}
+    }
+   },
+   "528B93K9HFA8DNZF": {
+    "528B93K9HFA8DNZF.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "528B93K9HFA8DNZF.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.0228 per Hr for SyncDurability-NodeUsage:cache.m7g.large in US East (N. Virginia)",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0228000000"
+       },
+       "rateCode": "528B93K9HFA8DNZF.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "528B93K9HFA8DNZF",
+     "termAttributes": {}
+    }
+   },
+   "7WCY4HQHXUCWU9WA": {
+    "7WCY4HQHXUCWU9WA.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "7WCY4HQHXUCWU9WA.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.126 per Hr for ExtendedSupportYr1_Yr2-NodeUsage:cache.m7g.large in US East (N. Virginia)",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1260000000"
+       },
+       "rateCode": "7WCY4HQHXUCWU9WA.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "7WCY4HQHXUCWU9WA",
+     "termAttributes": {}
+    }
+   },
+   "BT7FF8NJHA6V7WVP": {
+    "BT7FF8NJHA6V7WVP.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "BT7FF8NJHA6V7WVP.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.016 per T4G Micro Cache node-hour (or partial hour) running Redis",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0160000000"
+       },
+       "rateCode": "BT7FF8NJHA6V7WVP.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "BT7FF8NJHA6V7WVP",
+     "termAttributes": {}
+    }
+   },
+   "FGZVT5Y75GD83ZQN": {
+    "FGZVT5Y75GD83ZQN.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "FGZVT5Y75GD83ZQN.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.026 per Hr for ExtendedSupportYr3-NodeUsage:cache.t4g.micro in US East (N. Virginia)",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0260000000"
+       },
+       "rateCode": "FGZVT5Y75GD83ZQN.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "FGZVT5Y75GD83ZQN",
+     "termAttributes": {}
+    }
+   },
+   "GUTP43BSNHYMZJ57": {
+    "GUTP43BSNHYMZJ57.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "GUTP43BSNHYMZJ57.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.013 per Hr for ExtendedSupportYr1_Yr2-NodeUsage:cache.t4g.micro in US East (N. Virginia)",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0130000000"
+       },
+       "rateCode": "GUTP43BSNHYMZJ57.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "GUTP43BSNHYMZJ57",
+     "termAttributes": {}
+    }
+   },
+   "GV8CX2CTVE8PZTNN": {
+    "GV8CX2CTVE8PZTNN.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "GV8CX2CTVE8PZTNN.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.158 per Gen Purpose m7g.large node hour running Memcached",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1580000000"
+       },
+       "rateCode": "GV8CX2CTVE8PZTNN.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "GV8CX2CTVE8PZTNN",
+     "termAttributes": {}
+    }
+   },
+   "JSGVEAU2ZJSWY42F": {
+    "JSGVEAU2ZJSWY42F.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "JSGVEAU2ZJSWY42F.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.0128 per T4G Micro Cache node-hour (or partial hour) running Valkey",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0128000000"
+       },
+       "rateCode": "JSGVEAU2ZJSWY42F.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "JSGVEAU2ZJSWY42F",
+     "termAttributes": {}
+    }
+   },
+   "P3VK2HEV6XR83SCP": {
+    "P3VK2HEV6XR83SCP.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "P3VK2HEV6XR83SCP.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.1264 per Gen Purpose m7g.large node hour running Valkey",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1264000000"
+       },
+       "rateCode": "P3VK2HEV6XR83SCP.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "P3VK2HEV6XR83SCP",
+     "termAttributes": {}
+    }
+   },
+   "VT4S25MNXV3KEMPP": {
+    "VT4S25MNXV3KEMPP.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "VT4S25MNXV3KEMPP.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.016 per T4G Micro Cache node-hour (or partial hour) running Memcached",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0160000000"
+       },
+       "rateCode": "VT4S25MNXV3KEMPP.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "VT4S25MNXV3KEMPP",
+     "termAttributes": {}
+    }
+   }
+  }
+ },
+ "version": "20261118174528"
+}

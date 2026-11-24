@@ -1,0 +1,1222 @@
+{
+ "schemaVersion": "buildrax-prices/v1",
+ "currency": "USD",
+ "region": "us-east-1",
+ "records": [
+  {
+   "key": "aws.fargate.x86.vcpu-hour",
+   "label": "Fargate x86 vCPU-hour (Linux)",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.04048
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-11T23:46:23Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU 8CESGAFWKAJ98PME"
+  },
+  {
+   "key": "aws.fargate.x86.gb-hour",
+   "label": "Fargate x86 GB-hour (Linux)",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.004445
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-11T23:46:23Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU PBZNQUSEXZUC34C9"
+  },
+  {
+   "key": "aws.fargate.arm.vcpu-hour",
+   "label": "Fargate arm vCPU-hour (Linux)",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.03238
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-11T23:46:23Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU XSZATS4VYMDC9CYN"
+  },
+  {
+   "key": "aws.fargate.arm.gb-hour",
+   "label": "Fargate arm GB-hour (Linux)",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.00356
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-11T23:46:23Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU UNH9KPQP7W7C66C9"
+  },
+  {
+   "key": "aws.rds.postgres.db.t4g.micro.single-az",
+   "label": "RDS PostgreSQL db.t4g.micro Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.016
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 1
+   },
+   "notes": "SKU 9HPEGXQTDDGH53C9"
+  },
+  {
+   "key": "aws.rds.postgres.db.t4g.small.single-az",
+   "label": "RDS PostgreSQL db.t4g.small Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.032
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 2
+   },
+   "notes": "SKU S9H3AXMBHSKRFJTA"
+  },
+  {
+   "key": "aws.rds.postgres.db.t4g.medium.single-az",
+   "label": "RDS PostgreSQL db.t4g.medium Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.065
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 4
+   },
+   "notes": "SKU 6T9XP2QUFF4B5P26"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.large.single-az",
+   "label": "RDS PostgreSQL db.m7g.large Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.168
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 8
+   },
+   "notes": "SKU SHZU9RWDC2H76ATX"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.xlarge.single-az",
+   "label": "RDS PostgreSQL db.m7g.xlarge Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.337
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 4,
+    "memoryGib": 16
+   },
+   "notes": "SKU D6JSGVPE5NWG9EUC"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.2xlarge.single-az",
+   "label": "RDS PostgreSQL db.m7g.2xlarge Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.674
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 8,
+    "memoryGib": 32
+   },
+   "notes": "SKU J757NAJEWXF7W9NH"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.4xlarge.single-az",
+   "label": "RDS PostgreSQL db.m7g.4xlarge Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 1.348
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 16,
+    "memoryGib": 64
+   },
+   "notes": "SKU RJ8MG5KQM2TBM5AP"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.8xlarge.single-az",
+   "label": "RDS PostgreSQL db.m7g.8xlarge Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 2.696
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 32,
+    "memoryGib": 128
+   },
+   "notes": "SKU J47VWP5GCABD4XHD"
+  },
+  {
+   "key": "aws.rds.postgres.gp3.single-az",
+   "label": "RDS PostgreSQL gp3 storage GB-month Single-AZ",
+   "unit": "gb-month",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.115
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU KYVYY29G957PKY3B"
+  },
+  {
+   "key": "aws.rds.postgres.db.t4g.micro.multi-az",
+   "label": "RDS PostgreSQL db.t4g.micro Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.032
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 1
+   },
+   "notes": "SKU RGZ43Q28J3F87JYA"
+  },
+  {
+   "key": "aws.rds.postgres.db.t4g.small.multi-az",
+   "label": "RDS PostgreSQL db.t4g.small Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.065
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 2
+   },
+   "notes": "SKU 5SY529FVXY3EARD8"
+  },
+  {
+   "key": "aws.rds.postgres.db.t4g.medium.multi-az",
+   "label": "RDS PostgreSQL db.t4g.medium Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.129
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 4
+   },
+   "notes": "SKU SCBZU9XX357QUA4D"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.large.multi-az",
+   "label": "RDS PostgreSQL db.m7g.large Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.337
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 8
+   },
+   "notes": "SKU Z8HB5KU2V54F7ATT"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.xlarge.multi-az",
+   "label": "RDS PostgreSQL db.m7g.xlarge Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.674
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 4,
+    "memoryGib": 16
+   },
+   "notes": "SKU 5M867GRZCRG7AP47"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.2xlarge.multi-az",
+   "label": "RDS PostgreSQL db.m7g.2xlarge Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 1.348
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 8,
+    "memoryGib": 32
+   },
+   "notes": "SKU SCWRBJEMR2B822WR"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.4xlarge.multi-az",
+   "label": "RDS PostgreSQL db.m7g.4xlarge Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 2.696
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 16,
+    "memoryGib": 64
+   },
+   "notes": "SKU MH66MN38ASDMZJT8"
+  },
+  {
+   "key": "aws.rds.postgres.db.m7g.8xlarge.multi-az",
+   "label": "RDS PostgreSQL db.m7g.8xlarge Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 5.392
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 32,
+    "memoryGib": 128
+   },
+   "notes": "SKU T6DNQUU8MZ5FYP6X"
+  },
+  {
+   "key": "aws.rds.postgres.gp3.multi-az",
+   "label": "RDS PostgreSQL gp3 storage GB-month Multi-AZ",
+   "unit": "gb-month",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.23
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU J7S7KD4WFDNQWKNX"
+  },
+  {
+   "key": "aws.rds.mysql.db.t4g.micro.single-az",
+   "label": "RDS MySQL db.t4g.micro Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.016
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 1
+   },
+   "notes": "SKU U4AUM7WC9VCSGAY9"
+  },
+  {
+   "key": "aws.rds.mysql.db.t4g.small.single-az",
+   "label": "RDS MySQL db.t4g.small Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.032
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 2
+   },
+   "notes": "SKU T3Q9GS9SNACZAUSP"
+  },
+  {
+   "key": "aws.rds.mysql.db.t4g.medium.single-az",
+   "label": "RDS MySQL db.t4g.medium Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.065
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 4
+   },
+   "notes": "SKU UQ79SE25SFFPAFCG"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.large.single-az",
+   "label": "RDS MySQL db.m7g.large Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.168
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 8
+   },
+   "notes": "SKU 7KQ3X2CUG9UW6NAE"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.xlarge.single-az",
+   "label": "RDS MySQL db.m7g.xlarge Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.337
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 4,
+    "memoryGib": 16
+   },
+   "notes": "SKU TFUY7CPUXHDK7WUU"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.2xlarge.single-az",
+   "label": "RDS MySQL db.m7g.2xlarge Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.674
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 8,
+    "memoryGib": 32
+   },
+   "notes": "SKU 7JJ723PBBKE6KN3J"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.4xlarge.single-az",
+   "label": "RDS MySQL db.m7g.4xlarge Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 1.348
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 16,
+    "memoryGib": 64
+   },
+   "notes": "SKU JBYU8QX85WCC2XQU"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.8xlarge.single-az",
+   "label": "RDS MySQL db.m7g.8xlarge Single-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 2.696
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 32,
+    "memoryGib": 128
+   },
+   "notes": "SKU 3H5EU77NQ9K3K5J7"
+  },
+  {
+   "key": "aws.rds.mysql.gp3.single-az",
+   "label": "RDS MySQL gp3 storage GB-month Single-AZ",
+   "unit": "gb-month",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.115
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU H4R2WBBMX6VRJG4S"
+  },
+  {
+   "key": "aws.rds.mysql.db.t4g.micro.multi-az",
+   "label": "RDS MySQL db.t4g.micro Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.032
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 1
+   },
+   "notes": "SKU F2KGHFYN45729EWR"
+  },
+  {
+   "key": "aws.rds.mysql.db.t4g.small.multi-az",
+   "label": "RDS MySQL db.t4g.small Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.065
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 2
+   },
+   "notes": "SKU P4GXUTCT4ND5UFX6"
+  },
+  {
+   "key": "aws.rds.mysql.db.t4g.medium.multi-az",
+   "label": "RDS MySQL db.t4g.medium Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.129
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 4
+   },
+   "notes": "SKU 4B2R4GGX8Q8RG2WA"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.large.multi-az",
+   "label": "RDS MySQL db.m7g.large Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.337
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 2,
+    "memoryGib": 8
+   },
+   "notes": "SKU WZCMZYPXAFG5UFQN"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.xlarge.multi-az",
+   "label": "RDS MySQL db.m7g.xlarge Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.674
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 4,
+    "memoryGib": 16
+   },
+   "notes": "SKU 4CTC7J5K5UBPF2EN"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.2xlarge.multi-az",
+   "label": "RDS MySQL db.m7g.2xlarge Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 1.348
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 8,
+    "memoryGib": 32
+   },
+   "notes": "SKU Q9T5VVX6RF3NMHX7"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.4xlarge.multi-az",
+   "label": "RDS MySQL db.m7g.4xlarge Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 2.696
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 16,
+    "memoryGib": 64
+   },
+   "notes": "SKU T79EP7TGTZANJ4TC"
+  },
+  {
+   "key": "aws.rds.mysql.db.m7g.8xlarge.multi-az",
+   "label": "RDS MySQL db.m7g.8xlarge Multi-AZ hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 5.392
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "vcpu": 32,
+    "memoryGib": 128
+   },
+   "notes": "SKU VD3X4DPQ9SJQCMUU"
+  },
+  {
+   "key": "aws.rds.mysql.gp3.multi-az",
+   "label": "RDS MySQL gp3 storage GB-month Multi-AZ",
+   "unit": "gb-month",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.23
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+   "publishedAt": "2026-11-20T22:46:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU BVC2XPZ4DHBCJX5Q"
+  },
+  {
+   "key": "aws.elasticache.redis.cache.t4g.micro",
+   "label": "ElastiCache Redis cache.t4g.micro node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.016
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 0.5
+   },
+   "notes": "SKU BT7FF8NJHA6V7WVP"
+  },
+  {
+   "key": "aws.elasticache.redis.cache.t4g.small",
+   "label": "ElastiCache Redis cache.t4g.small node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.032
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 1.37
+   },
+   "notes": "SKU BYFG57CPZSFUXSSY"
+  },
+  {
+   "key": "aws.elasticache.redis.cache.t4g.medium",
+   "label": "ElastiCache Redis cache.t4g.medium node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.065
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 3.09
+   },
+   "notes": "SKU 4MCMS36XAQKRDGW3"
+  },
+  {
+   "key": "aws.elasticache.redis.cache.m7g.large",
+   "label": "ElastiCache Redis cache.m7g.large node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.158
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 6.38
+   },
+   "notes": "SKU 3GVF2GRNVGCHRPSP"
+  },
+  {
+   "key": "aws.elasticache.redis.cache.m7g.xlarge",
+   "label": "ElastiCache Redis cache.m7g.xlarge node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.315
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 12.93
+   },
+   "notes": "SKU A7XMKVYEAC9XQU45"
+  },
+  {
+   "key": "aws.elasticache.redis.cache.m7g.2xlarge",
+   "label": "ElastiCache Redis cache.m7g.2xlarge node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.629
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 26.04
+   },
+   "notes": "SKU QM5EURKRC58E6A77"
+  },
+  {
+   "key": "aws.elasticache.valkey.cache.t4g.micro",
+   "label": "ElastiCache Valkey cache.t4g.micro node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.0128
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 0.5
+   },
+   "notes": "SKU JSGVEAU2ZJSWY42F"
+  },
+  {
+   "key": "aws.elasticache.valkey.cache.t4g.small",
+   "label": "ElastiCache Valkey cache.t4g.small node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.0256
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 1.37
+   },
+   "notes": "SKU SWRGTJTDUJ972J3G"
+  },
+  {
+   "key": "aws.elasticache.valkey.cache.t4g.medium",
+   "label": "ElastiCache Valkey cache.t4g.medium node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.052
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 3.09
+   },
+   "notes": "SKU APX3AQ7H55MB8PGA"
+  },
+  {
+   "key": "aws.elasticache.valkey.cache.m7g.large",
+   "label": "ElastiCache Valkey cache.m7g.large node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.1264
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 6.38
+   },
+   "notes": "SKU P3VK2HEV6XR83SCP"
+  },
+  {
+   "key": "aws.elasticache.valkey.cache.m7g.xlarge",
+   "label": "ElastiCache Valkey cache.m7g.xlarge node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.252
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 12.93
+   },
+   "notes": "SKU YEXKV9XAE6WC3AUC"
+  },
+  {
+   "key": "aws.elasticache.valkey.cache.m7g.2xlarge",
+   "label": "ElastiCache Valkey cache.m7g.2xlarge node-hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.5032
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonElastiCache/current/us-east-1/index.json",
+   "publishedAt": "2026-11-18T17:45:28Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "meta": {
+    "memoryGib": 26.04
+   },
+   "notes": "SKU NGDW8QPSDJX3E9N4"
+  },
+  {
+   "key": "aws.s3.standard",
+   "label": "S3 Standard storage GB-month",
+   "unit": "gb-month",
+   "tiers": [
+    {
+     "from": 0,
+     "to": 51200,
+     "usd": 0.023
+    },
+    {
+     "from": 51200,
+     "to": 512000,
+     "usd": 0.022
+    },
+    {
+     "from": 512000,
+     "usd": 0.021
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/us-east-1/index.json",
+   "publishedAt": "2026-11-21T17:29:19Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU WP9ANXZGBYYSGJEA"
+  },
+  {
+   "key": "aws.data-transfer.out",
+   "label": "Data transfer out to the internet, GB",
+   "unit": "gb",
+   "tiers": [
+    {
+     "from": 0,
+     "to": 10240,
+     "usd": 0.09
+    },
+    {
+     "from": 10240,
+     "to": 51200,
+     "usd": 0.085
+    },
+    {
+     "from": 51200,
+     "to": 153600,
+     "usd": 0.07
+    },
+    {
+     "from": 153600,
+     "usd": 0.05
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSDataTransfer/current/us-east-1/index.json",
+   "publishedAt": "2026-11-19T10:58:41Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU HQEH3ZWJVT46JHRG"
+  },
+  {
+   "key": "aws.alb.hour",
+   "label": "Application Load Balancer hour",
+   "unit": "hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.0225
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/us-east-1/index.json",
+   "publishedAt": "2026-11-19T22:27:09Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU 37CUWUT8GSNQEPUV"
+  },
+  {
+   "key": "aws.alb.lcu-hour",
+   "label": "Application Load Balancer LCU-hour",
+   "unit": "lcu-hour",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.008
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/us-east-1/index.json",
+   "publishedAt": "2026-11-19T22:27:09Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU P2XGEJ8N3KU52WA8"
+  },
+  {
+   "key": "aws.ses.recipient",
+   "label": "SES outbound email, per recipient",
+   "unit": "count",
+   "tiers": [
+    {
+     "from": 0,
+     "usd": 0.0001
+    }
+   ],
+   "provider": "aws",
+   "region": "us-east-1",
+   "sourceUrl": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonSES/current/us-east-1/index.json",
+   "publishedAt": "2026-11-04T17:41:09Z",
+   "retrievedAt": "2026-11-24T00:00:00.000Z",
+   "evidenceType": "official-price-list",
+   "notes": "SKU 6M5WNQ7SQJYZPC9M"
+  }
+ ]
+}

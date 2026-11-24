@@ -1,0 +1,237 @@
+{
+ "formatVersion": "v1.0",
+ "offerCode": "AmazonS3",
+ "products": {
+  "2H4CRAVNRTNBDFKV": {
+   "attributes": {
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "VectorsStorage",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonS3",
+    "servicename": "Amazon Simple Storage Service",
+    "storageClass": "Vectors",
+    "usagetype": "Vectors-TimedStorage-ByteHrs",
+    "volumeType": "Vectors"
+   },
+   "sku": "2H4CRAVNRTNBDFKV"
+  },
+  "2N3NKSP5AF8HYTS2": {
+   "attributes": {
+    "durability": "99.999999999%",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "Storage",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonS3",
+    "servicename": "Amazon Simple Storage Service",
+    "storageClass": "Files",
+    "usagetype": "USE1-Files-TimedStorage-ByteHrs",
+    "volumeType": "Files"
+   },
+   "productFamily": "Storage",
+   "sku": "2N3NKSP5AF8HYTS2"
+  },
+  "KMKCKYYEKJBZ7B3F": {
+   "attributes": {
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonS3",
+    "servicename": "Amazon Simple Storage Service",
+    "storageClass": "General Purpose",
+    "usagetype": "Annotation-TimedStorage-ByteHrs",
+    "volumeType": "Annotations"
+   },
+   "productFamily": "Storage",
+   "sku": "KMKCKYYEKJBZ7B3F"
+  },
+  "WP9ANXZGBYYSGJEA": {
+   "attributes": {
+    "availability": "99.99%",
+    "durability": "99.999999999%",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonS3",
+    "servicename": "Amazon Simple Storage Service",
+    "storageClass": "General Purpose",
+    "usagetype": "TimedStorage-ByteHrs",
+    "volumeType": "Standard"
+   },
+   "productFamily": "Storage",
+   "sku": "WP9ANXZGBYYSGJEA"
+  },
+  "ZRGCHTXR5ZDB55NB": {
+   "attributes": {
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "operation": "",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonS3",
+    "servicename": "Amazon Simple Storage Service",
+    "storageClass": "Analytics",
+    "usagetype": "Tables-TimedStorage-ByteHrs",
+    "volumeType": "Tables"
+   },
+   "sku": "ZRGCHTXR5ZDB55NB"
+  }
+ },
+ "publicationDate": "2026-11-21T17:29:19Z",
+ "terms": {
+  "OnDemand": {
+   "2H4CRAVNRTNBDFKV": {
+    "2H4CRAVNRTNBDFKV.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "2H4CRAVNRTNBDFKV.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.06 per GB-Mo of Storage in Vectors ",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0600000000"
+       },
+       "rateCode": "2H4CRAVNRTNBDFKV.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "2H4CRAVNRTNBDFKV",
+     "termAttributes": {}
+    }
+   },
+   "2N3NKSP5AF8HYTS2": {
+    "2N3NKSP5AF8HYTS2.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "2N3NKSP5AF8HYTS2.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.30 per GB-Mo of Storage in Files ",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.3000000000"
+       },
+       "rateCode": "2N3NKSP5AF8HYTS2.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "2N3NKSP5AF8HYTS2",
+     "termAttributes": {}
+    }
+   },
+   "KMKCKYYEKJBZ7B3F": {
+    "KMKCKYYEKJBZ7B3F.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "KMKCKYYEKJBZ7B3F.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.023 per GB-Mo of Storage in Annotations ",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0230000000"
+       },
+       "rateCode": "KMKCKYYEKJBZ7B3F.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "KMKCKYYEKJBZ7B3F",
+     "termAttributes": {}
+    }
+   },
+   "WP9ANXZGBYYSGJEA": {
+    "WP9ANXZGBYYSGJEA.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "WP9ANXZGBYYSGJEA.JRTCKXETXF.D42MF2PVJS": {
+       "appliesTo": [],
+       "beginRange": "51200",
+       "description": "$0.022 per GB - next 450 TB / month of storage used",
+       "endRange": "512000",
+       "pricePerUnit": {
+        "USD": "0.0220000000"
+       },
+       "rateCode": "WP9ANXZGBYYSGJEA.JRTCKXETXF.D42MF2PVJS",
+       "unit": "GB-Mo"
+      },
+      "WP9ANXZGBYYSGJEA.JRTCKXETXF.PGHJ3S3EYE": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.023 per GB - first 50 TB / month of storage used",
+       "endRange": "51200",
+       "pricePerUnit": {
+        "USD": "0.0230000000"
+       },
+       "rateCode": "WP9ANXZGBYYSGJEA.JRTCKXETXF.PGHJ3S3EYE",
+       "unit": "GB-Mo"
+      },
+      "WP9ANXZGBYYSGJEA.JRTCKXETXF.PXJDJ3YRG3": {
+       "appliesTo": [],
+       "beginRange": "512000",
+       "description": "$0.021 per GB - storage used / month over 500 TB",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0210000000"
+       },
+       "rateCode": "WP9ANXZGBYYSGJEA.JRTCKXETXF.PXJDJ3YRG3",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "WP9ANXZGBYYSGJEA",
+     "termAttributes": {}
+    }
+   },
+   "ZRGCHTXR5ZDB55NB": {
+    "ZRGCHTXR5ZDB55NB.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "ZRGCHTXR5ZDB55NB.JRTCKXETXF.D42MF2PVJS": {
+       "appliesTo": [],
+       "beginRange": "51200",
+       "description": "$0.0253 per GB-Mo for Next 450 TB of Storage in S3 Table Buckets in US East (N. Virginia)",
+       "endRange": "512000",
+       "pricePerUnit": {
+        "USD": "0.0253000000"
+       },
+       "rateCode": "ZRGCHTXR5ZDB55NB.JRTCKXETXF.D42MF2PVJS",
+       "unit": "GB-Mo"
+      },
+      "ZRGCHTXR5ZDB55NB.JRTCKXETXF.PGHJ3S3EYE": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.0265 per GB-Mo for First 50 TB of Storage in S3 Table Buckets in US East (N. Virginia)",
+       "endRange": "51200",
+       "pricePerUnit": {
+        "USD": "0.0265000000"
+       },
+       "rateCode": "ZRGCHTXR5ZDB55NB.JRTCKXETXF.PGHJ3S3EYE",
+       "unit": "GB-Mo"
+      },
+      "ZRGCHTXR5ZDB55NB.JRTCKXETXF.PXJDJ3YRG3": {
+       "appliesTo": [],
+       "beginRange": "512000",
+       "description": "$0.0242 per GB-Mo for Over 500 TB of Storage in S3 Table Buckets in US East (N. Virginia)",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0242000000"
+       },
+       "rateCode": "ZRGCHTXR5ZDB55NB.JRTCKXETXF.PXJDJ3YRG3",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "ZRGCHTXR5ZDB55NB",
+     "termAttributes": {}
+    }
+   }
+  }
+ },
+ "version": "20261121172919"
+}

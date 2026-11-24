@@ -9,6 +9,28 @@ import { formatTrace, traceCommand, type TraceDirection } from "./commands/trace
 import { formatPlan, formatResearch, researchCommand, researchPlan } from "./commands/research.js";
 import { startServer } from "./commands/serve.js";
 import { openFile, viewCommand } from "./commands/view.js";
+import { createInterface } from "node:readline/promises";
+import { credentialStatus } from "@buildrax/pricing";
+import {
+  askStack,
+  costCommand,
+  formatAssumptions,
+  formatCost,
+  formatPricingPlan,
+  parseAssumptions,
+  parsePairs,
+  parseTiers,
+  resolveStack,
+} from "./commands/cost.js";
+
+export {
+  costCommand,
+  formatCost,
+  parseTiers,
+  parseAssumptions,
+  askStack,
+  costPathFor,
+} from "./commands/cost.js";
 
 export { scanCommand, summarize, formatSummary } from "./commands/scan.js";
 export { modelPathFor, notesPathFor, researchPathFor } from "./commands/data.js";
@@ -110,6 +132,96 @@ export function buildProgram(): Command {
         console.log(opts.json ? JSON.stringify(file, null, 2) : formatResearch(file));
       },
     );
+
+  const cost = program
+    .command("cost")
+    .description(
+      "monthly cost estimate per traffic tier, from dated list prices (estimates, never quotes)",
+    );
+  cost
+    .command("estimate", { isDefault: true })
+    .argument("[path]", "repository (uses .buildrax/model.json when present)", ".")
+    .option("--mode <mode>", "current (what the repo declares) | product (as a product)", "current")
+    .option("--tiers <list>", "user tiers", "100,1k,10k,100k,1m")
+    .option("--stack <answers>", "stack answers, e.g. database=postgres,cache=none,llm=openai")
+    .option("--region <code>", "AWS region (same as --stack region=…)")
+    .option("--assume <pairs>", "override assumptions, e.g. dauRatio=0.3,requestsPerDau=100")
+    .option("--yes", "accept the pre-selected stack without asking")
+    .option("--online", "download AWS list prices (default: only cached prices are used)")
+    .option(
+      "--use-credentials",
+      "with --online: query the AWS Price List API with credentials from the environment",
+    )
+    .option("--list-assumptions", "print every assumption with its default and exit")
+    .option("--json", "print the report as JSON")
+    .action(
+      async (
+        repo: string,
+        opts: {
+          mode: string;
+          tiers: string;
+          stack?: string;
+          region?: string;
+          assume?: string;
+          yes?: boolean;
+          online?: boolean;
+          useCredentials?: boolean;
+          listAssumptions?: boolean;
+          json?: boolean;
+        },
+      ) => {
+        if (opts.listAssumptions) {
+          console.log(formatAssumptions());
+          return;
+        }
+        if (opts.mode !== "current" && opts.mode !== "product")
+          throw new Error("--mode must be current or product");
+        const answers = parsePairs(opts.stack);
+        if (opts.region) answers["region"] = opts.region;
+        // Product mode asks the short stack questionnaire (Enter keeps each default).
+        if (opts.mode === "product" && !opts.yes && !opts.json && process.stdin.isTTY) {
+          const { stack } = await resolveStack(repo, answers);
+          const rl = createInterface({ input: process.stdin, output: process.stdout });
+          console.log("Stack for the estimate (Enter keeps the [default]):");
+          try {
+            Object.assign(answers, await askStack(stack, (q) => rl.question(q)));
+          } finally {
+            rl.close();
+          }
+        }
+        const r = await costCommand(repo, {
+          mode: opts.mode,
+          tiers: parseTiers(opts.tiers),
+          stack: answers,
+          assumptions: parseAssumptions(opts.assume),
+          online: opts.online,
+          useCredentials: opts.useCredentials,
+          onProgress: opts.json ? undefined : (m) => console.error(`  fetching ${m}`),
+        });
+        for (const w of r.warnings) console.error(`warning: ${w}`);
+        if (opts.json) {
+          console.log(JSON.stringify(r.report, null, 2));
+          return;
+        }
+        if (r.plan) console.log(`${formatPricingPlan(r.plan)}\n`);
+        console.log(formatCost(r.report));
+        console.log(`\nWritten to ${r.file}`);
+      },
+    );
+  cost
+    .command("credentials")
+    .argument("<action>", "status | clear")
+    .description("optional AWS credentials: where they are read from (values are never shown)")
+    .action((action: string) => {
+      if (action !== "status" && action !== "clear")
+        throw new Error("use: buildrax cost credentials status|clear");
+      const s = credentialStatus();
+      if (action === "status") console.log(`AWS: ${s.aws}\n${s.stored}`);
+      else
+        console.log(
+          `${s.stored}. To stop using environment credentials, unset AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_SESSION_TOKEN in your shell.`,
+        );
+    });
 
   program
     .command("trace")

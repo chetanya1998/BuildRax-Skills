@@ -1,0 +1,838 @@
+{
+ "formatVersion": "v1.0",
+ "offerCode": "AmazonRDS",
+ "products": {
+  "7KQ3X2CUG9UW6NAE": {
+   "attributes": {
+    "currentGeneration": "Yes",
+    "databaseEngine": "MySQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "2",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.m7g.large",
+    "instanceTypeFamily": "M7G",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "8 GiB",
+    "networkPerformance": "Up to 12.5 Gigabit",
+    "normalizationSizeFactor": "4",
+    "operation": "CreateDBInstance:0002",
+    "physicalProcessor": "AWS Graviton3",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storage": "EBS Only",
+    "unbundledLicensing": "FALSE",
+    "usagetype": "InstanceUsage:db.m7g.large",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "7KQ3X2CUG9UW6NAE"
+  },
+  "9HPEGXQTDDGH53C9": {
+   "attributes": {
+    "currentGeneration": "Yes",
+    "databaseEngine": "PostgreSQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "14",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.t4g.micro",
+    "instanceTypeFamily": "T4G",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "1 GiB",
+    "networkPerformance": "Up to 5 Gigabit",
+    "normalizationSizeFactor": "0.5",
+    "operation": "CreateDBInstance:0014",
+    "physicalProcessor": "AWS Graviton2",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storage": "EBS Only",
+    "unbundledLicensing": "FALSE",
+    "usagetype": "InstanceUsage:db.t4g.micro",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "9HPEGXQTDDGH53C9"
+  },
+  "BFM4DHJU8ZRAFXFZ": {
+   "attributes": {
+    "databaseEngine": "PostgreSQL",
+    "deploymentOption": "Multi-AZ (readable standbys)",
+    "engineCode": "14",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "maxVolumeSize": "16 TB",
+    "minVolumeSize": "5 GB",
+    "operation": "CreateDBInstance:0014",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storageMedia": "SSD",
+    "usagetype": "RDS:Multi-AZCluster-GP3-Storage",
+    "volumeType": "General Purpose-GP3"
+   },
+   "productFamily": "Database Storage",
+   "sku": "BFM4DHJU8ZRAFXFZ"
+  },
+  "BVC2XPZ4DHBCJX5Q": {
+   "attributes": {
+    "databaseEngine": "MySQL",
+    "deploymentOption": "Multi-AZ",
+    "engineCode": "2",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "maxVolumeSize": "16 TB",
+    "minVolumeSize": "5 GB",
+    "operation": "CreateDBInstance:0002",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storageMedia": "SSD",
+    "usagetype": "RDS:Multi-AZ-GP3-Storage",
+    "volumeType": "General Purpose-GP3"
+   },
+   "productFamily": "Database Storage",
+   "sku": "BVC2XPZ4DHBCJX5Q"
+  },
+  "EKJ27TU85G7S4RP9": {
+   "attributes": {
+    "databaseEngine": "MySQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "2",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.t4g.micro",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "1 GiB",
+    "normalizationSizeFactor": "0.5",
+    "operation": "CreateDBInstance:0002",
+    "physicalProcessor": "AWS Graviton2",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "usagetype": "UnusedBox:db.t4g.micro",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "EKJ27TU85G7S4RP9"
+  },
+  "F2KGHFYN45729EWR": {
+   "attributes": {
+    "currentGeneration": "Yes",
+    "databaseEngine": "MySQL",
+    "deploymentOption": "Multi-AZ",
+    "engineCode": "2",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.t4g.micro",
+    "instanceTypeFamily": "T4G",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "1 GiB",
+    "networkPerformance": "Up to 5 Gigabit",
+    "normalizationSizeFactor": "1",
+    "operation": "CreateDBInstance:0002",
+    "physicalProcessor": "AWS Graviton2",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storage": "EBS Only",
+    "unbundledLicensing": "FALSE",
+    "usagetype": "Multi-AZUsage:db.t4g.micro",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "F2KGHFYN45729EWR"
+  },
+  "H4R2WBBMX6VRJG4S": {
+   "attributes": {
+    "databaseEngine": "MySQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "2",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "maxVolumeSize": "16 TB",
+    "minVolumeSize": "5 GB",
+    "operation": "CreateDBInstance:0002",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storageMedia": "SSD",
+    "usagetype": "RDS:GP3-Storage",
+    "volumeType": "General Purpose-GP3"
+   },
+   "productFamily": "Database Storage",
+   "sku": "H4R2WBBMX6VRJG4S"
+  },
+  "J7S7KD4WFDNQWKNX": {
+   "attributes": {
+    "databaseEngine": "PostgreSQL",
+    "deploymentOption": "Multi-AZ",
+    "engineCode": "14",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "maxVolumeSize": "16 TB",
+    "minVolumeSize": "5 GB",
+    "operation": "CreateDBInstance:0014",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storageMedia": "SSD",
+    "usagetype": "RDS:Multi-AZ-GP3-Storage",
+    "volumeType": "General Purpose-GP3"
+   },
+   "productFamily": "Database Storage",
+   "sku": "J7S7KD4WFDNQWKNX"
+  },
+  "KYVYY29G957PKY3B": {
+   "attributes": {
+    "databaseEngine": "PostgreSQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "14",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "maxVolumeSize": "16 TB",
+    "minVolumeSize": "5 GB",
+    "operation": "CreateDBInstance:0014",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storageMedia": "SSD",
+    "usagetype": "RDS:GP3-Storage",
+    "volumeType": "General Purpose-GP3"
+   },
+   "productFamily": "Database Storage",
+   "sku": "KYVYY29G957PKY3B"
+  },
+  "MHBYPGEYAB7WUAKB": {
+   "attributes": {
+    "databaseEngine": "PostgreSQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "14",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.t4g.micro",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "1 GiB",
+    "normalizationSizeFactor": "0.5",
+    "operation": "CreateDBInstance:0014",
+    "physicalProcessor": "AWS Graviton2",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "usagetype": "UnusedBox:db.t4g.micro",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "MHBYPGEYAB7WUAKB"
+  },
+  "PJRBVPQW8MZAF9MK": {
+   "attributes": {
+    "databaseEngine": "MySQL",
+    "deploymentOption": "Multi-AZ (readable standbys)",
+    "engineCode": "2",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "maxVolumeSize": "16 TB",
+    "minVolumeSize": "5 GB",
+    "operation": "CreateDBInstance:0002",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storageMedia": "SSD",
+    "usagetype": "RDS:Multi-AZCluster-GP3-Storage",
+    "volumeType": "General Purpose-GP3"
+   },
+   "productFamily": "Database Storage",
+   "sku": "PJRBVPQW8MZAF9MK"
+  },
+  "RGZ43Q28J3F87JYA": {
+   "attributes": {
+    "currentGeneration": "Yes",
+    "databaseEngine": "PostgreSQL",
+    "deploymentOption": "Multi-AZ",
+    "engineCode": "14",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.t4g.micro",
+    "instanceTypeFamily": "T4G",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "1 GiB",
+    "networkPerformance": "Up to 5 Gigabit",
+    "normalizationSizeFactor": "1",
+    "operation": "CreateDBInstance:0014",
+    "physicalProcessor": "AWS Graviton2",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storage": "EBS Only",
+    "unbundledLicensing": "FALSE",
+    "usagetype": "Multi-AZUsage:db.t4g.micro",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "RGZ43Q28J3F87JYA"
+  },
+  "SHZU9RWDC2H76ATX": {
+   "attributes": {
+    "currentGeneration": "Yes",
+    "databaseEngine": "PostgreSQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "14",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.m7g.large",
+    "instanceTypeFamily": "M7G",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "8 GiB",
+    "networkPerformance": "Up to 12.5 Gigabit",
+    "normalizationSizeFactor": "4",
+    "operation": "CreateDBInstance:0014",
+    "physicalProcessor": "AWS Graviton3",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storage": "EBS Only",
+    "unbundledLicensing": "FALSE",
+    "usagetype": "InstanceUsage:db.m7g.large",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "SHZU9RWDC2H76ATX"
+  },
+  "SY7XEAU6AM46QBDG": {
+   "attributes": {
+    "databaseEngine": "PostgreSQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "14",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.m7g.large",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "8 GiB",
+    "normalizationSizeFactor": "4",
+    "operation": "CreateDBInstance:0014",
+    "physicalProcessor": "AWS Graviton3",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "usagetype": "UnusedBox:db.m7g.large",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "SY7XEAU6AM46QBDG"
+  },
+  "U4AUM7WC9VCSGAY9": {
+   "attributes": {
+    "currentGeneration": "Yes",
+    "databaseEngine": "MySQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "2",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.t4g.micro",
+    "instanceTypeFamily": "T4G",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "1 GiB",
+    "networkPerformance": "Up to 5 Gigabit",
+    "normalizationSizeFactor": "0.5",
+    "operation": "CreateDBInstance:0002",
+    "physicalProcessor": "AWS Graviton2",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storage": "EBS Only",
+    "unbundledLicensing": "FALSE",
+    "usagetype": "InstanceUsage:db.t4g.micro",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "U4AUM7WC9VCSGAY9"
+  },
+  "WZCMZYPXAFG5UFQN": {
+   "attributes": {
+    "currentGeneration": "Yes",
+    "databaseEngine": "MySQL",
+    "deploymentOption": "Multi-AZ",
+    "engineCode": "2",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.m7g.large",
+    "instanceTypeFamily": "M7G",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "8 GiB",
+    "networkPerformance": "Up to 12.5 Gigabit",
+    "normalizationSizeFactor": "8",
+    "operation": "CreateDBInstance:0002",
+    "physicalProcessor": "AWS Graviton3",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storage": "EBS Only",
+    "unbundledLicensing": "FALSE",
+    "usagetype": "Multi-AZUsage:db.m7g.large",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "WZCMZYPXAFG5UFQN"
+  },
+  "XH97GMF9GKD29WDW": {
+   "attributes": {
+    "databaseEngine": "MySQL",
+    "deploymentOption": "Single-AZ",
+    "engineCode": "2",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.m7g.large",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "8 GiB",
+    "normalizationSizeFactor": "4",
+    "operation": "CreateDBInstance:0002",
+    "physicalProcessor": "AWS Graviton3",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "usagetype": "UnusedBox:db.m7g.large",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "XH97GMF9GKD29WDW"
+  },
+  "Z8HB5KU2V54F7ATT": {
+   "attributes": {
+    "currentGeneration": "Yes",
+    "databaseEngine": "PostgreSQL",
+    "deploymentOption": "Multi-AZ",
+    "engineCode": "14",
+    "instanceFamily": "General purpose",
+    "instanceType": "db.m7g.large",
+    "instanceTypeFamily": "M7G",
+    "licenseModel": "No license required",
+    "location": "US East (N. Virginia)",
+    "locationType": "AWS Region",
+    "memory": "8 GiB",
+    "networkPerformance": "Up to 12.5 Gigabit",
+    "normalizationSizeFactor": "8",
+    "operation": "CreateDBInstance:0014",
+    "physicalProcessor": "AWS Graviton3",
+    "processorArchitecture": "64-bit",
+    "regionCode": "us-east-1",
+    "servicecode": "AmazonRDS",
+    "servicename": "Amazon Relational Database Service",
+    "storage": "EBS Only",
+    "unbundledLicensing": "FALSE",
+    "usagetype": "Multi-AZUsage:db.m7g.large",
+    "vcpu": "2"
+   },
+   "productFamily": "Database Instance",
+   "sku": "Z8HB5KU2V54F7ATT"
+  }
+ },
+ "publicationDate": "2026-11-20T22:46:19Z",
+ "terms": {
+  "OnDemand": {
+   "7KQ3X2CUG9UW6NAE": {
+    "7KQ3X2CUG9UW6NAE.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "7KQ3X2CUG9UW6NAE.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.168 per RDS db.m7g.large Single-AZ instance hour (or partial hour) running MySQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1680000000"
+       },
+       "rateCode": "7KQ3X2CUG9UW6NAE.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "7KQ3X2CUG9UW6NAE",
+     "termAttributes": {}
+    }
+   },
+   "9HPEGXQTDDGH53C9": {
+    "9HPEGXQTDDGH53C9.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "9HPEGXQTDDGH53C9.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.016 per RDS db.t4g.micro Single-AZ instance hour (or partial hour) running PostgreSQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0160000000"
+       },
+       "rateCode": "9HPEGXQTDDGH53C9.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "9HPEGXQTDDGH53C9",
+     "termAttributes": {}
+    }
+   },
+   "BFM4DHJU8ZRAFXFZ": {
+    "BFM4DHJU8ZRAFXFZ.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "BFM4DHJU8ZRAFXFZ.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.345 per GB-month of provisioned GP3 storage Multi-AZ (readable standbys) deployments running PostgreSQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.3450000000"
+       },
+       "rateCode": "BFM4DHJU8ZRAFXFZ.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "BFM4DHJU8ZRAFXFZ",
+     "termAttributes": {}
+    }
+   },
+   "BVC2XPZ4DHBCJX5Q": {
+    "BVC2XPZ4DHBCJX5Q.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "BVC2XPZ4DHBCJX5Q.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.23 per GB-month of provisioned GP3 storage for Multi-AZ deployments running MySQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.2300000000"
+       },
+       "rateCode": "BVC2XPZ4DHBCJX5Q.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "BVC2XPZ4DHBCJX5Q",
+     "termAttributes": {}
+    }
+   },
+   "EKJ27TU85G7S4RP9": {
+    "EKJ27TU85G7S4RP9.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "EKJ27TU85G7S4RP9.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.016 per RDS db.t4g.micro Single-AZ unused capacity reservation hour (or partial hour) for MySQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0160000000"
+       },
+       "rateCode": "EKJ27TU85G7S4RP9.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "EKJ27TU85G7S4RP9",
+     "termAttributes": {}
+    }
+   },
+   "F2KGHFYN45729EWR": {
+    "F2KGHFYN45729EWR.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "F2KGHFYN45729EWR.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.032 per RDS db.t4g.micro Multi-AZ instance hour (or partial hour) running MySQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0320000000"
+       },
+       "rateCode": "F2KGHFYN45729EWR.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "F2KGHFYN45729EWR",
+     "termAttributes": {}
+    }
+   },
+   "H4R2WBBMX6VRJG4S": {
+    "H4R2WBBMX6VRJG4S.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "H4R2WBBMX6VRJG4S.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.115 per GB-month of provisioned GP3 storage running MySQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1150000000"
+       },
+       "rateCode": "H4R2WBBMX6VRJG4S.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "H4R2WBBMX6VRJG4S",
+     "termAttributes": {}
+    }
+   },
+   "J7S7KD4WFDNQWKNX": {
+    "J7S7KD4WFDNQWKNX.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "J7S7KD4WFDNQWKNX.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.23 per GB-month of provisioned GP3 storage for Multi-AZ deployments running PostgreSQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.2300000000"
+       },
+       "rateCode": "J7S7KD4WFDNQWKNX.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "J7S7KD4WFDNQWKNX",
+     "termAttributes": {}
+    }
+   },
+   "KYVYY29G957PKY3B": {
+    "KYVYY29G957PKY3B.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "KYVYY29G957PKY3B.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.115 per GB-month of provisioned GP3 storage running PostgreSQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1150000000"
+       },
+       "rateCode": "KYVYY29G957PKY3B.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "KYVYY29G957PKY3B",
+     "termAttributes": {}
+    }
+   },
+   "MHBYPGEYAB7WUAKB": {
+    "MHBYPGEYAB7WUAKB.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "MHBYPGEYAB7WUAKB.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.016 per RDS db.t4g.micro Single-AZ unused capacity reservation hour (or partial hour) for PostgreSQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0160000000"
+       },
+       "rateCode": "MHBYPGEYAB7WUAKB.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "MHBYPGEYAB7WUAKB",
+     "termAttributes": {}
+    }
+   },
+   "PJRBVPQW8MZAF9MK": {
+    "PJRBVPQW8MZAF9MK.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "PJRBVPQW8MZAF9MK.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$0.345 per GB-month of provisioned GP3 storage Multi-AZ (readable standbys) deployments running MySQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.3450000000"
+       },
+       "rateCode": "PJRBVPQW8MZAF9MK.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "GB-Mo"
+      }
+     },
+     "sku": "PJRBVPQW8MZAF9MK",
+     "termAttributes": {}
+    }
+   },
+   "RGZ43Q28J3F87JYA": {
+    "RGZ43Q28J3F87JYA.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "RGZ43Q28J3F87JYA.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.032 per RDS db.t4g.micro Multi-AZ instance hour (or partial hour) running PostgreSQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0320000000"
+       },
+       "rateCode": "RGZ43Q28J3F87JYA.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "RGZ43Q28J3F87JYA",
+     "termAttributes": {}
+    }
+   },
+   "SHZU9RWDC2H76ATX": {
+    "SHZU9RWDC2H76ATX.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "SHZU9RWDC2H76ATX.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.168 per RDS db.m7g.large Single-AZ instance hour (or partial hour) running PostgreSQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1680000000"
+       },
+       "rateCode": "SHZU9RWDC2H76ATX.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "SHZU9RWDC2H76ATX",
+     "termAttributes": {}
+    }
+   },
+   "SY7XEAU6AM46QBDG": {
+    "SY7XEAU6AM46QBDG.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "SY7XEAU6AM46QBDG.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.168 per RDS db.m7g.large Single-AZ unused capacity reservation hour (or partial hour) for PostgreSQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1680000000"
+       },
+       "rateCode": "SY7XEAU6AM46QBDG.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "SY7XEAU6AM46QBDG",
+     "termAttributes": {}
+    }
+   },
+   "U4AUM7WC9VCSGAY9": {
+    "U4AUM7WC9VCSGAY9.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "U4AUM7WC9VCSGAY9.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.016 per RDS db.t4g.micro Single-AZ instance hour (or partial hour) running MySQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.0160000000"
+       },
+       "rateCode": "U4AUM7WC9VCSGAY9.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "U4AUM7WC9VCSGAY9",
+     "termAttributes": {}
+    }
+   },
+   "WZCMZYPXAFG5UFQN": {
+    "WZCMZYPXAFG5UFQN.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "WZCMZYPXAFG5UFQN.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.337 per RDS db.m7g.large Multi-AZ instance hour (or partial hour) running MySQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.3370000000"
+       },
+       "rateCode": "WZCMZYPXAFG5UFQN.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "WZCMZYPXAFG5UFQN",
+     "termAttributes": {}
+    }
+   },
+   "XH97GMF9GKD29WDW": {
+    "XH97GMF9GKD29WDW.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "XH97GMF9GKD29WDW.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.168 per RDS db.m7g.large Single-AZ unused capacity reservation hour (or partial hour) for MySQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.1680000000"
+       },
+       "rateCode": "XH97GMF9GKD29WDW.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "XH97GMF9GKD29WDW",
+     "termAttributes": {}
+    }
+   },
+   "Z8HB5KU2V54F7ATT": {
+    "Z8HB5KU2V54F7ATT.JRTCKXETXF": {
+     "effectiveDate": "2026-11-01T00:00:00Z",
+     "offerTermCode": "JRTCKXETXF",
+     "priceDimensions": {
+      "Z8HB5KU2V54F7ATT.JRTCKXETXF.6YS6EN2CT7": {
+       "appliesTo": [],
+       "beginRange": "0",
+       "description": "$ 0.337 per RDS db.m7g.large Multi-AZ instance hour (or partial hour) running PostgreSQL",
+       "endRange": "Inf",
+       "pricePerUnit": {
+        "USD": "0.3370000000"
+       },
+       "rateCode": "Z8HB5KU2V54F7ATT.JRTCKXETXF.6YS6EN2CT7",
+       "unit": "Hrs"
+      }
+     },
+     "sku": "Z8HB5KU2V54F7ATT",
+     "termAttributes": {}
+    }
+   }
+  }
+ },
+ "version": "20261120224619"
+}

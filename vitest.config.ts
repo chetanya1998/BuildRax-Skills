@@ -14,6 +14,8 @@ export default defineConfig({
       "@buildrax/context": src("context"),
       "@buildrax/research": src("research"),
       "@buildrax/skills": src("skills"),
+      "@buildrax/cost": src("cost"),
+      "@buildrax/pricing": src("pricing"),
       "@buildrax/viewer": src("viewer"),
     },
   },

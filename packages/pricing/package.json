@@ -1,0 +1,25 @@
+{
+  "name": "@buildrax/pricing",
+  "version": "0.0.0",
+  "description": "Opt-in price lookups: AWS public price list files to a compact, dated local price book",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@buildrax/cost": "workspace:*"
+  }
+}

@@ -12,9 +12,11 @@ pnpm workspaces, Node >= 20, TypeScript strict, ESM only. tsup (packages), vites
 
 ## Package dependency rules (no cycles)
 
-ir is the root. ingest, graph, research depend on ir. viewer and context depend on ir + graph.
+ir is the root. ingest, graph, research, cost depend on ir. pricing depends on cost.
+viewer depends on ir + graph + cost; context on ir + graph.
 skills has no internal dependencies. cli depends on all of them.
-graph must stay pure and browser-safe (no node: APIs). Viewer never extracts from source.
+graph and cost must stay pure and browser-safe (no node: APIs). Viewer never extracts from source.
+Only pricing (opt-in, allowlisted hosts) and research touch the network.
 Skills contain instructions only; all logic lives behind the CLI.
 
 ## Hard rules
