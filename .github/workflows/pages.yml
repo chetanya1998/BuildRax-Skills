@@ -1,8 +1,8 @@
 name: Deploy landing page
 on:
   push:
-    branches: [main, 'claude/**']
-    paths: ['site/**', '.github/workflows/pages.yml']
+    branches: [main, "claude/**"]
+    paths: ["site/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 permissions:
   contents: read
