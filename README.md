@@ -22,8 +22,32 @@ your source.
 
 ---
 
+## Demo
+
+Recorded from the real viewer (no mock-ups). Each loops in about 20–25 seconds.
+
+**Explore**: this repository as a map; open packages, see what uses what, focus on one package.
+
+<img src="docs/demo/explore.gif" alt="Animated demo: the Graph view of this repository; packages are double-clicked open into segment boxes, a package is clicked to highlight what it uses and what uses it, then the Nodes view and Focus show everything that depends on @buildrax/ir column by column" width="920">
+
+**Trace and read the code**: step through how a file connects, then turn on Code view and click a
+file and a database (config lines with secrets masked).
+
+<img src="docs/demo/trace-code.gif" alt="Animated demo: in the Nodes view server.ts is selected and the Inspector trace is stepped through; Code view is switched on, clicking db.ts opens a floating window with its links marked and the lines that use it, then clicking the database shows the code and config lines that use and declare it" width="920">
+
+**Flows**: every endpoint across frameworks; follow one to the database and read each step.
+
+<img src="docs/demo/flows.gif" alt="Animated demo: the Flows view lists endpoints by framework; GET /api/orders is drawn in lanes down to PostgreSQL, clicking steps opens the exact lines in a floating code window, then an Express route mounted from another file shows its resolved prefix and handler line" width="920">
+
+**Cost**: monthly cost per traffic tier, and what happens when an assumption changes.
+
+<img src="docs/demo/cost.gif" alt="Animated demo: the Cost view shows five traffic tiers with monthly estimates; tiers are clicked to show their breakdown, then the requests-per-user assumption is doubled and every tier recomputes in the page" width="920">
+
+---
+
 ## Contents
 
+- [Demo](#demo)
 - [Who it is for](#who-it-is-for)
 - [Pain points it solves](#pain-points-it-solves): legacy projects and projects you are building now
 - [User stories](#user-stories)
