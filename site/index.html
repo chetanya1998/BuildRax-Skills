@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BuildRAX Skills: see how your codebase is really put together</title>
+<meta name="description" content="Local, evidence-backed architecture maps for your repo and your AI agent. A file:line behind every arrow. No code execution, no LLM at scan time, no source upload.">
+<meta property="og:title" content="BuildRAX Skills">
+<meta property="og:description" content="See how your codebase is really put together before you, or your AI agent, change it.">
+<meta property="og:image" content="assets/graph.webp">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='%235aa9ff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<script>try{var t=localStorage.getItem('bx-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav aria-label="Main">
+  <div class="wrap">
+    <a class="logo" href="#top"><i></i>BuildRAX</a>
+    <div class="links" id="links">
+      <a href="#problem">Problems</a>
+      <a href="#try">Try it</a>
+      <a href="#features">Views</a>
+      <a href="#agents">For agents</a>
+      <a href="#who">Who it's for</a>
+      <a href="#ci">CI</a>
+      <a href="#start">Quick start</a>
+      <a href="https://github.com/chetanya1998/buildRax-Skills">GitHub ↗</a>
+    </div>
+    <button class="icon-btn burger" id="burger" aria-label="Menu" aria-expanded="false">☰</button>
+    <button class="icon-btn" id="theme" aria-label="Toggle light or dark theme">◐</button>
+  </div>
+</nav>
+
+<main id="main">
+<!-- HERO -->
+<header class="hero" id="top">
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="badge"><span class="pulse"></span> Early · install from source · no npm release yet</div>
+    <h1>See how your codebase is <span class="grad">really put together</span>, before you or your AI agent change it.</h1>
+    <p class="lead">BuildRAX scans a repo on your machine into an evidence-backed architecture map: packages, files, imports, endpoints, databases and paid services, with a <code>file:line</code> behind every box and arrow.</p>
+    <div class="cta">
+      <a class="btn pri" href="#start">Try it in 3 commands →</a>
+      <a class="btn" href="#try">Play with a real map</a>
+      <a class="btn" href="https://github.com/chetanya1998/buildRax-Skills">★ GitHub</a>
+    </div>
+    <div class="facts">
+      <span><b>0</b> LLM tokens to scan</span><span><b>0</b> code executed</span><span><b>0</b> bytes uploaded</span><span><b>1</b> offline HTML viewer</span>
+    </div>
+    <div class="hero-shot" id="tilt"><img src="assets/graph.webp" width="1840" height="1000" alt="BuildRAX Graph view of this repository in dark mode: packages as glowing orbs, the selected package lighting up what it uses in blue and what uses it in orange, with the Inspector showing evidence."></div>
+    <p class="note" style="text-align:center;margin-top:10px">This repository, scanned by itself: 138 files, zero circular dependencies, about 1.5 s.</p>
+  </div>
+</header>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="wrap">
+    <div class="eyebrow rv">The problem</div>
+    <h2 class="rv">Code grows faster than anyone's picture of it.</h2>
+    <p class="lead rv">Inherited code, AI-generated code and fast side projects all end up the same way: nobody can say what depends on what. <em>Tap or hover a card for the fix.</em></p>
+    <div class="grid g3" style="margin-top:34px">
+      <button class="flip rv" aria-label="Problem: nobody knows how this fits together"><div><span class="f"><span class="q">Nobody knows how this fits together.</span><span class="hint">Legacy · authors have left ↻</span></span><span class="b"><b>A map from the code itself,</b><span>Not from stale diagrams. Every link points at the import line that creates it.</span><span class="tag">Graph · Nodes · digest</span></span></div></button>
+      <button class="flip rv d1" aria-label="Problem: what breaks if I change this file"><div><span class="f"><span class="q">If I change this file, what breaks?</span><span class="hint">Refactor fear ↻</span></span><span class="b"><b>Impact, hop by hop.</b><span>Transitive dependents with file:line for each hop, explained one step at a time.</span><span class="tag">trace --direction up</span></span></div></button>
+      <button class="flip rv d2" aria-label="Problem: what does this endpoint touch"><div><span class="f"><span class="q">What does this endpoint actually touch?</span><span class="hint">Hidden infrastructure ↻</span></span><span class="b"><b>Endpoint → database.</b><span>Every route across 8 frameworks, followed to the databases and services it can reach.</span><span class="tag">routes · flow · Flows view</span></span></div></button>
+      <button class="flip rv" aria-label="Problem: AI generated code I did not design"><div><span class="f"><span class="q">The AI wrote files and dependencies I never designed.</span><span class="hint">Vibe-coding drift ↻</span></span><span class="b"><b>See what changed.</b><span>Added, removed and rewired since the last scan or any commit, plus the exact lines in Code view.</span><span class="tag">diff --since main · scan --watch</span></span></div></button>
+      <button class="flip rv d1" aria-label="Problem: agent burns tokens"><div><span class="f"><span class="q">My agent burns tokens crawling the whole repo.</span><span class="hint">Context cost ↻</span></span><span class="b"><b>A bounded, cited summary.</b><span>About 420 tokens for the digest and about 4k for a question pack, with file:line anchors.</span><span class="tag">digest · context</span></span></div></button>
+      <button class="flip rv d2" aria-label="Problem: hosting bill is a mystery"><div><span class="f"><span class="q">The hosting bill is a mystery. Will it scale?</span><span class="hint">Cost surprise ↻</span></span><span class="b"><b>Cost per traffic tier.</b><span>100 to 1M users from dated AWS list prices. No price feed? It says "price needed", never a guess.</span><span class="tag">cost · Cost view</span></span></div></button>
+    </div>
+  </div>
+</section>
+
+<!-- INTERACTIVE EXPLORER -->
+<section id="try" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="eyebrow rv">Try it, no install</div>
+    <h2 class="rv">Click a file. See what breaks.</h2>
+    <p class="lead rv">A real scan of <code>fixtures/sample-monorepo</code>, redrawn here. Pick any box, then switch between <b style="color:var(--org)">what depends on it</b> (impact) and <b style="color:var(--blue)">what it depends on</b>. The red loop is a genuine circular import the scan found.</p>
+    <div class="explorer" style="margin-top:30px">
+      <div class="stage rv">
+        <svg id="xg" viewBox="0 0 640 420" role="group" aria-label="Interactive dependency graph"></svg>
+        <div class="legend"><span><i style="background:var(--org)"></i>used by (impact)</span><span><i style="background:var(--blue)"></i>uses</span><span><i style="background:var(--red)"></i>circular</span></div>
+      </div>
+      <div class="card insp rv d1" aria-live="polite">
+        <div class="seg" role="group" aria-label="Direction"><button id="dUp" aria-pressed="true">Impact ▲</button><button id="dDn" aria-pressed="false">Uses ▼</button></div>
+        <h3 id="iName">Select a file</h3>
+        <p class="note" id="iNote">Click any box in the graph.</p>
+        <ul id="iList"></ul>
+        <div class="cmd"><code id="iCmd">buildrax trace &lt;file&gt; --direction up</code></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES / GIFS -->
+<section id="features">
+  <div class="wrap">
+    <div class="eyebrow rv">Four views, one model</div>
+    <h2 class="rv">Explore, trace, follow, price.</h2>
+    <p class="lead rv">Recorded from the real viewer. No mock-ups. Each loop is about 20 to 25 seconds.</p>
+    <div class="tabs" role="tablist" aria-label="Viewer features" id="ftabs"></div>
+    <div class="show rv">
+      <div>
+        <h3 id="fT"></h3>
+        <p id="fP" class="lead" style="font-size:1.02rem"></p>
+        <ul class="ul" id="fL"></ul>
+        <div class="cmd"><code id="fC"></code><button data-copy>copy</button></div>
+      </div>
+      <div>
+        <div class="shot"><img id="fImg" alt="" width="1840" height="1000"><button class="pp" id="fPP">▶ Play demo</button></div>
+        <div class="prog"><i id="fProg"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AGENTS -->
+<section id="agents" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="eyebrow rv">For Claude Code, Codex, Antigravity</div>
+    <h2 class="rv">Your agent reads a map, not your whole repo.</h2>
+    <p class="lead rv">The same scan feeds the agent skill. Output below is real, from the CLI on the sample fixture. Press replay to watch it run.</p>
+    <div class="grid g2" style="margin-top:30px">
+      <div class="rv">
+        <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh · sample-monorepo</span></div><pre id="tm" aria-label="Terminal animation of buildrax scan, digest and trace"></pre></div>
+        <p style="margin:12px 0 0"><button class="btn" id="replay">↻ Replay</button></p>
+      </div>
+      <div class="rv d1">
+        <div class="card">
+          <h3>Tokens the agent has to read</h3>
+          <p class="note">Measured on this repository (138 files). Token counts are estimates (characters ÷ 4), not billing numbers.</p>
+          <div class="tok" id="tok">
+            <div class="tr"><span>Raw source</span><div class="trk"><i data-w="100" style="background:var(--red)"></i></div><b data-n="198000">0</b></div>
+            <div class="tr"><span>context "&lt;question&gt;"</span><div class="trk"><i data-w="2.2" style="background:var(--org)"></i></div><b data-n="4000">0</b></div>
+            <div class="tr"><span>digest</span><div class="trk"><i data-w="0.6" style="background:var(--grn)"></i></div><b data-n="420">0</b></div>
+          </div>
+          <p class="note" style="margin-top:14px">Deterministic: same repo, same IDs, same digest. Your private notes are never included.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO -->
+<section id="who">
+  <div class="wrap">
+    <div class="eyebrow rv">User stories</div>
+    <h2 class="rv">Built for the person holding the repo.</h2>
+    <div class="pers rv" style="margin-top:30px">
+      <div class="pl" role="tablist" aria-label="Personas" id="ptabs"></div>
+      <div class="card" id="pBody" role="tabpanel" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CI -->
+<section id="ci" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="eyebrow rv">For teams</div>
+    <h2 class="rv">Architecture that can't erode quietly.</h2>
+    <p class="lead rv">Build the map in CI on every push. Pull requests get a plain-words architecture diff, and a new circular dependency can fail the build. The comment below is real <code>diff --markdown</code> output; the PR frame is an illustration.</p>
+    <div class="ci" style="margin-top:30px">
+      <div class="pr rv" id="pr">
+        <div class="h"><span class="tag">PR</span> add a.ts and b.ts <span style="margin-left:auto;color:var(--mut)">#42</span></div>
+        <div class="c">
+          <b>Architecture changes since <code>origin/main</code></b>
+          <table><tr><th></th><th>Before</th><th>After</th></tr><tr><td>Nodes</td><td>24</td><td>26</td></tr><tr><td>Links</td><td>16</td><td>18</td></tr></table>
+          <p class="warn" id="prW" style="opacity:0;transition:.5s">⚠ 1 circular dependency introduced</p>
+          <code style="font-size:.82rem" id="prC" >a.ts ↔ b.ts</code>
+        </div>
+        <div class="chk"><span class="dot" id="prD"></span><span id="prT">architecture check: running…</span></div>
+      </div>
+      <div class="rv d1">
+        <div class="card"><h3>What a reviewer gets</h3>
+          <ul class="ul"><li>Nodes and links before and after</li><li>Cycles introduced, named by file</li><li>What was added or removed</li><li>An optional check that fails the PR on a new cycle</li></ul>
+          <div class="cmd"><code>buildrax diff --since origin/main --markdown</code><button data-copy>copy</button></div>
+          <p class="note" style="margin-top:12px">Setup guide: <code>docs/ci.md</code></p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section id="trust">
+  <div class="wrap">
+    <div class="eyebrow rv">Privacy and honesty</div>
+    <h2 class="rv">Local by default. Evidence on every edge.</h2>
+    <div class="grid g2" style="margin-top:28px">
+      <div class="card rv"><ul class="priv"><li><b>Never runs your code</b> and never calls an LLM while scanning.</li><li><b>Source stays local.</b> scan, view, digest, trace, routes and diff make no network requests.</li><li><b>Opt-in lookups only</b>, shown first, and only public package names go to allowlisted hosts.</li><li><b>Secrets masked.</b> A real <code>.env</code> is never opened.</li><li><b>Your notes</b> are never sent anywhere or added to agent context.</li></ul></div>
+      <div class="card rv d1"><h3>Measured, not promised</h3>
+        <div class="grid g3" style="gap:14px;margin-top:10px">
+          <div><div class="num" data-c="1.5" data-d="1">0</div><span class="note">s full scan</span></div>
+          <div><div class="num" data-c="0.1" data-d="1">0</div><span class="note">s rescan, unchanged</span></div>
+          <div><div class="num" data-c="266">0</div><span class="note">tests, CI on Node 22 and 24</span></div>
+        </div>
+        <p class="note" style="margin-top:14px">Measured on this repo on the build machine. Your numbers will differ. Cost figures are estimates from dated list prices; anything without a price feed is reported as "price needed".</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- START -->
+<section id="start" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="eyebrow rv">Quick start</div>
+    <h2 class="rv">Three commands. About a minute.</h2>
+    <p class="lead rv">Needs Node.js 22+ and pnpm. Not on npm yet, so install from source.</p>
+    <div class="grid g3" style="margin-top:28px">
+      <div class="card rv"><div class="tag">1 · install</div><div class="cmd"><code>git clone https://github.com/chetanya1998/buildRax-Skills.git && cd buildRax-Skills && pnpm install && pnpm build</code><button data-copy>copy</button></div><div class="cmd"><code>alias buildrax="node $PWD/packages/cli/dist/bin.js"</code><button data-copy>copy</button></div></div>
+      <div class="card rv d1"><div class="tag">2 · scan</div><div class="cmd"><code>buildrax scan path/to/your-repo</code><button data-copy>copy</button></div><p class="note">Static, local, deterministic.</p></div>
+      <div class="card rv d2"><div class="tag">3 · explore</div><div class="cmd"><code>buildrax view path/to/your-repo --open</code><button data-copy>copy</button></div><p class="note">One offline HTML file. Add <code>--no-source</code> before sharing.</p></div>
+    </div>
+    <p class="note rv" style="margin-top:26px"><b>Supports today:</b> TypeScript, JavaScript, Python · Next.js, Express, Fastify, Hono, Koa, NestJS, FastAPI, Flask · docker-compose, Terraform, Kubernetes, Vercel, Netlify, Fly, Render, Prisma · npm, pnpm, yarn, poetry, uv lockfiles.</p>
+    <div class="card rv" style="margin-top:20px"><h3>Known limits</h3><p class="note" style="margin:0">Import-level and file-level for now: no function-level call graph yet, so <code>flow</code> shows what a handler's file can reach, not one runtime path. Static analysis cannot see dynamic imports or runtime wiring; a missing link is not proof of no dependency.</p></div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><div><b>BuildRAX Skills</b><br>Open-source, local-first architecture intelligence.</div>
+<div><a href="https://github.com/chetanya1998/buildRax-Skills">GitHub</a> · <a href="https://github.com/chetanya1998/buildRax-Skills/blob/main/docs/schema.md">Schema</a> · <a href="https://github.com/chetanya1998/buildRax-Skills/blob/main/docs/privacy.md">Privacy</a> · <a href="https://github.com/chetanya1998/buildRax-Skills/blob/main/docs/roadmap.md">Roadmap</a></div></div></footer>
+<script src="app.js"></script>
+</body>
+</html>
