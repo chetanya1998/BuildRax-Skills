@@ -8,7 +8,7 @@ import { formatNotes, notesCommand } from "./commands/notes.js";
 import { formatTrace, traceCommand, type TraceDirection } from "./commands/trace.js";
 import { formatPlan, formatResearch, researchCommand, researchPlan } from "./commands/research.js";
 import { startServer } from "./commands/serve.js";
-import { diffCommand, formatDiff } from "./commands/diff.js";
+import { diffCommand, formatDiff, formatDiffMarkdown } from "./commands/diff.js";
 import { openFile, viewCommand } from "./commands/view.js";
 import { createInterface } from "node:readline/promises";
 import { credentialStatus } from "@buildrax/pricing";
@@ -37,7 +37,7 @@ export { scanCommand, summarize, formatSummary } from "./commands/scan.js";
 export { modelPathFor, notesPathFor, researchPathFor } from "./commands/data.js";
 export { notesCommand, formatNotes } from "./commands/notes.js";
 export { startServer } from "./commands/serve.js";
-export { diffCommand, formatDiff, scanAtRef } from "./commands/diff.js";
+export { diffCommand, formatDiff, formatDiffMarkdown, scanAtRef } from "./commands/diff.js";
 export { traceModel, traceCommand, formatTrace, resolveTarget } from "./commands/trace.js";
 export { formatPlan, researchCommand, researchPlan } from "./commands/research.js";
 export type { RunningServer } from "./commands/serve.js";
@@ -232,13 +232,38 @@ export function buildProgram(): Command {
     .option("--since <ref>", "compare with the repository at a git ref (e.g. main, HEAD~5)")
     .option("--against <model>", "compare with a saved model.json")
     .option("--json", "print as JSON")
+    .option("--markdown", "print Markdown (for CI job summaries and PR comments)")
+    .option("--fail-on-new-cycles", "exit with code 1 when a circular dependency is introduced")
     .description(
       "architecture changes: nodes, links and circular dependencies added or removed (default: since the previous scan)",
     )
-    .action(async (repo: string, opts: { since?: string; against?: string; json?: boolean }) => {
-      const { diff, baseline } = await diffCommand(repo, opts);
-      console.log(opts.json ? JSON.stringify(diff, null, 2) : formatDiff(diff, baseline));
-    });
+    .action(
+      async (
+        repo: string,
+        opts: {
+          since?: string;
+          against?: string;
+          json?: boolean;
+          markdown?: boolean;
+          failOnNewCycles?: boolean;
+        },
+      ) => {
+        const { diff, baseline } = await diffCommand(repo, opts);
+        console.log(
+          opts.json
+            ? JSON.stringify(diff, null, 2)
+            : opts.markdown
+              ? formatDiffMarkdown(diff, baseline)
+              : formatDiff(diff, baseline),
+        );
+        if (opts.failOnNewCycles && diff.cycles.introduced.length) {
+          console.error(
+            `buildrax: ${diff.cycles.introduced.length} circular dependency(ies) introduced`,
+          );
+          process.exitCode = 1;
+        }
+      },
+    );
 
   program
     .command("trace")

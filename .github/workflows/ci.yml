@@ -23,3 +23,43 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+
+  # Architecture map as a build artifact (BuildRAX dogfooding its own CI recipe, docs/ci.md):
+  # scan, show what changed in the job summary, upload model + offline viewer. Read-only.
+  architecture:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the diff scans the base commit from git history
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Scan
+        run: node packages/cli/dist/bin.js scan .
+      - name: What changed
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+        run: |
+          if [ -n "$BASE" ] && [ "$BASE" != "0000000000000000000000000000000000000000" ] && git rev-parse --verify --quiet "$BASE^{commit}" >/dev/null; then
+            node packages/cli/dist/bin.js diff . --since "$BASE" --markdown > .buildrax/diff.md
+          else
+            echo "No base commit to compare with (first push of a branch)." > .buildrax/diff.md
+          fi
+          cat .buildrax/diff.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Viewer
+        run: node packages/cli/dist/bin.js view .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: buildrax-architecture
+          path: |
+            .buildrax/model.json
+            .buildrax/view.html
+            .buildrax/diff.md
+          retention-days: 30

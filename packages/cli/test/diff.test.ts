@@ -67,3 +67,23 @@ describe("diff and incremental scan", () => {
     await expect(diffCommand(tmp, { since: "no-such-branch" })).rejects.toThrow(/not found/);
   });
 });
+
+describe("markdown diff", () => {
+  it("renders a summary that cannot break out of its markup", async () => {
+    const { formatDiffMarkdown } = await import("../src/index.js");
+    const { diff } = await diffCommand(tmp, { since: "HEAD" });
+    const evil = {
+      ...diff,
+      nodes: {
+        ...diff.nodes,
+        added: [{ ...diff.nodes.added[0]!, id: "file:<img src=x onerror=alert(1)>|`x`.ts" }],
+      },
+    };
+    const text = formatDiffMarkdown(evil, "HEAD");
+    expect(text).toMatch(/^### Architecture changes since `HEAD`/);
+    expect(text).toContain("<summary>Added (1)</summary>");
+    expect(text).toContain("\\<img");
+    expect(text).not.toMatch(/[^\\]<img/);
+    expect(text).not.toContain("`x`");
+  });
+});

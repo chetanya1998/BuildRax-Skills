@@ -80,7 +80,8 @@ In the Graph view:
 
 See `docs/roadmap.md` for what comes next.
 
-See `docs/privacy.md`, `docs/cost.md`, `docs/schema.md` and `docs/agents.md`.
+See `docs/privacy.md`, `docs/cost.md`, `docs/ci.md` (architecture map as a CI artifact),
+`docs/schema.md` and `docs/agents.md`.
 
 ## Measured on this repo (estimates, chars / 4)
 

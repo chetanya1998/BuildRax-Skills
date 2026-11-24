@@ -158,3 +158,62 @@ export function formatDiff(d: ModelDiff, baseline: string): string {
   );
   return out.join("\n");
 }
+
+/** Markdown cells must not break the table or inject markup: escape pipes, backticks and HTML. */
+const md = (s: string): string =>
+  s.replace(/[\\`*_[\]|<>]/g, (c) => `\\${c}`).replace(/\r?\n/g, " ");
+
+/** Markdown for CI job summaries and PR comments. Long lists are folded into <details>. */
+export function formatDiffMarkdown(d: ModelDiff, baseline: string, max = 50): string {
+  const out = [`### Architecture changes since \`${md(baseline)}\``, ""];
+  if (d.same && !d.cycles.introduced.length && !d.cycles.resolved.length) {
+    out.push("No architecture changes.");
+    return out.join("\n");
+  }
+  out.push(
+    "| | Before | After |",
+    "| --- | ---: | ---: |",
+    `| Nodes | ${d.from.nodes} | ${d.to.nodes} |`,
+    `| Links | ${d.from.edges} | ${d.to.edges} |`,
+    "",
+  );
+  if (d.cycles.introduced.length)
+    out.push(
+      `**⚠ ${d.cycles.introduced.length} circular dependenc${d.cycles.introduced.length === 1 ? "y" : "ies"} introduced**`,
+      "",
+      ...d.cycles.introduced.map((c) => `- ${c.map(md).join(" ↔ ")}`),
+      "",
+    );
+  if (d.cycles.resolved.length)
+    out.push(
+      `**✓ ${d.cycles.resolved.length} circular dependenc${d.cycles.resolved.length === 1 ? "y" : "ies"} resolved**`,
+      "",
+    );
+  const block = (title: string, lines: string[]): void => {
+    if (!lines.length) return;
+    const shown = lines.slice(0, max);
+    out.push(
+      `<details${lines.length <= 10 ? " open" : ""}><summary>${title} (${lines.length})</summary>`,
+      "",
+      ...shown.map((l) => `- ${l}`),
+      ...(lines.length > max ? [`- … ${lines.length - max} more`] : []),
+      "",
+      "</details>",
+      "",
+    );
+  };
+  const node = (n: { id: string; kind: string }) =>
+    `${md(n.kind)} ${md(n.id.replace(/^[a-z]+:/, ""))}`;
+  block("Added", d.nodes.added.map(node));
+  block("Removed", d.nodes.removed.map(node));
+  block(
+    "Changed",
+    d.nodes.changed.map((c) => `${node(c)}: ${md(c.changes.join("; "))}`),
+  );
+  const edge = (e: { from: string; kind: string; to: string }) =>
+    `${md(e.from)} → ${md(e.kind)} → ${md(e.to)}`;
+  block("Links added", d.edges.added.map(edge));
+  block("Links removed", d.edges.removed.map(edge));
+  out.push("<sub>Static scan by BuildRAX; no code was executed.</sub>");
+  return out.join("\n");
+}

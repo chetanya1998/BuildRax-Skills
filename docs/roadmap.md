@@ -122,7 +122,8 @@ Decisions (2026-11-24):
    route handlers, server actions), Express and FastAPI first; then NestJS, Fastify, Hono, tRPC,
    Flask and Django. TypeScript and Python.
 2. **Function-level detail only when the user drills in** (file level stays the default model).
-3. **Team sync**: decide after the impact/effort check below.
+3. **Team sync: CI artifact** (decided after the impact/effort check below; recipe in
+   `docs/ci.md`, dogfooded by this repo's `architecture` job).
 4. **Web search: the agent always asks first.**
 
 ### Code-change sync
