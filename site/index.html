@@ -96,27 +96,25 @@
         <div class="wrap">
           <div class="hero-grid">
             <div>
-              <div class="chip rise"><i></i>Early · open source · install from source</div>
+              <div class="chip rise"><i></i>Free &amp; open source · runs on your machine</div>
               <h1>
-                <span class="ln"><span>See the architecture</span></span>
+                <span class="ln"><span>Know what breaks</span></span>
                 <span class="ln"
                   ><span><em class="s">before</em> you change it.</span></span
                 >
               </h1>
               <p class="lede rise r1">
-                BuildRAX scans your repository on your machine and turns it into an evidence-backed
-                map of packages, files, endpoints, databases and paid services. Every arrow has a
-                <code>file:line</code> behind it. You get one offline viewer, and your AI agent gets
-                a summary of about 420 tokens.
+                BuildRAX turns any codebase into a clickable map, so you and your AI agent can
+                change it with confidence.
               </p>
-              <div class="cmdline rise r2">
-                <span class="ps">$</span
-                ><code id="heroCmd">buildrax scan . &amp;&amp; buildrax view . --open</code>
-                <button class="copy" data-copy="#heroCmd">Copy</button>
-              </div>
+              <ul class="benefits rise r2">
+                <li><span class="tick">✓</span>See your whole system in seconds</li>
+                <li><span class="tick">✓</span>Find everything a change will break</li>
+                <li><span class="tick">✓</span>Give your AI agent the map, not the whole repo</li>
+              </ul>
               <div class="cta rise r3">
-                <a class="btn dark" href="#start">Get started <span class="arr">→</span></a>
-                <a class="btn" href="#tour">Watch the tour <span class="arr">↓</span></a>
+                <a class="btn dark" href="#start">Get started free <span class="arr">→</span></a>
+                <a class="btn" href="#tour">See it in action <span class="arr">↓</span></a>
               </div>
               <div class="works rise r4">
                 Works with <span>Claude Code</span><span>Codex</span><span>Antigravity</span>
@@ -146,24 +144,24 @@
 
           <div class="stats rv" id="stats">
             <div class="stat">
-              <div class="v" data-count="0">0</div>
-              <div class="l">LLM tokens spent scanning</div>
-            </div>
-            <div class="stat">
-              <div class="v" data-count="0">0</div>
-              <div class="l">lines of your code executed</div>
+              <div class="v"><span data-count="1.5" data-dec="1">0</span><small>s</small></div>
+              <div class="l">to map a 138-file repo</div>
             </div>
             <div class="stat">
               <div class="v"><small>~</small><span data-count="420">0</span></div>
-              <div class="l">tokens in the agent digest</div>
+              <div class="l">tokens for your agent, instead of ~198k</div>
+            </div>
+            <div class="stat">
+              <div class="v" data-count="8">0</div>
+              <div class="l">web frameworks understood</div>
+            </div>
+            <div class="stat">
+              <div class="v" data-count="0">0</div>
+              <div class="l">lines of code uploaded</div>
             </div>
             <div class="stat">
               <div class="v" data-count="1">0</div>
-              <div class="l">offline HTML viewer file</div>
-            </div>
-            <div class="stat">
-              <div class="v" data-count="266">0</div>
-              <div class="l">tests, CI on Node 22 and 24</div>
+              <div class="l">HTML file to share, works offline</div>
             </div>
           </div>
         </div>
@@ -184,13 +182,12 @@
         <div class="wrap">
           <div class="sec-head">
             <div>
-              <div class="eyebrow rv"><b>00</b> Live viewer tour</div>
-              <h2 class="rv">The real viewer.<br /><em class="s">Not</em> a mock-up.</h2>
+              <div class="eyebrow rv"><b>00</b> See it in action</div>
+              <h2 class="rv">Your whole codebase,<br /><em class="s">one</em> screen.</h2>
             </div>
             <p class="lede rv d1">
-              Each clip was recorded from the actual viewer running on this repository. It is one
-              HTML file that works offline, has four views, and puts the exact source line behind
-              every box.
+              Open the map, click anything, and get answers: what uses it, what breaks if it
+              changes, where each request goes, and what it will cost to run.
             </p>
           </div>
 
@@ -198,7 +195,7 @@
           <div class="stage rv d1">
             <div class="win-bar">
               <i></i><i></i><i></i><span class="t" id="tourFile">view.html</span
-              ><span class="r live">recorded live</span>
+              ><span class="r live">works offline</span>
             </div>
             <div class="screen" id="screen">
               <img id="tourImg" src="assets/explore.gif" width="920" height="500" alt="" />

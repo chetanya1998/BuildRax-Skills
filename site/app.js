@@ -93,12 +93,12 @@
     io.observe(el);
   };
 
-  function countUp(el, to, ms = 1400) {
+  function countUp(el, to, ms = 1400, dec = 0) {
     const t0 = performance.now();
     const step = (t) => {
       const p = reduce ? 1 : Math.min(1, (t - t0) / ms),
-        v = Math.round(to * (1 - Math.pow(1 - p, 3)));
-      el.textContent = v.toLocaleString("en-US");
+        v = to * (1 - Math.pow(1 - p, 3));
+      el.textContent = dec ? v.toFixed(dec) : Math.round(v).toLocaleString("en-US");
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -287,7 +287,9 @@
 
   /* ── stats count-up ───────────────────────────────────── */
   whenSeen($("#stats"), () =>
-    $$("#stats [data-count]").forEach((el) => countUp(el, +el.dataset.count)),
+    $$("#stats [data-count]").forEach((el) =>
+      countUp(el, +el.dataset.count, 1400, +(el.dataset.dec || 0)),
+    ),
   );
 
   /* ── marquee: duplicate the track for a seamless loop ── */
@@ -300,39 +302,39 @@
   (() => {
     const T = [
       {
-        k: "Explore",
-        d: "The whole map",
+        k: "See everything",
+        d: "Every package and link",
         gif: "explore.gif",
         file: "view.html · Graph",
         cmd: "buildrax view . --open",
-        cap: "Open packages into segment boxes. Click one to light up what it uses (blue) and what uses it (orange), then focus on a single package.",
+        cap: "Get the big picture at a glance. Click any package to see what it uses and what depends on it, without digging through folders.",
         alt: "The Graph view of this repository: packages opened into segment boxes, a package clicked to highlight what it uses and what uses it, then the Nodes view and Focus",
       },
       {
-        k: "Trace",
-        d: "Impact, line by line",
+        k: "Know the impact",
+        d: "What a change will break",
         gif: "trace-code.gif",
         file: "view.html · Nodes · Code view",
         cmd: "buildrax trace src/billing.ts --direction up",
-        cap: "Step through how a file connects. Then turn on Code view and click a file or a database to read the exact lines. Config secrets are masked.",
+        cap: "Before you refactor, see every file your change can break, one step at a time, and jump straight to the exact lines of code.",
         alt: "The Inspector trace stepped through for server.ts, then Code view showing the lines behind a file and a database",
       },
       {
-        k: "Flows",
-        d: "Endpoint → database",
+        k: "Follow requests",
+        d: "From endpoint to database",
         gif: "flows.gif",
         file: "view.html · Flows",
         cmd: "buildrax routes --reaching database:postgres",
-        cap: "Every endpoint across frameworks. Follow GET /api/orders down to PostgreSQL and open each step’s code in a floating window.",
+        cap: "Pick any API endpoint and follow the request through your code to the database, across Next.js, Express, FastAPI and more.",
         alt: "The Flows view: GET /api/orders drawn in lanes down to PostgreSQL, with steps opening their code",
       },
       {
-        k: "Cost",
-        d: "Price per traffic tier",
+        k: "Plan your costs",
+        d: "From 100 to 1M users",
         gif: "cost.gif",
         file: "view.html · Cost",
         cmd: "buildrax cost --mode product",
-        cap: "Monthly estimates at five traffic tiers. Double an assumption and every tier recomputes. Prices come from dated list prices, and anything without a price feed says “price needed”.",
+        cap: "Estimate what your app costs to run at 100 to 1M users and what gives out first. Change an assumption and every number updates.",
         alt: "The Cost view: five traffic tiers with monthly estimates, recomputing when an assumption is doubled",
       },
     ];

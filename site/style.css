@@ -152,7 +152,7 @@ h3 {
   margin: 0;
 }
 h1 {
-  font-size: clamp(2.6rem, 5.6vw, 4.6rem);
+  font-size: clamp(2.6rem, 5vw, 4.1rem);
 }
 h2 {
   font-size: clamp(2rem, 4.4vw, 3.4rem);
@@ -359,7 +359,7 @@ body.scrolled .nav {
 }
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   gap: 56px;
   align-items: center;
 }
@@ -1700,4 +1700,31 @@ h2 {
 .row q,
 .story p {
   text-wrap: pretty;
+}
+
+/* hero benefits: three short, scannable lines */
+.benefits {
+  list-style: none;
+  margin: 26px 0 32px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 1.02rem;
+  color: var(--text);
+}
+.benefits li {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.benefits .tick {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
 }
