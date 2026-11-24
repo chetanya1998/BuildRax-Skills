@@ -103,3 +103,15 @@ describe("infrastructure segment", () => {
     expect(g.groupOf.get("file:a.ts")).toBeUndefined();
   });
 });
+
+describe("live updates", () => {
+  it("describes a rescan in plain words", async () => {
+    const { describeChange } = await import("../app/live.js");
+    expect(
+      describeChange({ version: 2, added: 3, removed: 1, changed: 0, links: 1, cycles: 1 }),
+    ).toBe("3 added, 1 removed, 1 link change, 1 new circular dependency");
+    expect(
+      describeChange({ version: 2, added: 0, removed: 0, changed: 0, links: 0, cycles: 0 }),
+    ).toBe("updated");
+  });
+});

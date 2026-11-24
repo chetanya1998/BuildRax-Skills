@@ -5,11 +5,32 @@ import { validateNotes } from "@buildrax/ir";
 import { loadModel, loadNotes, saveNotes } from "./data.js";
 import { readModelFile } from "./sources.js";
 import { buildViewerHtml } from "./view.js";
+import { watchRepo, type RescanEvent } from "./watch.js";
 
 export interface RunningServer {
   url: string;
   token: string;
   close(): Promise<void>;
+  /** With watch: resolves when no rescan is running or queued. */
+  idle(): Promise<void>;
+}
+
+export interface ServeOptions {
+  /** Rescan on file changes and tell open viewers (they offer a refresh). */
+  watch?: boolean;
+  onRescan?: (e: RescanEvent) => void;
+  onError?: (err: Error) => void;
+}
+
+/** What the viewer polls: a counter that grows with every rescan, plus what changed. */
+interface VersionInfo {
+  version: number;
+  at?: string;
+  added: number;
+  removed: number;
+  changed: number;
+  links: number;
+  cycles: number;
 }
 
 const MAX_BODY = 2_000_000;
@@ -40,8 +61,13 @@ function readBody(req: http.IncomingMessage): Promise<string> {
  * disk (so there is no path-traversal surface), and requires a per-run token plus matching Host
  * and Origin headers for API calls, which blocks DNS-rebinding and cross-site writes.
  */
-export async function startServer(repo: string, port = 4317): Promise<RunningServer> {
+export async function startServer(
+  repo: string,
+  port = 4317,
+  opts: ServeOptions = {},
+): Promise<RunningServer> {
   const token = randomBytes(16).toString("hex");
+  let info: VersionInfo = { version: 0, added: 0, removed: 0, changed: 0, links: 0, cycles: 0 };
   let allowedHosts = new Set<string>();
 
   const send = (
@@ -66,7 +92,17 @@ export async function startServer(repo: string, port = 4317): Promise<RunningSer
         const url = new URL(req.url ?? "/", `http://${host}`);
 
         if (req.method === "GET" && url.pathname === "/") {
-          return send(res, 200, await buildViewerHtml(repo, { server: true, token }), "text/html");
+          return send(
+            res,
+            200,
+            await buildViewerHtml(repo, {
+              server: true,
+              token,
+              version: info.version,
+              watch: !!opts.watch,
+            }),
+            "text/html",
+          );
         }
         if (!url.pathname.startsWith("/api/"))
           return send(res, 404, JSON.stringify({ error: "not found" }));
@@ -78,6 +114,8 @@ export async function startServer(repo: string, port = 4317): Promise<RunningSer
           return send(res, 401, JSON.stringify({ error: "missing or invalid token" }));
         }
 
+        if (url.pathname === "/api/version" && req.method === "GET")
+          return send(res, 200, JSON.stringify(info));
         if (url.pathname === "/api/model" && req.method === "GET")
           return send(res, 200, JSON.stringify(await loadModel(repo)));
         if (url.pathname === "/api/file" && req.method === "GET") {
@@ -117,9 +155,36 @@ export async function startServer(repo: string, port = 4317): Promise<RunningSer
   const actual = (server.address() as AddressInfo).port;
   allowedHosts = new Set([`127.0.0.1:${actual}`, `localhost:${actual}`]);
 
+  const watcher = opts.watch
+    ? watchRepo(
+        repo,
+        (e) => {
+          const d = e.diff;
+          if (!d.same || d.cycles.introduced.length || d.cycles.resolved.length)
+            info = {
+              version: info.version + 1,
+              at: new Date().toISOString(),
+              added: d.nodes.added.length,
+              removed: d.nodes.removed.length,
+              changed: d.nodes.changed.length,
+              links: d.edges.added.length + d.edges.removed.length,
+              cycles: d.cycles.introduced.length,
+            };
+          opts.onRescan?.(e);
+        },
+        { onError: opts.onError },
+      )
+    : undefined;
+
   return {
     url: `http://127.0.0.1:${actual}/`,
     token,
-    close: () => new Promise((resolve) => server.close(() => resolve())),
+    close: () =>
+      new Promise((resolve) => {
+        watcher?.close();
+        server.closeAllConnections?.();
+        server.close(() => resolve());
+      }),
+    idle: async () => watcher?.idle(),
   };
 }

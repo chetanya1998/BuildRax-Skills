@@ -12,7 +12,7 @@ export { buildModel } from "./build.js";
 export type { BuildInput, SourceFile } from "./build.js";
 export { extractImports } from "./parser.js";
 export type { RawImport } from "./parser.js";
-export { walkRepo } from "./walk.js";
+export { walkRepo, isWatchedPath, ALWAYS_IGNORED } from "./walk.js";
 export { ParseCache, hashText } from "./cache.js";
 export type { ParseEntry } from "./cache.js";
 export * from "./resolve.js";

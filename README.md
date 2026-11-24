@@ -18,17 +18,17 @@ buildrax view fixtures/sample-monorepo --open
 
 ## Commands
 
-| Command                                     | Purpose                                                                       |
-| ------------------------------------------- | ----------------------------------------------------------------------------- |
-| `scan`                                      | static scan to `.buildrax/model.json` (no LLM tokens, no code execution)      |
-| `digest` / `context "<question>"`           | compact, token-bounded context for agents (notes excluded)                    |
-| `trace <target> [--direction up\|down]`     | transitive dependencies / change impact with `file:line`                      |
-| `diff [--since <git ref>]`                  | architecture changes since the last scan or a commit (links, cycles, infra)   |
-| `view` / `serve`                            | read-only viewer; `serve` saves your sticky notes to `.buildrax/notes.json`   |
-| `notes`                                     | list your notes and flags                                                     |
-| `research [--online]`                       | dependency facts from npm/PyPI; plan-only unless `--online`                   |
-| `cost [--mode current\|product] [--online]` | monthly cost per traffic tier from dated AWS list prices (see `docs/cost.md`) |
-| `install-skill`                             | install the agent skill for Claude Code, Codex, Antigravity                   |
+| Command                                     | Purpose                                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `scan [--watch]`                            | static, incremental scan to `.buildrax/model.json` (no LLM tokens, no code execution); `--watch` rescans on changes |
+| `digest` / `context "<question>"`           | compact, token-bounded context for agents (notes excluded)                                                          |
+| `trace <target> [--direction up\|down]`     | transitive dependencies / change impact with `file:line`                                                            |
+| `diff [--since <git ref>]`                  | architecture changes since the last scan or a commit (links, cycles, infra)                                         |
+| `view` / `serve [--watch]`                  | read-only viewer; `serve` saves your sticky notes to `.buildrax/notes.json`; `--watch` rescans and offers a refresh |
+| `notes`                                     | list your notes and flags                                                                                           |
+| `research [--online]`                       | dependency facts from npm/PyPI; plan-only unless `--online`                                                         |
+| `cost [--mode current\|product] [--online]` | monthly cost per traffic tier from dated AWS list prices (see `docs/cost.md`)                                       |
+| `install-skill`                             | install the agent skill for Claude Code, Codex, Antigravity                                                         |
 
 The viewer is one offline HTML file with two views of the same architecture (switch with the
 **Graph | Nodes** buttons or `V`; selection, panels, notes and the Code tab are shared) and a

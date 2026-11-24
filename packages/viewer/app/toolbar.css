@@ -196,3 +196,40 @@ body.view-nodes .graph-only {
     width: auto;
   }
 }
+
+/* serve --watch: "the code changed" banner */
+.live-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(680px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-solid);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font: 13px var(--ui);
+}
+.live-banner[hidden] {
+  display: none;
+}
+.live-banner button {
+  font: inherit;
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.live-banner button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}

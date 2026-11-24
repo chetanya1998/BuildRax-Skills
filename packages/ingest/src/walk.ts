@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import ignore from "ignore";
 
-const ALWAYS_IGNORED = new Set([
+export const ALWAYS_IGNORED: ReadonlySet<string> = new Set([
   ".git",
   "node_modules",
   "dist",
@@ -52,4 +52,10 @@ export async function walkRepo(root: string): Promise<string[]> {
 
   await visit("");
   return out;
+}
+
+/** True when a changed path (repo-relative) can affect a scan: not in an always-ignored folder. */
+export function isWatchedPath(rel: string): boolean {
+  const parts = rel.split(/[\\/]/);
+  return parts.length > 0 && parts.every((p) => p !== "" && !ALWAYS_IGNORED.has(p));
 }

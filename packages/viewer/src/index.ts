@@ -34,7 +34,7 @@ export interface InjectExtras {
   notes?: NotesFile;
   research?: ResearchFile;
   /** Present when served by `buildrax serve`; tells the page to use the notes API. */
-  config?: { server: true; token: string };
+  config?: { server: true; token: string; version?: number; watch?: boolean };
   /** Source text by repo-relative path, for the Code tab in static files. */
   sources?: Record<string, string>;
   /** Cost report plus the prices it may need, for the Cost view (`buildrax cost`). */

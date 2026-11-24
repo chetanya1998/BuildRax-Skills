@@ -27,7 +27,7 @@ async function loadCostForViewer(
  */
 export async function buildViewerHtml(
   repoPath: string,
-  config?: { server: true; token: string },
+  config?: { server: true; token: string; version?: number; watch?: boolean },
   opts: { embedSource?: boolean } = {},
 ): Promise<string> {
   const model = await loadModel(repoPath);

@@ -9,6 +9,7 @@ import { formatTrace, traceCommand, type TraceDirection } from "./commands/trace
 import { formatPlan, formatResearch, researchCommand, researchPlan } from "./commands/research.js";
 import { startServer } from "./commands/serve.js";
 import { diffCommand, formatDiff, formatDiffMarkdown } from "./commands/diff.js";
+import { formatRescan, watchRepo } from "./commands/watch.js";
 import { openFile, viewCommand } from "./commands/view.js";
 import { createInterface } from "node:readline/promises";
 import { credentialStatus } from "@buildrax/pricing";
@@ -38,6 +39,8 @@ export { modelPathFor, notesPathFor, researchPathFor } from "./commands/data.js"
 export { notesCommand, formatNotes } from "./commands/notes.js";
 export { startServer } from "./commands/serve.js";
 export { diffCommand, formatDiff, formatDiffMarkdown, scanAtRef } from "./commands/diff.js";
+export { watchRepo, formatRescan } from "./commands/watch.js";
+export type { RescanEvent, Watcher } from "./commands/watch.js";
 export { traceModel, traceCommand, formatTrace, resolveTarget } from "./commands/trace.js";
 export { formatPlan, researchCommand, researchPlan } from "./commands/research.js";
 export type { RunningServer } from "./commands/serve.js";
@@ -53,10 +56,17 @@ export function buildProgram(): Command {
     .argument("[path]", "repository to scan", ".")
     .option("--json", "print the summary as JSON")
     .option("--no-cache", "re-parse every file (ignore the incremental parse cache)")
+    .option("--watch", "keep running and rescan (incrementally) whenever files change")
     .description("scan a repository statically and write .buildrax/model.json")
-    .action(async (repo: string, opts: { json?: boolean; cache: boolean }) => {
+    .action(async (repo: string, opts: { json?: boolean; cache: boolean; watch?: boolean }) => {
       const summary = await scanCommand(repo, { cache: opts.cache });
       console.log(opts.json ? JSON.stringify(summary, null, 2) : formatSummary(summary));
+      if (!opts.watch) return;
+      console.log("Watching for changes (Ctrl+C to stop)…");
+      watchRepo(repo, (e) => console.log(opts.json ? JSON.stringify(e.diff) : formatRescan(e)), {
+        onError: (err) => console.error(`buildrax: rescan failed: ${err.message}`),
+      });
+      await new Promise(() => undefined); // until interrupted
     });
 
   program
@@ -335,10 +345,18 @@ export function buildProgram(): Command {
     .argument("[path]", "repository containing .buildrax/model.json", ".")
     .option("--port <n>", "port to listen on (127.0.0.1 only)", "4317")
     .option("--open", "open the viewer in the default browser")
+    .option("--watch", "rescan when files change; open viewers offer a refresh")
     .description("serve the viewer locally; notes are saved to .buildrax/notes.json")
-    .action(async (repo: string, opts: { port: string; open?: boolean }) => {
-      const server = await startServer(repo, Number(opts.port));
-      console.log(`BuildRAX viewer: ${server.url}  (Ctrl+C to stop)`);
+    .action(async (repo: string, opts: { port: string; open?: boolean; watch?: boolean }) => {
+      if (opts.watch) console.log(formatSummary(await scanCommand(repo)));
+      const server = await startServer(repo, Number(opts.port), {
+        watch: opts.watch,
+        onRescan: (e) => console.log(formatRescan(e)),
+        onError: (err) => console.error(`buildrax: rescan failed: ${err.message}`),
+      });
+      console.log(
+        `BuildRAX viewer: ${server.url}${opts.watch ? "  (watching for changes)" : ""}  (Ctrl+C to stop)`,
+      );
       if (opts.open) openFile(server.url);
     });
 

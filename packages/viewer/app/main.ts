@@ -24,6 +24,7 @@ import { layoutView } from "./layout.js";
 import { computeLineage } from "./lineage.js";
 import { parseResearch, renderResearchSection } from "./research-ui.js";
 import { parseCost, renderCostSection, renderCostView } from "./cost-ui.js";
+import { startLiveUpdates, type LiveConfig } from "./live.js";
 import type { Assumptions } from "@buildrax/cost";
 import { radiusFor } from "./geometry.js";
 import { buildGroups, type Groups } from "./groups.js";
@@ -1020,6 +1021,7 @@ function start(model: Model): void {
     state.theme === "dark" ? "Dark" : state.theme === "light" ? "Light" : "Auto (system)";
   setTheme();
   syncControls();
+  startLiveUpdates(readJson("buildrax-config") as LiveConfig | undefined);
   void refresh({ fit: true }).then(() => {
     if (state.cost) setCost(true);
   });

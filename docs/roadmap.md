@@ -130,8 +130,9 @@ Decisions (2026-11-24):
 
 Done: per-file parse cache (`.buildrax/cache/scan/`, content-hashed, output identical to a full
 scan; on this repo 1.5 s full, 0.1 s unchanged) and `buildrax diff` (since the previous scan, a git
-ref exported with `git archive` into a temp folder, or a saved model). Next: `scan --watch`,
-`serve --watch` with live viewer refresh (keeping selection, layout and notes), orphaned-note flags.
+ref exported with `git archive` into a temp folder, or a saved model), `scan --watch` and
+`serve --watch` (open viewers offer a refresh; view state survives through the URL), and the CI
+artifact recipe (`docs/ci.md`). Next: flag notes whose node disappeared.
 
 **Team sync, impact and effort** (measured on this repo: 126 files, `model.json` 246 KB of
 pretty-printed JSON, 14 KB gzipped; two scans of the same commit differ only in `scannedAt`):
