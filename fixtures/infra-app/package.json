@@ -1,0 +1,1 @@
+{ "name": "infra-app", "private": true, "dependencies": { "express": "*", "pg": "*", "ioredis": "*", "stripe": "*", "openai": "*", "@aws-sdk/client-s3": "*", "@sendgrid/mail": "*" } }

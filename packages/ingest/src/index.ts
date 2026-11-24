@@ -13,6 +13,20 @@ export { extractImports } from "./parser.js";
 export type { RawImport } from "./parser.js";
 export { walkRepo } from "./walk.js";
 export * from "./resolve.js";
+export {
+  detectInfra,
+  withInfra,
+  scanTerraform,
+  dockerfileRuntime,
+  prismaProvider,
+  parseCpu,
+  parseMemoryMb,
+  imageRepo,
+  serviceForImage,
+  SDK_SERVICES,
+} from "./infra/index.js";
+export type { InfraKind, InfraFacts, ServiceDef } from "./infra/index.js";
+import { detectInfra, withInfra } from "./infra/index.js";
 
 export const VERSION = "0.0.0";
 const MAX_FILE_BYTES = 1_000_000;
@@ -44,7 +58,7 @@ export async function scan(repoPath: string, options: ScanOptions = {}): Promise
     });
   }
 
-  return buildModel({
+  const model = buildModel({
     repoName: path.basename(root),
     scannedAt: options.now ?? new Date().toISOString(),
     version: VERSION,
@@ -52,4 +66,6 @@ export async function scan(repoPath: string, options: ScanOptions = {}): Promise
     sources,
     packages,
   });
+  // Infrastructure (v2): what the project runs on and pays for.
+  return withInfra(model, await detectInfra(root, allFiles, model));
 }

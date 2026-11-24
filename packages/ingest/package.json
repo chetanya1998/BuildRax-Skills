@@ -23,6 +23,7 @@
     "@buildrax/ir": "workspace:*",
     "ignore": "^7.0.14",
     "tree-sitter-wasms": "^0.1.13",
-    "web-tree-sitter": "0.25.10"
+    "web-tree-sitter": "0.25.10",
+    "yaml": "^2.9.1"
   }
 }

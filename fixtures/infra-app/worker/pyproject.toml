@@ -1,0 +1,3 @@
+[project]
+name = "infra-worker"
+version = "0.1.0"

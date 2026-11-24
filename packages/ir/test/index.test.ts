@@ -141,3 +141,35 @@ describe("research schema", () => {
     expect(validateResearch(ok).ok).toBe(false);
   });
 });
+
+import { INFRA_KINDS, IR_SCHEMA_VERSION } from "../src/index.js";
+
+describe("schema v2", () => {
+  it("writes v2 but still reads v1 models", () => {
+    expect(IR_SCHEMA_VERSION).toBe("buildrax-ir/v2");
+    expect(validateModel({ ...base(), schemaVersion: "buildrax-ir/v1" }).ok).toBe(true);
+    expect(validateModel({ ...base(), schemaVersion: "buildrax-ir/v2" }).ok).toBe(true);
+    expect(validateModel({ ...base(), schemaVersion: "buildrax-ir/v3" }).ok).toBe(false);
+  });
+  it("accepts infrastructure nodes and `uses` edges", () => {
+    const m = base();
+    m.schemaVersion = "buildrax-ir/v2";
+    m.nodes.push({
+      id: "database:postgres",
+      kind: "database",
+      name: "PostgreSQL",
+      parent: "project:r",
+      evidence: [{ kind: "config", file: "docker-compose.yml", startLine: 4 }],
+      meta: { engine: "postgres", version: "16" },
+    });
+    m.edges.push({
+      id: "file:a.ts->uses->database:postgres",
+      from: "file:a.ts",
+      to: "database:postgres",
+      kind: "uses",
+      evidence: [{ kind: "verified", file: "a.ts", startLine: 1 }],
+    });
+    expect(validateModel(m)).toMatchObject({ ok: true });
+    expect(INFRA_KINDS).toContain("cache");
+  });
+});

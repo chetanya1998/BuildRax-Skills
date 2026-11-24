@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-export const IR_SCHEMA_VERSION = "buildrax-ir/v1" as const;
+/** Current scan format. v2 adds infrastructure node kinds and the `uses` edge. */
+export const IR_SCHEMA_VERSION = "buildrax-ir/v2" as const;
+/** Still accepted when reading: v1 models are a subset of v2 (no infrastructure nodes). */
+export const IR_SCHEMA_VERSIONS = ["buildrax-ir/v1", IR_SCHEMA_VERSION] as const;
 
 export const NODE_KINDS = [
   "project",
@@ -13,6 +16,36 @@ export const NODE_KINDS = [
   "database",
   "external",
   "unresolved",
+  // Infrastructure (v2): what the project runs on or pays for.
+  "compute",
+  "hosting",
+  "cache",
+  "queue",
+  "storage",
+  "cdn",
+  "email",
+  "payments",
+  "llm",
+  "messaging",
+  "search",
+  "auth",
+] as const;
+
+/** Node kinds that describe infrastructure / paid services rather than code. */
+export const INFRA_KINDS = [
+  "compute",
+  "hosting",
+  "database",
+  "cache",
+  "queue",
+  "storage",
+  "cdn",
+  "email",
+  "payments",
+  "llm",
+  "messaging",
+  "search",
+  "auth",
 ] as const;
 export const EDGE_KINDS = [
   "imports",
@@ -22,6 +55,8 @@ export const EDGE_KINDS = [
   "writes",
   "publishes",
   "consumes",
+  // v2: code or a service relies on a piece of infrastructure.
+  "uses",
 ] as const;
 
 /**
@@ -76,7 +111,7 @@ export const IREdgeSchema = z.object({
 });
 
 export const ModelSchema = z.object({
-  schemaVersion: z.literal(IR_SCHEMA_VERSION),
+  schemaVersion: z.enum(IR_SCHEMA_VERSIONS),
   meta: z.object({
     repo: z.string(),
     scannedAt: z.string(),
