@@ -16,6 +16,10 @@ export interface ViewState {
   view: "graph" | "nodes";
   /** The Cost view is open over the canvas. */
   cost: boolean;
+  /** The Flows view is open over the canvas. */
+  flows: boolean;
+  /** Endpoint selected in the Flows view. */
+  route?: string;
   /** Canvas layout: structured layers or live physics. */
   layout: "layered" | "force";
   color: "package" | "kind" | "language" | "heat";
@@ -34,6 +38,7 @@ export const DEFAULT_STATE: ViewState = {
   panel: "inspector",
   view: "graph",
   cost: false,
+  flows: false,
   layout: "force",
   color: "package",
   cluster: true,
@@ -68,6 +73,8 @@ export function decodeState(hash: string): ViewState {
       focus: typeof v.focus === "string" && v.focus ? v.focus : undefined,
       view: v.view === "nodes" ? "nodes" : "graph",
       cost: v.cost === true,
+      flows: v.flows === true,
+      route: typeof v.route === "string" && v.route ? v.route : undefined,
       layout: v.layout === "layered" ? "layered" : "force",
       color:
         v.color === "kind" || v.color === "language" || v.color === "heat" ? v.color : "package",

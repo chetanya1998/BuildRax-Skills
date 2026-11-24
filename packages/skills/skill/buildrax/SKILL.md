@@ -26,7 +26,8 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
    database?"): `buildrax routes` lists endpoints with `file:line`; `buildrax flow "POST /orders"`
    follows one to the files, services, queues and databases it can reach, as numbered steps;
    `buildrax routes --reaching database:postgres` lists the endpoints that reach a component.
-   Say that flows are static and file-level.
+   Say that flows are static and file-level. The viewer's **Flows** view (`E`) shows the same as a
+   diagram.
 6. **Show the user** `buildrax view --open` (static file) or `buildrax serve --open` (live, lets
    them save their notes into the repo).
 7. **Outside facts** (security advisories for pinned versions, end-of-life dates, latest versions,

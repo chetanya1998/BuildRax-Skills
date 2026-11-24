@@ -32,12 +32,16 @@ buildrax view fixtures/sample-monorepo --open
 | `install-skill`                             | install the agent skill for Claude Code, Codex, Antigravity                                                         |
 
 The viewer is one offline HTML file with two views of the same architecture (switch with the
-**Graph | Nodes** buttons or `V`; selection, panels, notes and the Code tab are shared) and a
-**Cost** view (`C`):
+**Graph | Nodes** buttons or `V`; selection, panels, notes and the Code tab are shared), plus
+**Flows** (`E`) and **Cost** (`C`) views:
 
 - **Nodes view**: a structured diagram. Rectangular cards in left-to-right layers, frames for
   services and folders, and right-angled arrows routed around the cards. Nothing moves on its own.
 - **Graph view**: animated orbs, live physics and dotted segment boxes, for exploring.
+- **Flows view** (`E`): every endpoint the scan found (Next.js, Express, Fastify, Hono, Koa,
+  NestJS, FastAPI, Flask), grouped by framework and filterable. Pick one to see what it reaches,
+  lane by lane: endpoint → handler file → code (by hop) → infrastructure (databases, queues, …) →
+  packages, with numbered steps and `file:line` evidence. Click any box to jump to it in the graph.
 - **Cost view** (after `buildrax cost`): the traffic tiers side by side, a stacked chart, the
   breakdown per component with low–high ranges, what changes between tiers, bottlenecks, which
   assumptions matter most, missing prices and dated price sources. Edit any assumption to

@@ -24,6 +24,7 @@ import { layoutView } from "./layout.js";
 import { computeLineage } from "./lineage.js";
 import { parseResearch, renderResearchSection } from "./research-ui.js";
 import { parseCost, renderCostSection, renderCostView } from "./cost-ui.js";
+import { renderFlowsView, type FlowsUi } from "./flows-ui.js";
 import { startLiveUpdates, type LiveConfig } from "./live.js";
 import type { Assumptions } from "@buildrax/cost";
 import { radiusFor } from "./geometry.js";
@@ -226,6 +227,11 @@ function start(model: Model): void {
     { type: "button", role: "radio", title: "Structured cards with routed arrows (V)" },
     "Nodes",
   );
+  const segFlows = h(
+    "button",
+    { type: "button", role: "radio", title: "Endpoints and what they reach (E)" },
+    "Flows",
+  );
   const segCost = h(
     "button",
     { type: "button", role: "radio", title: "Monthly cost per traffic tier (C)" },
@@ -258,6 +264,8 @@ function start(model: Model): void {
   const costData = parseCost(readJson("buildrax-cost"));
   const costUi: { tier: number; edits: Partial<Assumptions> } = { tier: 0, edits: {} };
   const costBox = h("div", { class: "cost-view", hidden: "", "aria-label": "Cost estimate" });
+  const flowsBox = h("div", { class: "cost-view flows-view", hidden: "", "aria-label": "Flows" });
+  const flowsUi: FlowsUi = { route: state.route, filter: "" };
   const store = createStore(model, (msg) => void (notesStatus.textContent = msg));
   const inspectorBox = h("div", { class: "tab-body", "aria-live": "polite" });
   const codeBox = h("div", { class: "tab-body code-box" });
@@ -295,6 +303,7 @@ function start(model: Model): void {
     svg,
     bpSvg,
     costBox,
+    flowsBox,
     legendBox,
     statsBox,
     minimapWrap,
@@ -357,6 +366,7 @@ function start(model: Model): void {
         ...[
           ["/", "Search"],
           ["V", "Switch Graph / Nodes view"],
+          ["E", "Flows view (endpoints)"],
           ["C", "Cost view"],
           ["F", "Focus on the selection"],
           ["[  ]", "Overview / Inspector panel"],
@@ -413,6 +423,7 @@ function start(model: Model): void {
         { class: "seg view-seg", role: "radiogroup", "aria-label": "View" },
         segGraph,
         segNodes,
+        segFlows,
         segCost,
       ),
       focusPill,
@@ -752,18 +763,24 @@ function start(model: Model): void {
   function syncView(): void {
     const nodes = state.view === "nodes";
     const cost = state.cost;
+    const flows = state.flows && !cost;
+    const overlay = cost || flows;
     document.body.classList.toggle("view-nodes", nodes);
-    document.body.classList.toggle("view-cost", cost);
-    scene.setActive(!nodes && !cost);
-    blueprint.setActive(nodes && !cost);
+    // Both overlays hide the canvas the same way (view-cost styles).
+    document.body.classList.toggle("view-cost", overlay);
+    scene.setActive(!nodes && !overlay);
+    blueprint.setActive(nodes && !overlay);
     costBox.hidden = !cost;
-    segGraph.setAttribute("aria-checked", String(!nodes && !cost));
-    segNodes.setAttribute("aria-checked", String(nodes && !cost));
+    flowsBox.hidden = !flows;
+    segGraph.setAttribute("aria-checked", String(!nodes && !overlay));
+    segNodes.setAttribute("aria-checked", String(nodes && !overlay));
+    segFlows.setAttribute("aria-checked", String(flows));
     segCost.setAttribute("aria-checked", String(cost));
   }
   function setView(v: ViewState["view"]): void {
-    const wasCost = state.cost;
+    const wasCost = state.cost || state.flows;
     state.cost = false;
+    state.flows = false;
     if (state.view === v) {
       if (wasCost) {
         syncView();
@@ -792,7 +809,35 @@ function start(model: Model): void {
   /** The Cost view covers the canvas; the graph underneath keeps its state. */
   function setCost(on: boolean): void {
     state.cost = on;
-    if (on) paintCost();
+    if (on) {
+      state.flows = false;
+      paintCost();
+    }
+    syncView();
+    writeHash();
+  }
+  const paintFlows = (): void => {
+    renderFlowsView(flowsBox, {
+      index,
+      ui: flowsUi,
+      onChange: () => {
+        state.route = flowsUi.route;
+        paintFlows();
+        writeHash();
+      },
+      onSelectNode: (id) => {
+        setFlows(false);
+        void selectNode(id);
+      },
+    });
+  };
+  /** The Flows view covers the canvas like Cost; the graph keeps its state. */
+  function setFlows(on: boolean): void {
+    state.flows = on;
+    if (on) {
+      state.cost = false;
+      paintFlows();
+    }
     syncView();
     writeHash();
   }
@@ -942,6 +987,7 @@ function start(model: Model): void {
       else if (ev.key === "v" || ev.key === "V")
         setView(state.view === "nodes" ? "graph" : "nodes");
       else if (ev.key === "c" || ev.key === "C") setCost(!state.cost);
+      else if (ev.key === "e" || ev.key === "E") setFlows(!state.flows);
     }
   });
   searchInput.addEventListener("input", () => {
@@ -990,6 +1036,7 @@ function start(model: Model): void {
   segGraph.addEventListener("click", () => setView("graph"));
   segNodes.addEventListener("click", () => setView("nodes"));
   segCost.addEventListener("click", () => setCost(true));
+  segFlows.addEventListener("click", () => setFlows(true));
   shakeBtn.addEventListener("click", () => scene.reheat());
   unpinBtn.addEventListener("click", () => scene.unpinAll());
   segLayered.addEventListener("click", () => setLayout("layered"));
@@ -1024,6 +1071,7 @@ function start(model: Model): void {
   startLiveUpdates(readJson("buildrax-config") as LiveConfig | undefined);
   void refresh({ fit: true }).then(() => {
     if (state.cost) setCost(true);
+    else if (state.flows) setFlows(true);
   });
 }
 
