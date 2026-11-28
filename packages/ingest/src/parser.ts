@@ -4,6 +4,7 @@ import type { Lang } from "./languages.js";
 import { emptyFacts, jsFacts, pyFacts, type FileFacts } from "./routes/facts.js";
 import { jsDataFacts, pyDataFacts } from "./dataops/facts.js";
 import { jsEntities, pyEntities } from "./entities/facts.js";
+import { jsFunctions, pyFunctions } from "./functions/facts.js";
 
 const require = createRequire(import.meta.url);
 
@@ -69,12 +70,22 @@ export async function parseFile(source: string, lang: Lang): Promise<FileParse> 
       const data = pyDataFacts(root);
       return {
         imports: pythonImports(root),
-        facts: { ...pyFacts(root), ...data, entities: pyEntities(root) },
+        facts: {
+          ...pyFacts(root),
+          ...data,
+          entities: pyEntities(root),
+          functions: pyFunctions(root),
+        },
       };
     }
     return {
       imports: jsImports(root),
-      facts: { ...jsFacts(root), ...jsDataFacts(root), entities: jsEntities(root) },
+      facts: {
+        ...jsFacts(root),
+        ...jsDataFacts(root),
+        entities: jsEntities(root),
+        functions: jsFunctions(root),
+      },
     };
   } finally {
     tree.delete();

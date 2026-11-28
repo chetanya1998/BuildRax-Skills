@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import type { Model } from "@buildrax/ir";
+import type { FunctionsFile, Model } from "@buildrax/ir";
+import { buildFunctionIndex } from "./functions/build.js";
 import { buildModelWithContext, type SourceFile } from "./build.js";
 import { emptyFacts } from "./routes/facts.js";
 import { linkDataOps, withDataOps } from "./dataops/link.js";
@@ -22,6 +23,9 @@ export { jsEntities, pyEntities, prismaEntities } from "./entities/facts.js";
 export type { RawEntity, RawField, RawRelation } from "./entities/facts.js";
 export { buildEntities, withEntities, entitiesForTable, entityKey } from "./entities/build.js";
 export type { BuildInput, SourceFile } from "./build.js";
+export { jsFunctions, pyFunctions } from "./functions/facts.js";
+export type { RawFn, RawCall } from "./functions/facts.js";
+export { buildFunctionIndex } from "./functions/build.js";
 export { extractImports, parseFile } from "./parser.js";
 export type { RawImport, FileParse } from "./parser.js";
 export { jsFacts, pyFacts, joinPath, literal } from "./routes/facts.js";
@@ -82,10 +86,18 @@ export interface ScanStats {
 }
 
 /** Changes whenever parsing could produce different output: scanner version and grammars. */
-export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@5;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
+export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@6;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
 
 /** Scan a repository statically and return its Architecture IR. Never executes repo code. */
 export async function scan(repoPath: string, options: ScanOptions = {}): Promise<Model> {
+  return (await scanDetailed(repoPath, options)).model;
+}
+
+/** The model plus the function index side file (`.buildrax/functions.json`). */
+export async function scanDetailed(
+  repoPath: string,
+  options: ScanOptions = {},
+): Promise<{ model: Model; functions: FunctionsFile }> {
   const started = Date.now();
   const root = path.resolve(repoPath);
   const cache = await ParseCache.open(options.cacheFile, PARSER_FINGERPRINT);
@@ -169,5 +181,10 @@ export async function scan(repoPath: string, options: ScanOptions = {}): Promise
       reused: cache.hits,
       ms: Date.now() - started,
     });
-  return result;
+  const functions = buildFunctionIndex(
+    result,
+    sources.map((s) => ({ path: s.path, functions: s.facts?.functions ?? [] })),
+    ctx,
+  );
+  return { model: result, functions };
 }

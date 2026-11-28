@@ -107,6 +107,28 @@ Scanning is static: no repository code is executed. For environment files only
 `.env.example` / `.env.sample` / `.env.template` / `.env.dist` are opened, and only variable
 names are used. A real `.env` is never opened.
 
+## Function index (`buildrax-functions`)
+
+`.buildrax/functions.json`, written by `buildrax scan` next to the model and read only when
+someone drills in (`buildrax fn`, the inspector's Functions section). It is derived and
+git-ignored. `v1`:
+
+- `files[]`: `{ path, functions[] }`, sorted by path; functions in source order.
+- Function: `id` (`fn:<file>#<name>`, `@<line>` added when a file declares the name twice),
+  `name` (`save`, `Class.method`, `outer.inner`, or `router.get("/x")` / `new Worker("emails")`
+  for an inline callback with a block body or a literal first argument), `kind` (`function`,
+  `method`, `arrow`, `callback`), `line`, `endLine`, `exported`, `async`.
+- `calls[]`: `{ name, line, count?, to, via }`, only resolved calls. `via`: `local` (same file,
+  including `this.x()` / `self.x()` and nested helpers), `import` (a function in the repo file
+  the name is imported from), `file` (that file, when the function itself is not matched, e.g.
+  `db.query`), `workspace` (an exported function of a workspace package, or the package), or
+  `external` (the package node). `otherCalls` counts the rest: built-ins, parameters, locals.
+- `ops[]`: the proven data operations (from `reads` / `writes` / `publishes` / `consumes` edge
+  evidence) inside the function, by line range. `routes[]`: route nodes it handles.
+  `calledBy[]`: functions with a resolved call to it.
+
+Matching is by name; nothing is executed and types are not inferred.
+
 ## Research file (`buildrax-research`)
 
 `.buildrax/research.json`, written by `buildrax research --online`. `v2` adds the `lifecycle`

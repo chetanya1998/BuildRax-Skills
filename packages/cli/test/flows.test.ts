@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   flowCommand,
+  formatFunctions,
+  functionsCommand,
   formatFlows,
   formatRoutes,
   routesCommand,
@@ -74,5 +76,29 @@ describe("routes and flow commands", () => {
   it("explains when nothing matches", async () => {
     const { flows } = await flowCommand(tmp, "GET /nope");
     expect(await formatFlows(tmp, flows, "GET /nope")).toMatch(/No endpoint matches/);
+  });
+});
+
+describe("fn command (function index)", () => {
+  it("scan writes functions.json and fn lists a file's functions with ops and routes", async () => {
+    await fs.access(path.join(tmp, ".buildrax", "functions.json"));
+    const res = await functionsCommand(tmp, "web/src/app/api/orders/route.ts");
+    expect(res.file).toBe("web/src/app/api/orders/route.ts");
+    expect(res.functions.map((f) => f.name)).toEqual(["GET", "POST"]);
+    const text = formatFunctions(res, "route.ts");
+    expect(text).toContain("GET  4-10  (function, exported, async)");
+    expect(text).toContain("handles GET /api/orders");
+    expect(text).toContain("publishes queue:bullmq  :14");
+    expect(text).not.toContain(" in POST");
+  });
+
+  it("finds a function by name and shows its callers", async () => {
+    const res = await functionsCommand(tmp, "send_receipt");
+    const text = formatFunctions(res, "send_receipt");
+    expect(text).toContain("send_receipt  py/app/tasks.py:7-8");
+    expect(text).toContain("called by bulk (py/app/routers/items.py)");
+    expect(formatFunctions(await functionsCommand(tmp, "nope"), "nope")).toMatch(
+      /^No function matches/,
+    );
   });
 });

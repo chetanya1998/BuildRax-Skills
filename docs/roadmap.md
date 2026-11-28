@@ -203,5 +203,7 @@ Phase 0 (groundwork):
   workers; handler-scoped steps in flows).
 - 0.2 Data models: **done** (Prisma, TypeORM, Drizzle, Mongoose, Django, SQLAlchemy as `entity`
   nodes with `relates` edges, IR v3; data operations name the entities they touch).
-- 0.3 Function index (side file): functions, calls, data operations per function.
+- 0.3 Function index: **done** (`.buildrax/functions.json`, `buildrax fn`, a collapsed
+  Functions section in the inspector: calls resolved through imports, callers, proven data
+  operations and routes per function).
 - 0.4 Rationale sources: ADRs, docs, "why" comments, local git messages, linked to nodes.

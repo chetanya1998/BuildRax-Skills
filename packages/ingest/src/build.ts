@@ -60,6 +60,8 @@ export interface BuildContext {
   bindings: Bindings;
   /** External packages each file imports (npm names, lower-cased PyPI names). */
   externalImports: Map<string, Set<string>>;
+  /** Local import name → external package or workspace package (module) node id, per file. */
+  externalBindings: Bindings;
 }
 
 export function buildModel(input: BuildInput): Model {
@@ -165,6 +167,13 @@ export function buildModelWithContext(input: BuildInput): { model: Model } & Bui
   // Local import names → the repo file they come from (to follow router mounts across files).
   const bindings: Bindings = new Map();
   const externalImports = new Map<string, Set<string>>();
+  const externalBindings: Bindings = new Map();
+  const bindExternal = (file: string, locals: readonly string[] | undefined, id: string): void => {
+    if (!locals?.length) return;
+    const m = externalBindings.get(file) ?? new Map<string, string>();
+    for (const l of locals) m.set(l, id);
+    externalBindings.set(file, m);
+  };
   const bind = (file: string, locals: readonly string[] | undefined, target: string): void => {
     if (!locals?.length) return;
     const m = bindings.get(file) ?? new Map<string, string>();
@@ -202,7 +211,9 @@ export function buildModelWithContext(input: BuildInput): { model: Model } & Bui
           });
         if (res.external) {
           usesExternal(s.path, res.external.toLowerCase());
-          link(from, "depends-on", ensureTarget("external", res.external, ev, "pypi"), ev);
+          const xid = ensureTarget("external", res.external, ev, "pypi");
+          link(from, "depends-on", xid, ev);
+          bindExternal(s.path, imp.locals, xid);
         }
         if (res.unresolved) {
           const uev: Evidence = { ...ev, kind: "unresolved" };
@@ -245,15 +256,18 @@ export function buildModelWithContext(input: BuildInput): { model: Model } & Bui
       } else if (!isNodeBuiltin(spec)) {
         const name = npmPackageName(spec);
         const ws = workspaceNames.get(name);
-        if (ws)
+        if (ws) {
           link(from, "depends-on", packageModuleId(ws), {
             ...ev,
             kind: "config",
             detail: `workspace package ${name}`,
           });
-        else {
+          bindExternal(s.path, imp.locals, packageModuleId(ws));
+        } else {
           usesExternal(s.path, name);
-          link(from, "depends-on", ensureTarget("external", name, ev, "npm"), ev);
+          const xid = ensureTarget("external", name, ev, "npm");
+          link(from, "depends-on", xid, ev);
+          bindExternal(s.path, imp.locals, xid);
         }
       }
     }
@@ -294,5 +308,5 @@ export function buildModelWithContext(input: BuildInput): { model: Model } & Bui
     nodes: [...nodes.values()].sort(byId),
     edges: [...edges.values()].sort(byId),
   };
-  return { model, bindings, externalImports };
+  return { model, bindings, externalImports, externalBindings };
 }

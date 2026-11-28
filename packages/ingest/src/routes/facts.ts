@@ -1,6 +1,7 @@
 import type { Node } from "web-tree-sitter";
 import type { RawClient, RawOp } from "../dataops/facts.js";
 import type { RawEntity } from "../entities/facts.js";
+import type { RawFn } from "../functions/facts.js";
 
 /**
  * Per-file facts for endpoint detection, read from the syntax tree (never executed). They are
@@ -52,6 +53,8 @@ export interface FileFacts {
   tasks?: string[];
   /** Data models declared in this file (TypeORM, Drizzle, Mongoose, SQLAlchemy, Django). */
   entities?: RawEntity[];
+  /** Functions declared in this file and the calls made in each. */
+  functions?: RawFn[];
 }
 
 export const emptyFacts = (): FileFacts => ({

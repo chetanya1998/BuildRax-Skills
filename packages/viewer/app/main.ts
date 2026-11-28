@@ -23,6 +23,7 @@ import { relocateNotes, renderNotesPanel, renderNotesSection } from "./notes-ui.
 import { layoutView } from "./layout.js";
 import { computeLineage } from "./lineage.js";
 import { parseResearch, renderResearchSection } from "./research-ui.js";
+import { readFnIndex, renderFunctionsSection } from "./functions-ui.js";
 import { parseCost, renderCostSection, renderCostView } from "./cost-ui.js";
 import { renderFlowsView, type FlowsUi } from "./flows-ui.js";
 import { FloatingCode, SHEET_BELOW } from "./flows-code.js";
@@ -266,6 +267,7 @@ function start(model: Model): void {
   const notesStatus = h("p", { class: "warn", role: "status" });
   const notesBox = h("div", { class: "notes-box" });
   const research = parseResearch(readJson("buildrax-research"));
+  const fnIndex = readFnIndex(readJson("buildrax-functions"));
   const costData = parseCost(readJson("buildrax-cost"));
   const costUi: { tier: number; edits: Partial<Assumptions> } = { tier: 0, edits: {} };
   const costBox = h("div", { class: "cost-view", hidden: "", "aria-label": "Cost estimate" });
@@ -725,6 +727,27 @@ function start(model: Model): void {
         inspectorBox,
         renderCostSection(costData, model, costUi.edits, sel.id, () => setCost(true)),
         renderResearchSection(research, index, sel.id),
+        fnIndex
+          ? renderFunctionsSection(
+              {
+                fns: fnIndex,
+                index,
+                onSelectNode: (id) => void selectNode(id),
+                onOpen: flowsCode
+                  ? (path, line, label) => {
+                      void flowsCode.show({
+                        title: `${label} · ${path}`,
+                        file: path,
+                        line,
+                        marks: [[line, label]],
+                        nodeId: `file:${path}`,
+                      });
+                    }
+                  : undefined,
+              },
+              sel.id,
+            )
+          : null,
       );
     if (sel) put(inspectorBox, renderNotesSection({ type: sel.type, id: sel.id }, store, index));
     scene.setBadges(nodeBadges(store.list(), index), edgeBadges(store.list()));

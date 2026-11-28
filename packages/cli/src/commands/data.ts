@@ -5,6 +5,8 @@ import {
   validateModel,
   validateNotes,
   validateResearch,
+  validateFunctions,
+  type FunctionsFile,
   type Model,
   type NotesFile,
   type ResearchFile,
@@ -15,6 +17,9 @@ export const modelPathFor = (repo: string): string => path.join(buildraxDir(repo
 export const notesPathFor = (repo: string): string => path.join(buildraxDir(repo), "notes.json");
 export const researchPathFor = (repo: string): string =>
   path.join(buildraxDir(repo), "research.json");
+
+export const functionsPathFor = (repo: string): string =>
+  path.join(buildraxDir(repo), "functions.json");
 
 async function readJson(file: string): Promise<unknown | undefined> {
   try {
@@ -61,5 +66,15 @@ export async function loadResearch(repo: string): Promise<ResearchFile | undefin
   const checked = validateResearch(raw);
   if (!checked.ok || !checked.file)
     throw new Error(`research.json is invalid:\n${checked.errors.slice(0, 5).join("\n")}`);
+  return checked.file;
+}
+
+/** The function index, or undefined when the scan predates it. */
+export async function loadFunctions(repo: string): Promise<FunctionsFile | undefined> {
+  const raw = await readJson(functionsPathFor(repo));
+  if (raw === undefined) return undefined;
+  const checked = validateFunctions(raw);
+  if (!checked.ok || !checked.file)
+    throw new Error(`functions.json is invalid:\n${checked.errors.slice(0, 5).join("\n")}`);
   return checked.file;
 }

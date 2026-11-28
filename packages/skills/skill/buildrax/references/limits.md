@@ -1,7 +1,8 @@
 # Limits to state honestly
 
-- Languages: TypeScript, JavaScript and Python imports only. Functions, classes, routes, databases
-  and data flow are not extracted yet.
+- Languages: TypeScript, JavaScript and Python. Functions and their calls are in the function
+  index (`buildrax fn`): calls are matched by name through imports, so calls through variables,
+  parameters, callbacks or dynamic dispatch are counted but not followed.
 - tsconfig/jsconfig `paths` and `baseUrl` aliases are resolved; `extends` only for relative configs.
 - Endpoints: Next.js (app/pages routers), Express, Fastify, Hono, Koa, NestJS, FastAPI, Flask. Route
   prefixes are followed across files through imports; runtime-built paths are listed as computed.

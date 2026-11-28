@@ -1,9 +1,9 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileCycles, GraphIndex, hubs } from "@buildrax/graph";
-import { scan, type ScanStats } from "@buildrax/ingest";
+import { scanDetailed, type ScanStats } from "@buildrax/ingest";
 import { validateModel, type Model } from "@buildrax/ir";
-import { modelPathFor } from "./data.js";
+import { functionsPathFor, modelPathFor } from "./data.js";
 import { previousModelPathFor, scanCachePathFor } from "./diff.js";
 
 export interface ScanSummary {
@@ -32,7 +32,7 @@ export async function scanCommand(
 ): Promise<ScanSummary> {
   const root = path.resolve(repoPath);
   const stats: ScanStats = { files: 0, parsed: 0, reused: 0, ms: 0 };
-  const model = await scan(root, {
+  const { model, functions } = await scanDetailed(root, {
     cacheFile: opts.cache === false ? undefined : scanCachePathFor(root),
     stats,
   });
@@ -53,7 +53,14 @@ export async function scanCommand(
   // Atomic write: temp file then rename.
   await fs.writeFile(`${modelPath}.tmp`, `${JSON.stringify(model, null, 2)}\n`);
   await fs.rename(`${modelPath}.tmp`, modelPath);
-  await fs.writeFile(path.join(dir, ".gitignore"), "view.html\n*.tmp\ncache/\ncost-prices.json\n");
+  // Function index: a side file read only when someone drills into code.
+  const fnPath = functionsPathFor(root);
+  await fs.writeFile(`${fnPath}.tmp`, `${JSON.stringify(functions)}\n`);
+  await fs.rename(`${fnPath}.tmp`, fnPath);
+  await fs.writeFile(
+    path.join(dir, ".gitignore"),
+    "view.html\n*.tmp\ncache/\ncost-prices.json\nfunctions.json\n",
+  );
   return { ...summarize(model, modelPath), work: stats };
 }
 

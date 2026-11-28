@@ -197,7 +197,10 @@ with the `file:line` of each link. Arrows carry matching step numbers. Step with
 
 Every endpoint the scan found, grouped by framework. Pick one to see what it reaches, lane by
 lane: endpoint → handler file → code by hop → infrastructure → packages, with numbered steps.
-The same is available in the terminal: `buildrax flow "GET /api/orders"`.
+The same is available in the terminal: `buildrax flow "GET /api/orders"`. To go one level
+deeper, select a file and open **Functions** in the inspector, or run
+`buildrax fn web/src/app/api/orders/route.ts`: each function with the routes it handles, the
+tables and queues it touches, what it calls and who calls it.
 
 ### Code view: read the code behind any box or arrow
 

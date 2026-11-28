@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { Model, NotesFile, ResearchFile } from "@buildrax/ir";
+import type { FunctionsFile, Model, NotesFile, ResearchFile } from "@buildrax/ir";
 
 /** Absolute path to the built single-file viewer template (placeholder data script inside). */
 export function viewerTemplatePath(): string {
@@ -41,6 +41,8 @@ export interface InjectExtras {
   excerpts?: Record<string, { start: number; lines: string[] }>;
   /** Cost report plus the prices it may need, for the Cost view (`buildrax cost`). */
   cost?: { report: unknown; prices: unknown };
+  /** Function index (`.buildrax/functions.json`), shown when the user drills into a file. */
+  functions?: FunctionsFile;
 }
 
 /** Embed a model (and optional notes/research/config) into the viewer HTML. */
@@ -52,5 +54,6 @@ export function injectModel(html: string, model: Model, extras: InjectExtras = {
   if (extras.sources) out = setScript(out, "buildrax-sources", extras.sources);
   if (extras.cost) out = setScript(out, "buildrax-cost", extras.cost);
   if (extras.excerpts) out = setScript(out, "buildrax-excerpts", extras.excerpts);
+  if (extras.functions) out = setScript(out, "buildrax-functions", extras.functions);
   return out;
 }

@@ -494,3 +494,45 @@ span.dot-todo {
 .anchor {
   margin-top: 4px;
 }
+
+/* Function index (drill-in) */
+.functions-section > summary {
+  cursor: pointer;
+  list-style: revert;
+}
+.functions-section > summary h3 {
+  display: inline;
+}
+.fn-item {
+  margin: 4px 0;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.fn-item > summary {
+  cursor: pointer;
+  word-break: break-word;
+}
+.fn-name {
+}
+.fn-badge {
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.85em;
+}
+.fn-rows {
+  list-style: none;
+  margin: 4px 0;
+  padding: 0;
+}
+.fn-rows li {
+  margin: 2px 0;
+  word-break: break-word;
+}
+.fn-label {
+  display: inline-block;
+  min-width: 64px;
+  color: var(--ink-soft);
+}

@@ -1,3 +1,4 @@
+import { formatFunctions, functionsCommand } from "./commands/functions.js";
 import { Command } from "commander";
 import { formatSummary, scanCommand } from "./commands/scan.js";
 import { contextFor, renderDigest } from "@buildrax/context";
@@ -36,7 +37,14 @@ export {
 } from "./commands/cost.js";
 
 export { scanCommand, summarize, formatSummary } from "./commands/scan.js";
-export { modelPathFor, notesPathFor, researchPathFor } from "./commands/data.js";
+export {
+  functionsPathFor,
+  loadFunctions,
+  modelPathFor,
+  notesPathFor,
+  researchPathFor,
+} from "./commands/data.js";
+export { findFunctions, formatFunctions, functionsCommand } from "./commands/functions.js";
 export { notesCommand, formatNotes } from "./commands/notes.js";
 export { startServer } from "./commands/serve.js";
 export { diffCommand, formatDiff, formatDiffMarkdown, scanAtRef } from "./commands/diff.js";
@@ -300,6 +308,17 @@ export function buildProgram(): Command {
       console.log(
         opts.json ? JSON.stringify(flows, null, 2) : await formatFlows(repo, flows, endpoint),
       );
+    });
+
+  program
+    .command("fn")
+    .argument("<query>", "a file path (lists its functions), a function name or Class.method")
+    .argument("[path]", "repository containing .buildrax/functions.json", ".")
+    .option("--json", "print as JSON")
+    .description("drill into functions: calls, callers, data operations and routes they handle")
+    .action(async (query: string, repo: string, opts: { json?: boolean }) => {
+      const res = await functionsCommand(repo, query);
+      console.log(opts.json ? JSON.stringify(res, null, 2) : formatFunctions(res, query));
     });
 
   program

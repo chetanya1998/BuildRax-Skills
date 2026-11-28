@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { injectModel, viewerTemplatePath } from "@buildrax/viewer";
-import { loadModel, loadNotes, loadResearch } from "./data.js";
+import { loadFunctions, loadModel, loadNotes, loadResearch } from "./data.js";
 import { collectSources } from "./sources.js";
 import { collectExcerpts } from "./excerpts.js";
 import { costPathFor, costPricesPathFor } from "./cost.js";
@@ -33,13 +33,15 @@ export async function buildViewerHtml(
 ): Promise<string> {
   const model = await loadModel(repoPath);
   const embed = !config && opts.embedSource !== false;
-  const [notes, research, template, sources, excerpts] = await Promise.all([
+  const [notes, research, template, sources, excerpts, functions] = await Promise.all([
     loadNotes(repoPath),
     loadResearch(repoPath),
     fs.readFile(viewerTemplatePath(), "utf8"),
     embed ? collectSources(repoPath, model) : undefined,
     // Redacted config-file lines around recorded evidence (never whole files).
     embed ? collectExcerpts(repoPath, model) : undefined,
+    // A stale or broken index only loses the Functions section, never the viewer.
+    loadFunctions(repoPath).catch(() => undefined),
   ]);
   const cost = await loadCostForViewer(repoPath);
   return injectModel(template, model, {
@@ -49,6 +51,7 @@ export async function buildViewerHtml(
     sources: sources?.files,
     excerpts,
     cost,
+    functions,
   });
 }
 

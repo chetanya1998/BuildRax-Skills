@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFnIndex } from "../app/functions-ui.js";
 import { GraphIndex, routeFlow } from "@buildrax/graph";
 import type { Model } from "@buildrax/ir";
 import { PER_ROW, layoutFlow, methodColor } from "../app/flows-ui.js";
@@ -139,5 +140,32 @@ describe("code behind a click in the Flows view", async () => {
       file: "lib/a.ts",
       line: 3,
     });
+  });
+});
+
+describe("function index in the viewer", () => {
+  it("indexes functions by file, id and route, and ignores anything else", () => {
+    const fn = {
+      id: "fn:a.ts#GET",
+      name: "GET",
+      kind: "function" as const,
+      line: 1,
+      endLine: 3,
+      routes: ["route:x:GET /a"],
+      calls: [],
+      ops: [],
+    };
+    const idx = readFnIndex({
+      schemaVersion: "buildrax-functions/v1",
+      repo: "r",
+      scannedAt: "t",
+      stats: { files: 1, functions: 1, calls: 0, resolved: 0 },
+      files: [{ path: "a.ts", functions: [fn] }],
+    })!;
+    expect(idx.byFile.get("a.ts")).toEqual([fn]);
+    expect(idx.byId.get("fn:a.ts#GET")?.path).toBe("a.ts");
+    expect(idx.byRoute.get("route:x:GET /a")?.[0]?.fn.name).toBe("GET");
+    expect(readFnIndex({ schemaVersion: "other" })).toBeUndefined();
+    expect(readFnIndex(undefined)).toBeUndefined();
   });
 });
