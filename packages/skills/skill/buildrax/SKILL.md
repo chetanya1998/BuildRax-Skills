@@ -24,7 +24,8 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
    `up` = what depends on it (what could break if it changes); `down` = what it depends on.
 5. **APIs and request flows** ("what does POST /orders touch?", "which endpoints hit the orders
    database?"): `buildrax routes` lists endpoints with `file:line`; `buildrax flow "POST /orders"`
-   follows one to the files, services, queues and databases it can reach, as numbered steps;
+   follows one to the files, services, queues and databases it can reach, as numbered steps
+   (which tables it reads or writes, what it publishes, and the worker that consumes it);
    `buildrax routes --reaching database:postgres` lists the endpoints that reach a component.
    Say that flows are static and file-level. The viewer's **Flows** view (`E`) shows the same as a
    diagram.

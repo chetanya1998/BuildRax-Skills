@@ -361,15 +361,16 @@ Details: `docs/privacy.md`.
 
 ## What it supports
 
-| Area           | Today                                                                                                                                                                                  |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Languages      | TypeScript, JavaScript (ESM and CommonJS), Python; tsconfig/jsconfig `paths` and `baseUrl` aliases                                                                                     |
-| Endpoints      | Next.js (app and pages routers), Express, Fastify, Hono, Koa, NestJS, FastAPI, Flask (router prefixes followed across files)                                                           |
-| Infrastructure | docker-compose, Dockerfiles, Terraform (AWS, Google Cloud, Azure resources), Kubernetes, Vercel, Netlify, Fly, Render, Procfile, Serverless, Prisma, SDK imports, `.env.example` names |
-| Lockfiles      | npm, pnpm, yarn, poetry, uv, requirements (exact pins), Pipfile.lock                                                                                                                   |
-| Research       | OSV.dev, endoflife.date, npm and PyPI registries                                                                                                                                       |
-| Cost           | AWS: Fargate, RDS (PostgreSQL / MySQL), ElastiCache (Redis / Valkey), S3, ALB, data transfer, SES; SaaS prices you record with source and date                                         |
-| Agents         | Claude Code, Codex, Antigravity (skill install paths not yet verified against each vendor's docs)                                                                                      |
+| Area           | Today                                                                                                                                                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Languages      | TypeScript, JavaScript (ESM and CommonJS), Python; tsconfig/jsconfig `paths` and `baseUrl` aliases                                                                                                                          |
+| Data flow      | Reads and writes to databases and caches, queue publish/consume (Prisma, SQL, Drizzle, Supabase, TypeORM, MongoDB, Redis, BullMQ, Kafka, SQS, RabbitMQ, Django ORM, SQLAlchemy, Celery), followed through queues to workers |
+| Endpoints      | Next.js (app and pages routers), Express, Fastify, Hono, Koa, NestJS, FastAPI, Flask (router prefixes followed across files)                                                                                                |
+| Infrastructure | docker-compose, Dockerfiles, Terraform (AWS, Google Cloud, Azure resources), Kubernetes, Vercel, Netlify, Fly, Render, Procfile, Serverless, Prisma, SDK imports, `.env.example` names                                      |
+| Lockfiles      | npm, pnpm, yarn, poetry, uv, requirements (exact pins), Pipfile.lock                                                                                                                                                        |
+| Research       | OSV.dev, endoflife.date, npm and PyPI registries                                                                                                                                                                            |
+| Cost           | AWS: Fargate, RDS (PostgreSQL / MySQL), ElastiCache (Redis / Valkey), S3, ALB, data transfer, SES; SaaS prices you record with source and date                                                                              |
+| Agents         | Claude Code, Codex, Antigravity (skill install paths not yet verified against each vendor's docs)                                                                                                                           |
 
 ---
 
@@ -394,8 +395,8 @@ Your numbers will differ with repository size and machine.
 ## Known limits
 
 - Import-level and file-level today: no function-level call graph yet, so `flow` shows
-  everything the handler's file can reach, not a single runtime path. Database reads vs writes
-  and queue publish/consume are not separated yet (next on the roadmap).
+  everything the handler's file can reach, not a single runtime path. Reads, writes and queue
+  hops are detected from client calls; dynamic table or queue names are not resolved.
 - Static analysis cannot see dynamic imports, dependency injection or runtime wiring; a missing
   link is not proof of no dependency. Paths built at runtime are listed as computed, never guessed.
 - Cost: AWS only, on-demand list prices; capacity comes from editable assumptions, not

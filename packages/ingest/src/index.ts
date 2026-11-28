@@ -1,7 +1,9 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { Model } from "@buildrax/ir";
-import { buildModel, type SourceFile } from "./build.js";
+import { buildModelWithContext, type SourceFile } from "./build.js";
+import { emptyFacts } from "./routes/facts.js";
+import { linkDataOps, withDataOps } from "./dataops/link.js";
 import { langForFile } from "./languages.js";
 import { detectPackages } from "./packages.js";
 import { parseFile } from "./parser.js";
@@ -10,7 +12,10 @@ import { walkRepo } from "./walk.js";
 import { ParseCache, hashText } from "./cache.js";
 import { readLockedVersions, readRuntimes, withVersions } from "./versions.js";
 
-export { buildModel } from "./build.js";
+export { buildModel, buildModelWithContext } from "./build.js";
+export { classifySql, jsDataFacts, pyDataFacts } from "./dataops/facts.js";
+export type { RawOp, RawClient, OpKind, OpSystem } from "./dataops/facts.js";
+export { linkDataOps, withDataOps } from "./dataops/link.js";
 export type { BuildInput, SourceFile } from "./build.js";
 export { extractImports, parseFile } from "./parser.js";
 export type { RawImport, FileParse } from "./parser.js";
@@ -72,7 +77,7 @@ export interface ScanStats {
 }
 
 /** Changes whenever parsing could produce different output: scanner version and grammars. */
-export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@3;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
+export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@4;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
 
 /** Scan a repository statically and return its Architecture IR. Never executes repo code. */
 export async function scan(repoPath: string, options: ScanOptions = {}): Promise<Model> {
@@ -108,7 +113,7 @@ export async function scan(repoPath: string, options: ScanOptions = {}): Promise
   }
   await cache.save();
 
-  const model = buildModel({
+  const { model, ...ctx } = buildModelWithContext({
     repoName: options.repoName ?? path.basename(root),
     scannedAt: options.now ?? new Date().toISOString(),
     version: VERSION,
@@ -118,7 +123,16 @@ export async function scan(repoPath: string, options: ScanOptions = {}): Promise
     aliases: await readAliasConfigs(root, allFiles),
   });
   // Infrastructure (v2): what the project runs on and pays for.
-  const withInfraNodes = withInfra(model, await detectInfra(root, allFiles, model));
+  const infraModel = withInfra(model, await detectInfra(root, allFiles, model));
+  // Data operations: which code reads/writes databases and caches, publishes/consumes queues.
+  const withInfraNodes = withDataOps(
+    infraModel,
+    linkDataOps(
+      infraModel,
+      sources.map((s) => ({ path: s.path, facts: s.facts ?? emptyFacts() })),
+      ctx,
+    ),
+  );
   // Pinned versions (lockfiles) and declared runtimes, for advisories and lifecycle checks.
   const result = withVersions(
     withInfraNodes,

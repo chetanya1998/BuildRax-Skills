@@ -89,6 +89,10 @@ export interface FlowStep {
   to: string;
   kind: string;
   evidence?: Evidence;
+  /** Tables, queue names and functions involved, for data operations. */
+  meta?: Record<string, unknown>;
+  /** The step happens later, in another process (a queue delivering a message to a worker). */
+  async?: boolean;
 }
 
 export interface Flow {
@@ -130,19 +134,36 @@ export function routeFlow(
   const packages = new Set<string>();
   let truncated = false;
   let frontier = [node.parent];
+  const DATA = new Set(["reads", "writes", "publishes", "consumes"]);
+  const handler =
+    typeof node.meta?.["handler"] === "string" ? (node.meta["handler"] as string) : undefined;
+  const seenLeaf = new Set<string>(); // edge ids already shown (a file can both read and write a db)
   for (let hop = 1; frontier.length && hop <= depth; hop++) {
     const next: string[] = [];
     for (const from of [...frontier].sort()) {
       const out = [...index.out(from)].sort((a, b) => (a.id < b.id ? -1 : 1));
+      // A data operation says more than "uses": prefer it when both point at the same node.
+      const dataTargets = new Set(out.filter((e) => DATA.has(e.kind)).map((e) => e.to));
+      const queued: string[] = [];
       for (const e of out) {
         const to = index.node(e.to);
         if (!to) continue;
         const follow = e.kind === "imports" && to.kind === "file" && !files.has(to.id);
         const leaf =
-          (e.kind === "uses" && INFRA.has(to.kind) && !infra.has(to.id)) ||
+          (INFRA.has(to.kind) &&
+            ((DATA.has(e.kind) && e.kind !== "consumes") ||
+              (e.kind === "uses" && !dataTargets.has(to.id))) &&
+            !seenLeaf.has(e.id)) ||
           (to.kind === "external" && !external.has(to.id)) ||
           (to.kind === "module" && e.kind === "depends-on" && !packages.has(to.id));
         if (!follow && !leaf) continue;
+        // In the handler's own file, keep only the data operations made inside the handler.
+        let evidence = e.evidence[0];
+        if (DATA.has(e.kind) && from === node.parent && handler) {
+          const fns = (e.meta?.["functions"] as string[] | undefined) ?? [];
+          if (fns.length && !fns.some((f) => f === handler || f.endsWith(`.${handler}`))) continue;
+          evidence = e.evidence.find((v) => v.detail?.endsWith(` in ${handler}`)) ?? evidence;
+        }
         if (steps.length >= maxSteps) {
           truncated = true;
           break;
@@ -153,14 +174,47 @@ export function routeFlow(
           from,
           to: to.id,
           kind: e.kind,
-          evidence: e.evidence[0],
+          evidence,
+          ...(e.meta ? { meta: e.meta } : {}),
         });
+        seenLeaf.add(e.id);
         if (follow) {
           files.add(to.id);
           next.push(to.id);
-        } else if (INFRA.has(to.kind)) infra.add(to.id);
-        else if (to.kind === "external") external.add(to.id);
+        } else if (INFRA.has(to.kind)) {
+          infra.add(to.id);
+          if (e.kind === "publishes") queued.push(to.id);
+        } else if (to.kind === "external") external.add(to.id);
         else packages.add(to.id);
+      }
+      // Asynchronous hop: a message published to a queue is picked up by its consumers.
+      for (const q of queued) {
+        const published = new Set(
+          out
+            .filter((e) => e.kind === "publishes" && e.to === q)
+            .flatMap((e) => (e.meta?.["channels"] as string[] | undefined) ?? []),
+        );
+        for (const c of [...index.in(q)]
+          .filter((e) => e.kind === "consumes")
+          .sort((a, b) => (a.from < b.from ? -1 : 1))) {
+          const channels = (c.meta?.["channels"] as string[] | undefined) ?? [];
+          // Same queue name when both sides name it; otherwise keep it (marked possible).
+          if (published.size && channels.length && !channels.some((ch) => published.has(ch)))
+            continue;
+          if (files.has(c.from) || steps.length >= maxSteps) continue;
+          steps.push({
+            n: steps.length + 1,
+            hop,
+            from: q,
+            to: c.from,
+            kind: "delivers",
+            evidence: c.evidence[0],
+            ...(c.meta ? { meta: c.meta } : {}),
+            async: true,
+          });
+          files.add(c.from);
+          next.push(c.from);
+        }
       }
     }
     if (hop === depth && next.length) truncated = true;
@@ -190,4 +244,14 @@ export function routesReaching(
     const f = routeFlow(index, r.id, { depth: opts.depth, maxSteps: 2000 });
     return !!f && (f.entry === targetId || f.steps.some((s) => s.to === targetId));
   });
+}
+
+/** What a data step touches: tables, cache keys, queue names (`orders`, `emails`), or "". */
+export function stepDetail(step: Pick<FlowStep, "meta">): string {
+  const m = step.meta ?? {};
+  const list = [
+    ...((m["tables"] as string[] | undefined) ?? []),
+    ...((m["channels"] as string[] | undefined) ?? []),
+  ];
+  return [...new Set(list)].slice(0, 4).join(", ");
 }

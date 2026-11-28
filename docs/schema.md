@@ -46,6 +46,18 @@ Added without a format change (optional `meta` fields; older readers ignore them
   `package.json` `engines.node`, `.nvmrc`, `.node-version`, `.python-version` and `pyproject.toml`
   `requires-python`; `version` is the oldest version the declaration allows.
 
+### Data operations
+
+`reads` / `writes` edges from a file to a database or cache, and `publishes` / `consumes` edges
+to a queue, found from client calls: Prisma, SQL clients and `sql` tags (classified by the SQL
+literal), Drizzle, Supabase, TypeORM, MongoDB/Mongoose, Redis, BullMQ, Kafka, SQS, RabbitMQ,
+Django ORM, SQLAlchemy and Celery. A call counts only with proof: a client of that family created
+in the file, a receiver imported from a repo file that holds such a client or uses that
+infrastructure, or (for an SQL literal) the file importing a database library. Edge `meta`:
+`tables` (tables, models, collections or cache keys when literal), `channels` (queue, topic or
+task names), `functions` (enclosing functions) and `systems`. Evidence is `verified`, or
+`inferred` when the target is only "the one database in the project". No format change.
+
 ### Routes (endpoints)
 
 `route` nodes (`route:<package dir>:<METHOD> <path>`, or `route:<file>:<line>:<METHOD>` when the

@@ -766,3 +766,15 @@ div + .fc-section {
     cursor: default;
   }
 }
+.flow-steps .step-what {
+  font-family: var(--font);
+  font-size: 10.5px;
+  color: var(--accent);
+}
+.flow-steps .step-async {
+  font: 600 9.5px var(--ui);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--up);
+  margin-left: 4px;
+}

@@ -1,4 +1,11 @@
-import { listRoutes, routeFlow, type Flow, type GraphIndex, type RouteInfo } from "@buildrax/graph";
+import {
+  stepDetail,
+  listRoutes,
+  routeFlow,
+  type Flow,
+  type GraphIndex,
+  type RouteInfo,
+} from "@buildrax/graph";
 import { h, s } from "./dom.js";
 import { codeTargetFor, type FloatingCode } from "./flows-code.js";
 
@@ -351,6 +358,10 @@ function stepList(index: GraphIndex, flow: Flow, o: FlowsViewOptions): HTMLEleme
         `${name(st.from)} `,
         h("b", null, st.kind),
         ` → ${name(st.to)}`,
+        stepDetail(st) ? h("span", { class: "step-what" }, ` ${stepDetail(st)}`) : null,
+        st.async
+          ? h("span", { class: "step-async", title: "Happens later, in a worker" }, " async")
+          : null,
         st.evidence?.file
           ? h(
               "code",

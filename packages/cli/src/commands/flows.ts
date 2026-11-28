@@ -4,6 +4,7 @@ import {
   listRoutes,
   routeFlow,
   routesReaching,
+  stepDetail,
   type Flow,
   type RouteInfo,
 } from "@buildrax/graph";
@@ -73,8 +74,9 @@ export async function formatFlows(repo: string, flows: Flow[], query: string): P
       const ev = s.evidence?.file
         ? `  ${s.evidence.file}${s.evidence.startLine ? `:${s.evidence.startLine}` : ""}`
         : "";
+      const what = stepDetail(s);
       out.push(
-        `  ${String(s.n).padStart(3)}. ${"  ".repeat(s.hop - 1)}${label(s.from)} -${s.kind}-> ${label(s.to)}${ev}`,
+        `  ${String(s.n).padStart(3)}. ${"  ".repeat(s.hop - 1)}${label(s.from)} -${s.kind}-> ${label(s.to)}${what ? ` (${what})` : ""}${s.async ? " [async]" : ""}${ev}`,
       );
     }
     const p = f.participants;

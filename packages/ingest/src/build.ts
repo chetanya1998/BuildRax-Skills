@@ -54,7 +54,19 @@ function addEvidence(list: Evidence[], ev: Evidence): void {
 }
 
 /** Pure assembly of the Architecture IR from already-extracted facts. Deterministic output. */
+/** What later passes (data operations) need from building the model. */
+export interface BuildContext {
+  /** Local import name → repo file it comes from, per file. */
+  bindings: Bindings;
+  /** External packages each file imports (npm names, lower-cased PyPI names). */
+  externalImports: Map<string, Set<string>>;
+}
+
 export function buildModel(input: BuildInput): Model {
+  return buildModelWithContext(input).model;
+}
+
+export function buildModelWithContext(input: BuildInput): { model: Model } & BuildContext {
   const nodes = new Map<string, IRNode>();
   const edges = new Map<string, IREdge>();
   const files = new Set(input.allFiles);
@@ -270,7 +282,7 @@ export function buildModel(input: BuildInput): Model {
   const byId = <T extends { id: string }>(a: T, b: T): number =>
     a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   const languages = [...new Set(input.sources.map((s) => languageLabel(s.lang)))].sort();
-  return {
+  const model: Model = {
     schemaVersion: IR_SCHEMA_VERSION,
     meta: {
       repo: input.repoName,
@@ -282,4 +294,5 @@ export function buildModel(input: BuildInput): Model {
     nodes: [...nodes.values()].sort(byId),
     edges: [...edges.values()].sort(byId),
   };
+  return { model, bindings, externalImports };
 }

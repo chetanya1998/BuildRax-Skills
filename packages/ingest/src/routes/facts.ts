@@ -1,4 +1,5 @@
 import type { Node } from "web-tree-sitter";
+import type { RawClient, RawOp } from "../dataops/facts.js";
 
 /**
  * Per-file facts for endpoint detection, read from the syntax tree (never executed). They are
@@ -42,6 +43,12 @@ export interface FileFacts {
   useServer: boolean;
   /** App/router objects created in this file (`const app = express()`, `router = APIRouter()`). */
   receivers: string[];
+  /** Candidate data operations (database, cache, queue); confirmed when linked. */
+  ops?: RawOp[];
+  /** Client objects created in this file, by variable name. */
+  clients?: Record<string, RawClient>;
+  /** Celery task functions defined in this file. */
+  tasks?: string[];
 }
 
 export const emptyFacts = (): FileFacts => ({

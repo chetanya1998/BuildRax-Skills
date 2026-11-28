@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 import { Language, Parser, type Node } from "web-tree-sitter";
 import type { Lang } from "./languages.js";
 import { emptyFacts, jsFacts, pyFacts, type FileFacts } from "./routes/facts.js";
+import { jsDataFacts, pyDataFacts } from "./dataops/facts.js";
 
 const require = createRequire(import.meta.url);
 
@@ -63,9 +64,11 @@ export async function parseFile(source: string, lang: Lang): Promise<FileParse> 
   }
   try {
     const root = tree.rootNode;
-    return lang === "python"
-      ? { imports: pythonImports(root), facts: pyFacts(root) }
-      : { imports: jsImports(root), facts: jsFacts(root) };
+    if (lang === "python") {
+      const data = pyDataFacts(root);
+      return { imports: pythonImports(root), facts: { ...pyFacts(root), ...data } };
+    }
+    return { imports: jsImports(root), facts: { ...jsFacts(root), ...jsDataFacts(root) } };
   } finally {
     tree.delete();
     parser.delete();

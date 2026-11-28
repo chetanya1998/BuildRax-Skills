@@ -176,3 +176,31 @@ because scanning is fast and deterministic. Committing remains possible for team
    only after asking the user.
 4. `buildrax research add`: record findings (source URL, date, reliability) into `research.json`
    or prices into `prices.json`; shown in the Inspector and Cost view; staleness check.
+
+## Next: System Design Studio (decided 2026-11-28)
+
+A guided, animated, evidence-backed tour of the whole system: HLD → LLD zoom (context,
+containers, components, code), system-design concepts detected in code, a step-by-step request
+tour, flaws, the "why" behind decisions, and a deck for leadership.
+
+Decisions:
+
+1. **Zero-token structure**: BuildRAX stays deterministic; AI judgement (design review, inferred
+   "why") comes from the user's coding agent through the skill, imported and validated by the CLI.
+2. **Rationale sources**: ADRs, architecture docs, code comments and local git commit messages may
+   be read (read-only, local).
+3. **Leadership output**: offline HTML deck and PDF.
+4. **No automatic business-capability grouping**; users add notes instead.
+5. **Order**: phase 0 → 1 (design model) → 2 (animated HLD/LLD view) → guided tour on today's data
+   → deck → early leadership demo.
+
+Every claim carries its source: from code, from config, documented, researched (URL + date) or
+AI inference (unverified until cited).
+
+Phase 0 (groundwork):
+
+- 0.1 Data operations: **done** (reads/writes, publish/consume, followed through queues to
+  workers; handler-scoped steps in flows).
+- 0.2 Data models (Prisma, SQLAlchemy, Django, TypeORM) as entities and relations (IR v3).
+- 0.3 Function index (side file): functions, calls, data operations per function.
+- 0.4 Rationale sources: ADRs, docs, "why" comments, local git messages, linked to nodes.
