@@ -10,7 +10,13 @@ Indie hackers and solo technical founders, developers inheriting codebases, vibe
 "I don't know how this codebase is really wired together" — and agents burn tokens crawling source to find out. Static, local, no LLM, no upload.
 
 ## Origin
-Founder/PM building BuildRAX in public. (Personal origin story: to add.)
+I watched my own team struggle because nobody had the whole picture of the system. Without it:
+- troubleshooting took far too long;
+- technical bottlenecks were hard to find and fix once the system was in production;
+- no one could say what our APIs and infrastructure would actually cost;
+- it was hard to know how, and where, the system would break as it scaled;
+- security risks that could hurt the system stayed hidden.
+BuildRAX is the tool I wanted for them: one evidence-backed view of the whole system (architecture, flows, cost by traffic tier, advisories and end-of-life runtimes), built straight from the code.
 
 ## Stage
 prototype — works end to end, 266 tests, CI on Node 22/24; no npm release yet, package names are placeholders.
