@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
-import { scan } from "@buildrax/ingest";
+import { scan, scanDetailed } from "@buildrax/ingest";
 import type { Model } from "@buildrax/ir";
 import {
   contextFor,
@@ -49,6 +49,18 @@ describe("digest", () => {
     expect(text).toContain("Order [orders] prisma web/prisma/schema.prisma -> Customer");
     expect(text).toContain("Customer prisma web/prisma/schema.prisma -> Order[]");
     expect(renderDigest(model).text).not.toContain("DATA MODELS");
+  });
+  it("lists decision records when a rationale index is given", async () => {
+    const { model: flows, rationale } = await scanDetailed(path.resolve(FIXTURE, "../flows-app"), {
+      now: "2026-01-01T00:00:00.000Z",
+      git: false,
+    });
+    const text = renderDigest(flows, { rationale }).text;
+    expect(text).toContain("DECISIONS");
+    expect(text).toContain(
+      "accepted 2026-03-02 1. Store orders in PostgreSQL docs/adr/0001-postgres-for-orders.md",
+    );
+    expect(renderDigest(flows).text).not.toContain("DECISIONS");
   });
 });
 

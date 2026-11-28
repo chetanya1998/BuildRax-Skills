@@ -202,6 +202,14 @@ deeper, select a file and open **Functions** in the inspector, or run
 `buildrax fn web/src/app/api/orders/route.ts`: each function with the routes it handles, the
 tables and queues it touches, what it calls and who calls it.
 
+### Why is it built this way?
+
+Select anything and the inspector's **Why** section quotes what the repository already says about
+it: decision records (ADRs), the README or docs sections that name it, comments that explain a
+choice, and the commit messages behind its changes. Each is labelled by where it came from. In the
+terminal: `buildrax why web/src/lib/db.ts`, and `buildrax decisions` for the decision log.
+Nothing is generated: it is quoted, and tied only by exact names and paths.
+
 ### Code view: read the code behind any box or arrow
 
 <img src="docs/images/code-view.webp" alt="Graph view in dark mode with a floating code window for the Amazon RDS database: excerpts of docker-compose.yml showing the services that depend on the database, each marked, with headers saying config, secrets masked; the Inspector lists the evidence" width="920">

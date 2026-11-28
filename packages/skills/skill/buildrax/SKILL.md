@@ -30,7 +30,10 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
    Data models (Prisma, TypeORM, Drizzle, Mongoose, Django, SQLAlchemy) are `entity` nodes with
    `relates` edges; the digest lists them under DATA MODELS. To drill into one file or function ("what does
    `createOrder` call, and who calls it?"), use `buildrax fn <file|name>`; only do this after the
-   file-level answer, it is the detailed layer. Say that flows are static and file-level. The viewer's **Flows** view (`E`) shows the same as a
+   file-level answer, it is the detailed layer. For "why is it like this?", run
+   `buildrax why <target>` and quote what it returns with its label (Documented, From code, From
+   git history); if it finds nothing, say so instead of guessing a reason, and any reason you
+   infer yourself must be called an inference. Say that flows are static and file-level. The viewer's **Flows** view (`E`) shows the same as a
    diagram.
 6. **Show the user** `buildrax view --open` (static file) or `buildrax serve --open` (live, lets
    them save their notes into the repo).

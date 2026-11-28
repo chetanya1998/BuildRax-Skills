@@ -4,6 +4,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  decisionsCommand,
+  formatDecisions,
+  formatWhy,
+  whyCommand,
   flowCommand,
   formatFunctions,
   functionsCommand,
@@ -100,5 +104,28 @@ describe("fn command (function index)", () => {
     expect(formatFunctions(await functionsCommand(tmp, "nope"), "nope")).toMatch(
       /^No function matches/,
     );
+  });
+});
+
+describe("why and decisions commands (rationale)", () => {
+  it("shows the decision record behind a file, with its provenance", async () => {
+    await fs.access(path.join(tmp, ".buildrax", "rationale.json"));
+    const res = await whyCommand(tmp, "web/src/lib/db.ts");
+    expect(res.node.id).toBe("file:web/src/lib/db.ts");
+    const text = formatWhy(res);
+    expect(text).toContain("Documented (decision record) (1)");
+    expect(text).toContain(
+      "1. Store orders in PostgreSQL  (accepted, 2026-03-02)  docs/adr/0001-postgres-for-orders.md",
+    );
+    expect(text).toContain("not inferred");
+  });
+
+  it("quotes explaining comments and lists decision records", async () => {
+    const text = formatWhy(await whyCommand(tmp, "web/src/lib/cache.ts"));
+    expect(text).toContain("From code (1)");
+    expect(text).toContain('"One shared client on purpose');
+    const list = formatDecisions(await decisionsCommand(tmp));
+    expect(list).toMatch(/^3 decision record\(s\)/);
+    expect(list).toMatch(/superseded\s+ADR 2: Send emails from a worker/);
   });
 });

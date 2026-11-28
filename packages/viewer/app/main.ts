@@ -24,6 +24,7 @@ import { layoutView } from "./layout.js";
 import { computeLineage } from "./lineage.js";
 import { parseResearch, renderResearchSection } from "./research-ui.js";
 import { readFnIndex, renderFunctionsSection } from "./functions-ui.js";
+import { readRationale, renderWhySection } from "./why-ui.js";
 import { parseCost, renderCostSection, renderCostView } from "./cost-ui.js";
 import { renderFlowsView, type FlowsUi } from "./flows-ui.js";
 import { FloatingCode, SHEET_BELOW } from "./flows-code.js";
@@ -268,6 +269,7 @@ function start(model: Model): void {
   const notesBox = h("div", { class: "notes-box" });
   const research = parseResearch(readJson("buildrax-research"));
   const fnIndex = readFnIndex(readJson("buildrax-functions"));
+  const rationale = readRationale(readJson("buildrax-rationale"));
   const costData = parseCost(readJson("buildrax-cost"));
   const costUi: { tier: number; edits: Partial<Assumptions> } = { tier: 0, edits: {} };
   const costBox = h("div", { class: "cost-view", hidden: "", "aria-label": "Cost estimate" });
@@ -327,6 +329,18 @@ function start(model: Model): void {
   // Floating code window for the Flows view (one per page, created only if source can be read).
   const flowsCode = source.mode === "none" ? undefined : new FloatingCode(source);
   if (flowsCode) document.body.append(flowsCode.el);
+  /** Open a file at a line in the floating code window (Functions and Why sections). */
+  const openCodeAt = flowsCode
+    ? (path: string, line: number, label: string): void => {
+        void flowsCode.show({
+          title: `${label} · ${path}`,
+          file: path,
+          line,
+          marks: [[line, label]],
+          nodeId: `file:${path}`,
+        });
+      }
+    : undefined;
   const CODE_UNAVAILABLE =
     "Code view is unavailable: this viewer was built with buildrax view --no-source. Rebuild it without that flag, or use buildrax serve.";
   // What the code window currently shows on the canvas, to avoid reloading on every repaint.
@@ -726,6 +740,7 @@ function start(model: Model): void {
       put(
         inspectorBox,
         renderCostSection(costData, model, costUi.edits, sel.id, () => setCost(true)),
+        rationale ? renderWhySection({ rationale, index, onOpen: openCodeAt }, sel.id) : null,
         renderResearchSection(research, index, sel.id),
         fnIndex
           ? renderFunctionsSection(
@@ -733,17 +748,7 @@ function start(model: Model): void {
                 fns: fnIndex,
                 index,
                 onSelectNode: (id) => void selectNode(id),
-                onOpen: flowsCode
-                  ? (path, line, label) => {
-                      void flowsCode.show({
-                        title: `${label} · ${path}`,
-                        file: path,
-                        line,
-                        marks: [[line, label]],
-                        nodeId: `file:${path}`,
-                      });
-                    }
-                  : undefined,
+                onOpen: openCodeAt,
               },
               sel.id,
             )

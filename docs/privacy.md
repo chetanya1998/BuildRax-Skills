@@ -1,14 +1,14 @@
 # Privacy: what stays local and what is sent
 
-| Feature                                                                | Network                                                                    | What leaves the machine                                                                                                                                                            |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scan`, `digest`, `context`, `trace`, `view`, `notes`, `install-skill` | none                                                                       | nothing                                                                                                                                                                            |
-| `serve`                                                                | localhost only (127.0.0.1)                                                 | nothing; API needs a per-run token and matching Host/Origin                                                                                                                        |
-| `research` (no flag)                                                   | none                                                                       | nothing; prints the exact requests it would make                                                                                                                                   |
-| `research --online`                                                    | HTTPS to `registry.npmjs.org`, `pypi.org`, `api.osv.dev`, `endoflife.date` | public package names; to OSV also the version pinned in your lockfile (POST body); to endoflife.date only a product name (`nodejs`, `postgresql`…), the version is matched locally |
-| `cost` (no flag)                                                       | none                                                                       | nothing; prints the price files it would download                                                                                                                                  |
-| `cost --online`                                                        | HTTPS GET to `pricing.us-east-1.amazonaws.com`                             | the AWS service and region names in the URL path only                                                                                                                              |
-| `cost --online --use-credentials`                                      | HTTPS POST to `api.pricing.us-east-1.amazonaws.com`, signed                | service, region and product filters; your AWS access key id as part of the signature                                                                                               |
+| Feature                                                                             | Network                                                                    | What leaves the machine                                                                                                                                                            |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scan`, `digest`, `context`, `trace`, `why`, `fn`, `view`, `notes`, `install-skill` | none                                                                       | nothing                                                                                                                                                                            |
+| `serve`                                                                             | localhost only (127.0.0.1)                                                 | nothing; API needs a per-run token and matching Host/Origin                                                                                                                        |
+| `research` (no flag)                                                                | none                                                                       | nothing; prints the exact requests it would make                                                                                                                                   |
+| `research --online`                                                                 | HTTPS to `registry.npmjs.org`, `pypi.org`, `api.osv.dev`, `endoflife.date` | public package names; to OSV also the version pinned in your lockfile (POST body); to endoflife.date only a product name (`nodejs`, `postgresql`…), the version is matched locally |
+| `cost` (no flag)                                                                    | none                                                                       | nothing; prints the price files it would download                                                                                                                                  |
+| `cost --online`                                                                     | HTTPS GET to `pricing.us-east-1.amazonaws.com`                             | the AWS service and region names in the URL path only                                                                                                                              |
+| `cost --online --use-credentials`                                                   | HTTPS POST to `api.pricing.us-east-1.amazonaws.com`, signed                | service, region and product filters; your AWS access key id as part of the signature                                                                                               |
 
 Guarantees enforced in code and tests:
 
@@ -20,6 +20,11 @@ Guarantees enforced in code and tests:
 - Notes are stored in `.buildrax/notes.json` (or browser storage in a static file). They are never
   read by `digest` or `context`, never sent by `research`, and there is no sync command.
 - Scanning is static; repository code is never executed.
+- Rationale (`buildrax why`) is read locally: Markdown docs and decision records, code comments, and
+  local commit messages through `git log` only (no hooks, pager, fsmonitor or diff drivers run;
+  `--no-git` skips it). Author names and emails are not read. The result,
+  `.buildrax/rationale.json`, is git-ignored and never sent anywhere; `digest` includes only the
+  titles and status of decision records.
 - The agent running a skill may itself send what you show it to its model provider. BuildRAX keeps
   what it shows the agent small (digest/context) and excludes notes.
 

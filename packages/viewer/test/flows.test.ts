@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFnIndex } from "../app/functions-ui.js";
+import { readRationale, whyFor } from "../app/why-ui.js";
 import { GraphIndex, routeFlow } from "@buildrax/graph";
 import type { Model } from "@buildrax/ir";
 import { PER_ROW, layoutFlow, methodColor } from "../app/flows-ui.js";
@@ -167,5 +168,62 @@ describe("function index in the viewer", () => {
     expect(idx.byRoute.get("route:x:GET /a")?.[0]?.fn.name).toBe("GET");
     expect(readFnIndex({ schemaVersion: "other" })).toBeUndefined();
     expect(readFnIndex(undefined)).toBeUndefined();
+  });
+});
+
+describe("rationale in the viewer", () => {
+  it("reads the index and gathers sources for a node and inside it", () => {
+    const model = {
+      schemaVersion: "buildrax-ir/v3",
+      meta: { repo: "r", scannedAt: "t", generator: { name: "b", version: "0" }, languages: [] },
+      nodes: [
+        { id: "project:r", kind: "project", name: "r", evidence: [{ kind: "config" }] },
+        {
+          id: "module:src",
+          kind: "module",
+          name: "src",
+          parent: "project:r",
+          path: "src",
+          evidence: [{ kind: "config" }],
+        },
+        {
+          id: "file:src/a.ts",
+          kind: "file",
+          name: "a.ts",
+          parent: "module:src",
+          path: "src/a.ts",
+          evidence: [{ kind: "config" }],
+        },
+      ],
+      edges: [],
+    } as unknown as Model;
+    const r = readRationale({
+      schemaVersion: "buildrax-rationale/v1",
+      repo: "r",
+      scannedAt: "t",
+      stats: { adrs: 1, docs: 0, comments: 1, commits: 0 },
+      git: { read: false, commits: 0 },
+      sources: [
+        {
+          id: "adr:docs/adr/1.md",
+          kind: "adr",
+          title: "Use src",
+          excerpt: "x",
+          links: [{ node: "module:src", via: "code" }],
+        },
+        {
+          id: "comment:src/a.ts:1",
+          kind: "comment",
+          title: "src/a.ts",
+          excerpt: "y",
+          links: [{ node: "file:src/a.ts", via: "location" }],
+        },
+      ],
+      byNode: { "module:src": ["adr:docs/adr/1.md"], "file:src/a.ts": ["comment:src/a.ts:1"] },
+    })!;
+    const w = whyFor(r, new GraphIndex(model), "module:src");
+    expect(w.sources.map((s) => s.id)).toEqual(["adr:docs/adr/1.md"]);
+    expect(w.inside).toBe(1);
+    expect(readRationale({ schemaVersion: "x" })).toBeUndefined();
   });
 });

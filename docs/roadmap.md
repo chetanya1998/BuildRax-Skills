@@ -206,4 +206,8 @@ Phase 0 (groundwork):
 - 0.3 Function index: **done** (`.buildrax/functions.json`, `buildrax fn`, a collapsed
   Functions section in the inspector: calls resolved through imports, callers, proven data
   operations and routes per function).
-- 0.4 Rationale sources: ADRs, docs, "why" comments, local git messages, linked to nodes.
+- 0.4 Rationale sources: **done** (`.buildrax/rationale.json`, `buildrax why`, `buildrax
+decisions`, a Why section in the inspector: decision records, doc sections, explaining comments
+  and local commit messages, tied to nodes by exact names and paths, labelled by provenance).
+
+Phase 0 is complete.

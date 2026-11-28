@@ -5,6 +5,7 @@ import { emptyFacts, jsFacts, pyFacts, type FileFacts } from "./routes/facts.js"
 import { jsDataFacts, pyDataFacts } from "./dataops/facts.js";
 import { jsEntities, pyEntities } from "./entities/facts.js";
 import { jsFunctions, pyFunctions } from "./functions/facts.js";
+import { whyComments } from "./rationale/comments.js";
 
 const require = createRequire(import.meta.url);
 
@@ -75,6 +76,7 @@ export async function parseFile(source: string, lang: Lang): Promise<FileParse> 
           ...data,
           entities: pyEntities(root),
           functions: pyFunctions(root),
+          whys: whyComments(root),
         },
       };
     }
@@ -85,6 +87,7 @@ export async function parseFile(source: string, lang: Lang): Promise<FileParse> 
         ...jsDataFacts(root),
         entities: jsEntities(root),
         functions: jsFunctions(root),
+        whys: whyComments(root),
       },
     };
   } finally {

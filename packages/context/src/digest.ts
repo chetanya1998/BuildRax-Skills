@@ -1,5 +1,5 @@
 import { GraphIndex, buildView, fileCycles, hubs } from "@buildrax/graph";
-import type { Model } from "@buildrax/ir";
+import type { Model, RationaleFile } from "@buildrax/ir";
 import { estimateTokens } from "./tokens.js";
 
 export interface DigestOptions {
@@ -7,6 +7,8 @@ export interface DigestOptions {
   level?: 0 | 1;
   /** Soft cap; the digest degrades to level 0 and shorter lists to fit. */
   budgetTokens?: number;
+  /** Rationale index: its decision records are listed under DECISIONS. */
+  rationale?: RationaleFile;
 }
 
 export interface Digest {
@@ -18,7 +20,12 @@ export interface Digest {
 
 const short = (path: string): string => path.replace(/^file:/, "");
 
-function render(model: Model, level: 0 | 1, caps: { lists: number }): string {
+function render(
+  model: Model,
+  level: 0 | 1,
+  caps: { lists: number },
+  rationale?: RationaleFile,
+): string {
   const index = new GraphIndex(model);
   const top = model.nodes
     .filter((n) => n.kind === "module" && n.parent?.startsWith("project:"))
@@ -95,6 +102,14 @@ function render(model: Model, level: 0 | 1, caps: { lists: number }): string {
     if (entities.length > caps.lists * 3) lines.push(`+${entities.length - caps.lists * 3} more`);
   }
 
+  const adrs = rationale?.sources.filter((s) => s.kind === "adr") ?? [];
+  if (adrs.length) {
+    lines.push("", "DECISIONS (status date title file; `buildrax why <node>` for details)");
+    for (const a of adrs.slice(0, caps.lists * 2))
+      lines.push(`${a.status ?? "?"} ${a.date ?? "-"} ${a.title} ${a.file ?? ""}`);
+    if (adrs.length > caps.lists * 2) lines.push(`+${adrs.length - caps.lists * 2} more`);
+  }
+
   const unresolved = model.edges.filter((e) => index.node(e.to)?.kind === "unresolved");
   if (unresolved.length) {
     lines.push("", "UNRESOLVED IMPORTS (could not be resolved; do not assume they exist)");
@@ -115,7 +130,7 @@ export function renderDigest(model: Model, opts: DigestOptions = {}): Digest {
   attempts.push({ level: 0, lists: 8 }, { level: 0, lists: 4 }, { level: 0, lists: 2 });
   let last: Digest | undefined;
   for (const a of attempts) {
-    const text = render(model, a.level, { lists: a.lists });
+    const text = render(model, a.level, { lists: a.lists }, opts.rationale);
     last = { text, tokens: estimateTokens(text), level: a.level };
     if (last.tokens <= budget) break;
   }

@@ -1,6 +1,9 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import type { FunctionsFile, Model } from "@buildrax/ir";
+import type { FunctionsFile, Model, RationaleFile } from "@buildrax/ir";
+import { buildRationale } from "./rationale/build.js";
+import { isDocPath } from "./rationale/docs.js";
+import { readCommits } from "./rationale/git.js";
 import { buildFunctionIndex } from "./functions/build.js";
 import { buildModelWithContext, type SourceFile } from "./build.js";
 import { emptyFacts } from "./routes/facts.js";
@@ -26,6 +29,13 @@ export type { BuildInput, SourceFile } from "./build.js";
 export { jsFunctions, pyFunctions } from "./functions/facts.js";
 export type { RawFn, RawCall } from "./functions/facts.js";
 export { buildFunctionIndex } from "./functions/build.js";
+export { buildRationale } from "./rationale/build.js";
+export { buildMatcher } from "./rationale/match.js";
+export { isAdrPath, isDocPath, markdownSections, readAdr, plainExcerpt } from "./rationale/docs.js";
+export { parseLog, readCommits } from "./rationale/git.js";
+export type { RawCommit } from "./rationale/git.js";
+export { whyComments, cleanComment, WHY_PATTERN } from "./rationale/comments.js";
+export type { RawWhy } from "./rationale/comments.js";
 export { extractImports, parseFile } from "./parser.js";
 export type { RawImport, FileParse } from "./parser.js";
 export { jsFacts, pyFacts, joinPath, literal } from "./routes/facts.js";
@@ -63,6 +73,8 @@ import { detectInfra, withInfra } from "./infra/index.js";
 
 export const VERSION = "0.0.0";
 const MAX_FILE_BYTES = 1_000_000;
+const MAX_DOCS = 300;
+const MAX_DOC_BYTES = 300_000;
 
 export interface ScanOptions {
   /** Override the timestamp (useful for deterministic tests). */
@@ -76,6 +88,8 @@ export interface ScanOptions {
   repoName?: string;
   /** Filled in with how much work the scan did. */
   stats?: ScanStats;
+  /** Read local git commit messages for rationale (default true; `git log` only). */
+  git?: boolean;
 }
 
 export interface ScanStats {
@@ -86,7 +100,7 @@ export interface ScanStats {
 }
 
 /** Changes whenever parsing could produce different output: scanner version and grammars. */
-export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@6;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
+export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@7;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
 
 /** Scan a repository statically and return its Architecture IR. Never executes repo code. */
 export async function scan(repoPath: string, options: ScanOptions = {}): Promise<Model> {
@@ -97,7 +111,7 @@ export async function scan(repoPath: string, options: ScanOptions = {}): Promise
 export async function scanDetailed(
   repoPath: string,
   options: ScanOptions = {},
-): Promise<{ model: Model; functions: FunctionsFile }> {
+): Promise<{ model: Model; functions: FunctionsFile; rationale: RationaleFile }> {
   const started = Date.now();
   const root = path.resolve(repoPath);
   const cache = await ParseCache.open(options.cacheFile, PARSER_FINGERPRINT);
@@ -186,5 +200,23 @@ export async function scanDetailed(
     sources.map((s) => ({ path: s.path, functions: s.facts?.functions ?? [] })),
     ctx,
   );
-  return { model: result, functions };
+  // Rationale (side file): ADRs, docs, "why" comments and commit messages tied to nodes.
+  const docs: { path: string; text: string }[] = [];
+  for (const f of allFiles.filter(isDocPath).slice(0, MAX_DOCS)) {
+    try {
+      const abs = path.join(root, f);
+      if ((await fs.stat(abs)).size <= MAX_DOC_BYTES)
+        docs.push({ path: f, text: await fs.readFile(abs, "utf8") });
+    } catch {
+      /* unreadable doc: skip */
+    }
+  }
+  const rationale = buildRationale({
+    model: result,
+    docs,
+    comments: sources.map((s) => ({ path: s.path, whys: s.facts?.whys ?? [] })),
+    functions,
+    commits: options.git === false ? undefined : await readCommits(root),
+  });
+  return { model: result, functions, rationale };
 }

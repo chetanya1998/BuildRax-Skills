@@ -129,6 +129,33 @@ git-ignored. `v1`:
 
 Matching is by name; nothing is executed and types are not inferred.
 
+## Rationale index (`buildrax-rationale`)
+
+`.buildrax/rationale.json`, written by `buildrax scan` (git-ignored, local only). It quotes why
+things are built the way they are; it never changes the model. `v1`:
+
+- `sources[]`, each `{ id, kind, title, file?, line?, endLine?, status?, date?, hash?, fn?,
+excerpt, links[] }`. Kinds and their provenance label:
+  - `adr` (Documented, decision record): Markdown under `adr/`, `adrs/`, `decisions/`,
+    `decision-records/`, `architecture-decisions/`, or named `ADR-12…`. Title, `status`
+    ("Status: Accepted" or a Status section), `date`, and the Decision section (else the first
+    paragraph) as the excerpt. One that names nothing links to the project.
+  - `doc` (Documented): sections of READMEs, `ARCHITECTURE.md`, `DESIGN.md` and `docs/` pages,
+    split by heading; kept only when they name something in the model.
+  - `comment` (From code): comments with wording that gives a reason ("because", "to avoid",
+    "instead of", "on purpose", "workaround", NOTE/HACK, …); licence headers and tool directives
+    are skipped. `fn` is the function it documents (just above it) or sits in.
+  - `commit` (From git history): local commits (no merges, newest 400) whose message has a body or
+    reason wording; trailers are dropped and authors are not read. Linked to the files they
+    changed, or to the packages when they changed more than 15 files.
+- `links[]`: `{ node, via }`. `via`: `path` (a repo path in the text), `code` (an exact
+  `code span`: file, package, model, table, route), `name` (an infrastructure service, a database
+  engine word, a route path, or a well-known framework name; words that are also English, like
+  Express or React, only when capitalised), `location`, `changed`, `project`. Matching is exact,
+  never fuzzy, and ties nothing it cannot name.
+- `byNode`: node id → source ids (decisions, docs, comments, then at most 8 newest commits).
+- `git`: whether history was read (`--no-git`, not a repository, or no git means `read: false`).
+
 ## Research file (`buildrax-research`)
 
 `.buildrax/research.json`, written by `buildrax research --online`. `v2` adds the `lifecycle`

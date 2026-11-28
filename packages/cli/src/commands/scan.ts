@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileCycles, GraphIndex, hubs } from "@buildrax/graph";
 import { scanDetailed, type ScanStats } from "@buildrax/ingest";
 import { validateModel, type Model } from "@buildrax/ir";
-import { functionsPathFor, modelPathFor } from "./data.js";
+import { functionsPathFor, modelPathFor, rationalePathFor } from "./data.js";
 import { previousModelPathFor, scanCachePathFor } from "./diff.js";
 
 export interface ScanSummary {
@@ -28,11 +28,12 @@ export interface ScanSummary {
 /** Scan, validate and write `.buildrax/model.json`. Returns a summary for printing. */
 export async function scanCommand(
   repoPath: string,
-  opts: { cache?: boolean } = {},
+  opts: { cache?: boolean; git?: boolean } = {},
 ): Promise<ScanSummary> {
   const root = path.resolve(repoPath);
   const stats: ScanStats = { files: 0, parsed: 0, reused: 0, ms: 0 };
-  const { model, functions } = await scanDetailed(root, {
+  const { model, functions, rationale } = await scanDetailed(root, {
+    git: opts.git,
     cacheFile: opts.cache === false ? undefined : scanCachePathFor(root),
     stats,
   });
@@ -57,9 +58,13 @@ export async function scanCommand(
   const fnPath = functionsPathFor(root);
   await fs.writeFile(`${fnPath}.tmp`, `${JSON.stringify(functions)}\n`);
   await fs.rename(`${fnPath}.tmp`, fnPath);
+  // Rationale: ADRs, docs, "why" comments and commit messages tied to nodes (local only).
+  const whyPath = rationalePathFor(root);
+  await fs.writeFile(`${whyPath}.tmp`, `${JSON.stringify(rationale)}\n`);
+  await fs.rename(`${whyPath}.tmp`, whyPath);
   await fs.writeFile(
     path.join(dir, ".gitignore"),
-    "view.html\n*.tmp\ncache/\ncost-prices.json\nfunctions.json\n",
+    "view.html\n*.tmp\ncache/\ncost-prices.json\nfunctions.json\nrationale.json\n",
   );
   return { ...summarize(model, modelPath), work: stats };
 }

@@ -536,3 +536,36 @@ span.dot-todo {
   min-width: 64px;
   color: var(--ink-soft);
 }
+
+/* Why (rationale) */
+.why-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.why-item {
+  margin: 6px 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: 3px;
+  word-break: break-word;
+}
+.why-adr {
+  border-left-color: var(--accent);
+}
+.why-comment {
+  border-left-color: var(--accent-2);
+}
+.why-label {
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+.why-text {
+  margin: 4px 0;
+}
+.why-meta {
+  font-size: 0.85em;
+}

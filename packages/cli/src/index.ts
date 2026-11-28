@@ -1,10 +1,11 @@
+import { decisionsCommand, formatDecisions, formatWhy, whyCommand } from "./commands/why.js";
 import { formatFunctions, functionsCommand } from "./commands/functions.js";
 import { Command } from "commander";
 import { formatSummary, scanCommand } from "./commands/scan.js";
 import { contextFor, renderDigest } from "@buildrax/context";
 import { ALL_TARGETS, installSkill, type SkillScope, type SkillTarget } from "@buildrax/skills";
 import path from "node:path";
-import { loadModel } from "./commands/data.js";
+import { loadModel, loadRationale } from "./commands/data.js";
 import { formatNotes, notesCommand } from "./commands/notes.js";
 import { formatTrace, traceCommand, type TraceDirection } from "./commands/trace.js";
 import { formatPlan, formatResearch, researchCommand, researchPlan } from "./commands/research.js";
@@ -40,11 +41,21 @@ export { scanCommand, summarize, formatSummary } from "./commands/scan.js";
 export {
   functionsPathFor,
   loadFunctions,
+  loadRationale,
+  rationalePathFor,
   modelPathFor,
   notesPathFor,
   researchPathFor,
 } from "./commands/data.js";
 export { findFunctions, formatFunctions, functionsCommand } from "./commands/functions.js";
+export {
+  decisionsCommand,
+  formatDecisions,
+  formatWhy,
+  whyCommand,
+  whyFor,
+  PROVENANCE,
+} from "./commands/why.js";
 export { notesCommand, formatNotes } from "./commands/notes.js";
 export { startServer } from "./commands/serve.js";
 export { diffCommand, formatDiff, formatDiffMarkdown, scanAtRef } from "./commands/diff.js";
@@ -67,17 +78,23 @@ export function buildProgram(): Command {
     .option("--json", "print the summary as JSON")
     .option("--no-cache", "re-parse every file (ignore the incremental parse cache)")
     .option("--watch", "keep running and rescan (incrementally) whenever files change")
+    .option("--no-git", "do not read local git commit messages for rationale")
     .description("scan a repository statically and write .buildrax/model.json")
-    .action(async (repo: string, opts: { json?: boolean; cache: boolean; watch?: boolean }) => {
-      const summary = await scanCommand(repo, { cache: opts.cache });
-      console.log(opts.json ? JSON.stringify(summary, null, 2) : formatSummary(summary));
-      if (!opts.watch) return;
-      console.log("Watching for changes (Ctrl+C to stop)…");
-      watchRepo(repo, (e) => console.log(opts.json ? JSON.stringify(e.diff) : formatRescan(e)), {
-        onError: (err) => console.error(`buildrax: rescan failed: ${err.message}`),
-      });
-      await new Promise(() => undefined); // until interrupted
-    });
+    .action(
+      async (
+        repo: string,
+        opts: { json?: boolean; cache: boolean; watch?: boolean; git: boolean },
+      ) => {
+        const summary = await scanCommand(repo, { cache: opts.cache, git: opts.git });
+        console.log(opts.json ? JSON.stringify(summary, null, 2) : formatSummary(summary));
+        if (!opts.watch) return;
+        console.log("Watching for changes (Ctrl+C to stop)…");
+        watchRepo(repo, (e) => console.log(opts.json ? JSON.stringify(e.diff) : formatRescan(e)), {
+          onError: (err) => console.error(`buildrax: rescan failed: ${err.message}`),
+        });
+        await new Promise(() => undefined); // until interrupted
+      },
+    );
 
   program
     .command("view")
@@ -104,6 +121,8 @@ export function buildProgram(): Command {
       const d = renderDigest(await loadModel(repo), {
         level: opts.level === "1" ? 1 : 0,
         budgetTokens: opts.budget ? Number(opts.budget) : undefined,
+        // Decision records only; a missing or stale index just leaves the list out.
+        rationale: await loadRationale(repo).catch(() => undefined),
       });
       console.log(opts.json ? JSON.stringify(d, null, 2) : d.text);
     });
@@ -308,6 +327,29 @@ export function buildProgram(): Command {
       console.log(
         opts.json ? JSON.stringify(flows, null, 2) : await formatFlows(repo, flows, endpoint),
       );
+    });
+
+  program
+    .command("why")
+    .argument("<target>", "node id, file path, folder, package, service or route")
+    .argument("[path]", "repository containing .buildrax/rationale.json", ".")
+    .option("--json", "print as JSON")
+    .description(
+      "why it is built this way: decision records, docs, explaining comments and commit messages",
+    )
+    .action(async (target: string, repo: string, opts: { json?: boolean }) => {
+      const res = await whyCommand(repo, target);
+      console.log(opts.json ? JSON.stringify(res, null, 2) : formatWhy(res));
+    });
+
+  program
+    .command("decisions")
+    .argument("[path]", "repository containing .buildrax/rationale.json", ".")
+    .option("--json", "print as JSON")
+    .description("list architecture decision records (ADRs) with status and date")
+    .action(async (repo: string, opts: { json?: boolean }) => {
+      const adrs = await decisionsCommand(repo);
+      console.log(opts.json ? JSON.stringify(adrs, null, 2) : formatDecisions(adrs));
     });
 
   program
