@@ -20,6 +20,9 @@ Guarantees enforced in code and tests:
 - Notes are stored in `.buildrax/notes.json` (or browser storage in a static file). They are never
   read by `digest` or `context`, never sent by `research`, and there is no sync command.
 - Scanning is static; repository code is never executed.
+- `buildrax design --pack` only writes a local file for your agent; `--import` only reads one. The
+  agent decides what it sends to its model provider; the brief contains the design summary and
+  ids, never notes or secrets.
 - Rationale (`buildrax why`) is read locally: Markdown docs and decision records, code comments, and
   local commit messages through `git log` only (no hooks, pager, fsmonitor or diff drivers run;
   `--no-git` skips it). Author names and emails are not read. The result,

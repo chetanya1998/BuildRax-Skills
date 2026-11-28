@@ -53,3 +53,22 @@ evidence) or **unknown** (needs `buildrax research --online`). Counts per catego
 Risk checks: circular imports, files imported by 15 or more files (or 10% of files), unresolved
 imports, data-access folders importing endpoint folders, a database written by more than one
 container, known advisories and end-of-life versions (from research).
+
+## Agent review (AI, through your coding agent)
+
+BuildRAX never calls a model. AI judgement comes from the coding agent you already use:
+
+1. `buildrax design --pack` writes `.buildrax/design-pack.md`: rules, the design summary, the ids
+   the agent may cite, recorded decisions and the exact JSON shape to return (a few thousand
+   tokens). Notes are never included.
+2. The agent reads the code, writes its review as JSON (`buildrax-design-review/v1`: items of type
+   flaw, risk, strength, rationale or recommendation, each naming nodes, optional `file:line`
+   evidence, optional HTTPS sources with the date read) and runs
+   `buildrax design --import review.json`.
+3. The CLI checks every item: ids must exist in the model or the design, evidence lines must fall
+   inside scanned files, sources must be public HTTPS URLs, concept ids must be in the catalogue,
+   and severity is only for flaws and risks. Any problem rejects the whole import with a list to
+   fix; nothing is stored.
+4. Accepted reviews go to `.buildrax/design-review.json`, separate from the model. `buildrax
+design` shows them labelled **AI inference, unverified**, or **AI inference, cited** when the
+   item names a source, and warns when the review was checked against an older scan.

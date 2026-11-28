@@ -1,3 +1,4 @@
+import { importCommand, loadReview, packCommand, reviewPathFor } from "./commands/review.js";
 import { designCommand, formatDesign } from "./commands/design.js";
 import { decisionsCommand, formatDecisions, formatWhy, whyCommand } from "./commands/why.js";
 import { formatFunctions, functionsCommand } from "./commands/functions.js";
@@ -50,6 +51,15 @@ export {
 } from "./commands/data.js";
 export { findFunctions, formatFunctions, functionsCommand } from "./commands/functions.js";
 export { designCommand, formatDesign, PROVENANCE_LABEL } from "./commands/design.js";
+export {
+  buildPack,
+  checkReview,
+  importCommand,
+  loadReview,
+  packCommand,
+  packPathFor,
+  reviewPathFor,
+} from "./commands/review.js";
 export {
   decisionsCommand,
   formatDecisions,
@@ -336,14 +346,41 @@ export function buildProgram(): Command {
     .argument("[path]", "repository containing .buildrax/model.json", ".")
     .option("--level <n>", "1 = context, 2 = containers, 3 = components", "2")
     .option("--json", "print the design model as JSON")
+    .option("--pack", "write a review brief for your coding agent to .buildrax/design-pack.md")
+    .option("--out <file>", "with --pack: write the brief here instead")
+    .option("--import <file>", "check your agent's review (JSON) and store it as AI inference")
     .description(
       "design view: C4 context/containers/components, system-design concepts and an NFR scorecard",
     )
-    .action(async (repo: string, opts: { level: string; json?: boolean }) => {
-      const d = await designCommand(repo);
-      const level = opts.level === "1" ? 1 : opts.level === "3" ? 3 : 2;
-      console.log(opts.json ? JSON.stringify(d, null, 2) : formatDesign(d, { level }));
-    });
+    .action(
+      async (
+        repo: string,
+        opts: { level: string; json?: boolean; pack?: boolean; out?: string; import?: string },
+      ) => {
+        if (opts.pack) {
+          const p = await packCommand(repo, opts.out);
+          console.log(
+            `Review brief written to ${p.path} (~${Math.ceil(p.text.length / 4)} tokens). Give it to your coding agent, then run \`buildrax design --import <review.json>\`.`,
+          );
+          return;
+        }
+        if (opts.import) {
+          const r = await importCommand(repo, opts.import);
+          console.log(
+            `Imported ${r.items.length} review item(s) to ${reviewPathFor(repo)}. They are shown as AI inference in \`buildrax design\`.`,
+          );
+          return;
+        }
+        const d = await designCommand(repo);
+        const level = opts.level === "1" ? 1 : opts.level === "3" ? 3 : 2;
+        const review = await loadReview(repo).catch(() => undefined);
+        console.log(
+          opts.json
+            ? JSON.stringify(review ? { ...d, review } : d, null, 2)
+            : formatDesign(d, { level, review }),
+        );
+      },
+    );
 
   program
     .command("why")

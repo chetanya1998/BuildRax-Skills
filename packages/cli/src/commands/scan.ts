@@ -64,7 +64,7 @@ export async function scanCommand(
   await fs.rename(`${whyPath}.tmp`, whyPath);
   await fs.writeFile(
     path.join(dir, ".gitignore"),
-    "view.html\n*.tmp\ncache/\ncost-prices.json\nfunctions.json\nrationale.json\n",
+    "view.html\n*.tmp\ncache/\ncost-prices.json\nfunctions.json\nrationale.json\ndesign-pack.md\n",
   );
   return { ...summarize(model, modelPath), work: stats };
 }

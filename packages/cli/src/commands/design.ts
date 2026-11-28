@@ -1,4 +1,5 @@
 import { ABSENT_NOTE, buildDesign, type DesignModel, type Provenance } from "@buildrax/design";
+import type { ReviewFile } from "@buildrax/ir";
 import { loadFunctions, loadModel, loadRationale, loadResearch } from "./data.js";
 
 export const PROVENANCE_LABEL: Record<Provenance, string> = {
@@ -23,7 +24,10 @@ export async function designCommand(repo: string): Promise<DesignModel> {
 
 const MARK = { present: "✓", absent: "·", risk: "!", unknown: "?" } as const;
 
-export function formatDesign(d: DesignModel, opts: { level?: 1 | 2 | 3 } = {}): string {
+export function formatDesign(
+  d: DesignModel,
+  opts: { level?: 1 | 2 | 3; review?: ReviewFile } = {},
+): string {
   const level = opts.level ?? 2;
   const name = (id: string): string => d.c4.elements.find((e) => e.id === id)?.name ?? id;
   const out: string[] = [
@@ -82,9 +86,31 @@ export function formatDesign(d: DesignModel, opts: { level?: 1 | 2 | 3 } = {}): 
     for (const c of d.scorecard.checks.filter((x) => x.category === s.category))
       out.push(`    ${MARK[c.status]} ${c.label}: ${c.detail}`);
   }
+  if (opts.review) out.push(...formatReview(opts.review, d.scannedAt));
   out.push("", ABSENT_NOTE);
   if (!d.inputs.rationale || !d.inputs.functions)
     out.push("Run `buildrax scan` again to add the function and rationale indexes to this view.");
   if (level < 3) out.push("Use --level 3 for components inside each container.");
   return out.join("\n");
+}
+
+export function formatReview(r: ReviewFile, scannedAt: string): string[] {
+  const out = [
+    "",
+    `REVIEW (${r.items.length}) by ${r.agent ?? "your agent"}, imported ${r.importedAt.slice(0, 10)}: AI inference, unverified unless cited`,
+  ];
+  if (r.modelScannedAt !== scannedAt)
+    out.push("  (checked against an older scan; the code may have changed since)");
+  for (const it of r.items)
+    out.push(
+      `  ${it.type.toUpperCase()}${it.severity ? ` [${it.severity}]` : ""} ${it.title}  (${it.cited ? "AI inference, cited" : "AI inference, unverified"})`,
+      `    ${it.body}`,
+      ...(it.evidence?.length
+        ? [`    read: ${it.evidence.map((e) => `${e.file}:${e.line}`).join(", ")}`]
+        : []),
+      ...(it.sources?.length
+        ? [`    sources: ${it.sources.map((s) => `${s.url} (${s.accessed})`).join(", ")}`]
+        : []),
+    );
+  return out;
 }

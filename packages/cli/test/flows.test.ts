@@ -4,6 +4,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  checkReview,
+  importCommand,
+  loadReview,
+  packCommand,
+  reviewPathFor,
   designCommand,
   formatDesign,
   decisionsCommand,
@@ -144,5 +149,95 @@ describe("design command", () => {
     expect(text).toContain("! One service writes to PostgreSQL");
     expect(text).toContain("counts, not grades");
     expect(formatDesign(d, { level: 1 })).not.toContain("CONTAINERS");
+  });
+});
+
+describe("design review loop (pack → agent → import)", () => {
+  const review = (items: unknown[]) => ({
+    schemaVersion: "buildrax-design-review/v1",
+    agent: "t",
+    items,
+  });
+  const good = {
+    type: "risk",
+    severity: "medium",
+    title: "Two services write PostgreSQL",
+    body: "py and web both write.",
+    nodes: ["database:postgres", "c4:container:module:py"],
+    evidence: [{ file: "./web/src/app/api/orders/route.ts", line: 13 }],
+  };
+
+  it("writes a brief with rules, citable ids and the output shape, and no notes", async () => {
+    const { path: p, text } = await packCommand(tmp);
+    expect(p).toBe(path.join(tmp, ".buildrax", "design-pack.md"));
+    expect(text).toContain("`c4:store:database:postgres` PostgreSQL [datastore]");
+    expect(text).toContain("1. Store orders in PostgreSQL (accepted)");
+    expect(text).toContain('"schemaVersion": "buildrax-design-review/v1"');
+    expect(text).toContain("RISK Data / One service writes to PostgreSQL");
+    expect(text).not.toMatch(/notes\.json/);
+  });
+
+  it("rejects unknown ids, bad lines, private URLs and unknown concepts, storing nothing", async () => {
+    const d = await designCommand(tmp);
+    const model = JSON.parse(await fs.readFile(path.join(tmp, ".buildrax", "model.json"), "utf8"));
+    const bad = checkReview(
+      review([
+        {
+          ...good,
+          nodes: ["database:nope"],
+          evidence: [
+            { file: "web/src/lib/db.ts", line: 999 },
+            { file: "nope.ts", line: 1 },
+          ],
+          sources: [{ url: "https://127.0.0.1/x", accessed: "2026-11-28" }],
+          concept: "made-up",
+        },
+      ]),
+      model,
+      d,
+      "2026-11-28T00:00:00.000Z",
+    );
+    expect(bad.ok).toBe(false);
+    expect(!bad.ok && bad.errors).toEqual([
+      'items.0.nodes: unknown id "database:nope"',
+      "items.0.evidence: web/src/lib/db.ts has 3 lines, not 999",
+      'items.0.evidence: "nope.ts" is not a scanned file',
+      'items.0.sources: "https://127.0.0.1/x" must be a public https URL',
+      'items.0.concept: unknown concept "made-up"',
+    ]);
+    expect(checkReview({ items: [] }, model, d, "t").ok).toBe(false);
+    await expect(fs.access(reviewPathFor(tmp))).rejects.toThrow();
+  });
+
+  it("stores a valid review as AI inference and shows it in the design view", async () => {
+    const file = path.join(tmp, "review.json");
+    await fs.writeFile(
+      file,
+      JSON.stringify(
+        review([
+          good,
+          {
+            type: "rationale",
+            title: "Why a queue",
+            body: "Inferred.",
+            nodes: ["queue:bullmq"],
+            sources: [{ url: "https://docs.bullmq.io/", accessed: "2026-11-28" }],
+          },
+        ]),
+      ),
+    );
+    const stored = await importCommand(tmp, file, "2026-11-28T00:00:00.000Z");
+    expect(stored.items.map((i) => [i.id, i.provenance, i.cited])).toEqual([
+      ["review:1", "ai", false],
+      ["review:2", "ai", true],
+    ]);
+    expect(stored.items[0]!.evidence).toEqual([
+      { file: "web/src/app/api/orders/route.ts", line: 13 },
+    ]);
+    const text = formatDesign(await designCommand(tmp), { review: await loadReview(tmp) });
+    expect(text).toContain(
+      "RISK [medium] Two services write PostgreSQL  (AI inference, unverified)",
+    );
+    expect(text).toContain("RATIONALE Why a queue  (AI inference, cited)");
   });
 });

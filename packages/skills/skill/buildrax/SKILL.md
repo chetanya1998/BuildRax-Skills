@@ -46,7 +46,11 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
 9. **System design** ("explain the architecture", "what patterns does it use", "how resilient is
    it", "prepare an overview for leadership"): `buildrax design` (add `--level 3` for components).
    Quote its provenance labels. "Absent" means a static scan did not see it, not that it is
-   missing; never turn the scorecard into a grade.
+   missing; never turn the scorecard into a grade. To **review the design** (flaws, risks,
+   recommendations, reasons nobody wrote down): run `buildrax design --pack`, follow the brief it
+   writes (read the code you cite), write the JSON it describes and run
+   `buildrax design --import <file>`; if it is rejected, fix every listed problem and import again.
+   Ask the user before any web search, and present your own conclusions as inference.
 
 Add `--json` to `scan`, `digest`, `context`, `trace`, `routes`, `flow`, `notes`, `research`, `cost`, `design` when you need to parse output.
 More detail: `references/commands.md`, `references/answering-questions.md`, `references/limits.md`,

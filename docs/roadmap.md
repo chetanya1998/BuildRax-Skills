@@ -217,5 +217,9 @@ Phase 1 (design model):
 - 1.1 C4 projection: **done** (context, containers, components; compose services tied to the
   folder they build).
 - 1.2 Concept catalogue and NFR scorecard: **done** (`buildrax design`, docs/design.md).
-- 1.3 Agent review: `buildrax design pack` → the user's agent → `buildrax design import`,
-  validated, stored separately, labelled AI inference.
+- 1.3 Agent review: **done** (`buildrax design --pack` → the user's agent →
+  `buildrax design --import`; checked against the model, stored in `.buildrax/design-review.json`,
+  labelled AI inference, unverified or cited).
+
+Phase 1 is complete. Next: phase 2, the animated HLD/LLD view (context → containers → components
+→ code, sequence diagrams, ER diagram) in the viewer.
