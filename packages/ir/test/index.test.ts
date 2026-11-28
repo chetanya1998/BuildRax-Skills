@@ -144,12 +144,38 @@ describe("research schema", () => {
 
 import { INFRA_KINDS, IR_SCHEMA_VERSION } from "../src/index.js";
 
-describe("schema v2", () => {
-  it("writes v2 but still reads v1 models", () => {
-    expect(IR_SCHEMA_VERSION).toBe("buildrax-ir/v2");
+describe("schema versions", () => {
+  it("writes v3 but still reads v1 and v2 models", () => {
+    expect(IR_SCHEMA_VERSION).toBe("buildrax-ir/v3");
     expect(validateModel({ ...base(), schemaVersion: "buildrax-ir/v1" }).ok).toBe(true);
     expect(validateModel({ ...base(), schemaVersion: "buildrax-ir/v2" }).ok).toBe(true);
-    expect(validateModel({ ...base(), schemaVersion: "buildrax-ir/v3" }).ok).toBe(false);
+    expect(validateModel({ ...base(), schemaVersion: "buildrax-ir/v3" }).ok).toBe(true);
+    expect(validateModel({ ...base(), schemaVersion: "buildrax-ir/v4" }).ok).toBe(false);
+  });
+  it("accepts entity nodes and `relates` edges (v3)", () => {
+    const m = base();
+    m.nodes.push(
+      {
+        id: "entity:s.prisma:A",
+        kind: "entity",
+        name: "A",
+        evidence: [{ kind: "verified", file: "s.prisma", startLine: 1 }],
+      },
+      {
+        id: "entity:s.prisma:B",
+        kind: "entity",
+        name: "B",
+        evidence: [{ kind: "verified", file: "s.prisma", startLine: 5 }],
+      },
+    );
+    m.edges.push({
+      id: "entity:s.prisma:A->relates->entity:s.prisma:B",
+      from: "entity:s.prisma:A",
+      to: "entity:s.prisma:B",
+      kind: "relates",
+      evidence: [{ kind: "verified", file: "s.prisma", startLine: 3 }],
+    });
+    expect(validateModel(m)).toMatchObject({ ok: true });
   });
   it("accepts infrastructure nodes and `uses` edges", () => {
     const m = base();

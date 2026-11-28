@@ -4,6 +4,8 @@ import type { Model } from "@buildrax/ir";
 import { buildModelWithContext, type SourceFile } from "./build.js";
 import { emptyFacts } from "./routes/facts.js";
 import { linkDataOps, withDataOps } from "./dataops/link.js";
+import { prismaEntities } from "./entities/facts.js";
+import { buildEntities, withEntities } from "./entities/build.js";
 import { langForFile } from "./languages.js";
 import { detectPackages } from "./packages.js";
 import { parseFile } from "./parser.js";
@@ -16,6 +18,9 @@ export { buildModel, buildModelWithContext } from "./build.js";
 export { classifySql, jsDataFacts, pyDataFacts } from "./dataops/facts.js";
 export type { RawOp, RawClient, OpKind, OpSystem } from "./dataops/facts.js";
 export { linkDataOps, withDataOps } from "./dataops/link.js";
+export { jsEntities, pyEntities, prismaEntities } from "./entities/facts.js";
+export type { RawEntity, RawField, RawRelation } from "./entities/facts.js";
+export { buildEntities, withEntities, entitiesForTable, entityKey } from "./entities/build.js";
 export type { BuildInput, SourceFile } from "./build.js";
 export { extractImports, parseFile } from "./parser.js";
 export type { RawImport, FileParse } from "./parser.js";
@@ -77,7 +82,7 @@ export interface ScanStats {
 }
 
 /** Changes whenever parsing could produce different output: scanner version and grammars. */
-export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@4;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
+export const PARSER_FINGERPRINT = `ingest@${VERSION};facts@5;tree-sitter-wasms@0.1.13;web-tree-sitter@0.25.10`;
 
 /** Scan a repository statically and return its Architecture IR. Never executes repo code. */
 export async function scan(repoPath: string, options: ScanOptions = {}): Promise<Model> {
@@ -124,11 +129,29 @@ export async function scan(repoPath: string, options: ScanOptions = {}): Promise
   });
   // Infrastructure (v2): what the project runs on and pays for.
   const infraModel = withInfra(model, await detectInfra(root, allFiles, model));
+  // Data models (v3): entities from code and Prisma schemas, with their relations.
+  const prismaSources: { path: string; entities: ReturnType<typeof prismaEntities> }[] = [];
+  for (const f of allFiles.filter((x) => x.endsWith(".prisma"))) {
+    try {
+      const abs = path.join(root, f);
+      if ((await fs.stat(abs)).size <= MAX_FILE_BYTES)
+        prismaSources.push({ path: f, entities: prismaEntities(await fs.readFile(abs, "utf8")) });
+    } catch {
+      /* unreadable schema: skip */
+    }
+  }
+  const entityModel = withEntities(
+    infraModel,
+    buildEntities(infraModel, [
+      ...sources.map((s) => ({ path: s.path, entities: s.facts?.entities ?? [] })),
+      ...prismaSources,
+    ]),
+  );
   // Data operations: which code reads/writes databases and caches, publishes/consumes queues.
   const withInfraNodes = withDataOps(
-    infraModel,
+    entityModel,
     linkDataOps(
-      infraModel,
+      entityModel,
       sources.map((s) => ({ path: s.path, facts: s.facts ?? emptyFacts() })),
       ctx,
     ),

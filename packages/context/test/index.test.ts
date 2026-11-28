@@ -40,6 +40,16 @@ describe("digest", () => {
     expect(small.tokens).toBeLessThan(full.tokens);
     expect(small.level).toBe(0);
   });
+  it("lists data models with their table, ORM, file and relations", async () => {
+    const flows = await scan(path.resolve(FIXTURE, "../flows-app"), {
+      now: "2026-01-01T00:00:00.000Z",
+    });
+    const text = renderDigest(flows).text;
+    expect(text).toContain("DATA MODELS");
+    expect(text).toContain("Order [orders] prisma web/prisma/schema.prisma -> Customer");
+    expect(text).toContain("Customer prisma web/prisma/schema.prisma -> Order[]");
+    expect(renderDigest(model).text).not.toContain("DATA MODELS");
+  });
 });
 
 describe("contextFor", () => {

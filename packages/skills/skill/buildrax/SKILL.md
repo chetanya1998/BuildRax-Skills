@@ -27,7 +27,8 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
    follows one to the files, services, queues and databases it can reach, as numbered steps
    (which tables it reads or writes, what it publishes, and the worker that consumes it);
    `buildrax routes --reaching database:postgres` lists the endpoints that reach a component.
-   Say that flows are static and file-level. The viewer's **Flows** view (`E`) shows the same as a
+   Data models (Prisma, TypeORM, Drizzle, Mongoose, Django, SQLAlchemy) are `entity` nodes with
+   `relates` edges; the digest lists them under DATA MODELS. Say that flows are static and file-level. The viewer's **Flows** view (`E`) shows the same as a
    diagram.
 6. **Show the user** `buildrax view --open` (static file) or `buildrax serve --open` (live, lets
    them save their notes into the repo).

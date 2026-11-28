@@ -1,0 +1,19 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id     Int     @id @default(autoincrement())
+  email  String  @unique
+  orders Order[]
+}
+
+model Order {
+  id         Int      @id @default(autoincrement())
+  total      Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId Int
+
+  @@map("orders")
+}

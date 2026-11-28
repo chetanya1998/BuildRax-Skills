@@ -9,6 +9,7 @@ import {
 import type { BuildContext } from "../build.js";
 import type { FileFacts } from "../routes/facts.js";
 import type { OpKind, OpSystem, RawClient, RawOp } from "./facts.js";
+import { entitiesForTable } from "../entities/build.js";
 
 /** Infrastructure kind each client family talks to. */
 const TARGET_KIND: Record<OpSystem, "database" | "cache" | "queue"> = {
@@ -239,9 +240,10 @@ export function linkDataOps(
         channels?: string[];
         functions?: string[];
         systems?: string[];
+        entities?: string[];
       };
       const add = (
-        k: "tables" | "channels" | "functions" | "systems",
+        k: "tables" | "channels" | "functions" | "systems" | "entities",
         v: string | undefined,
       ): void => {
         if (!v) return;
@@ -250,6 +252,8 @@ export function linkDataOps(
         meta[k] = list.sort();
       };
       add("tables", op.table);
+      if (op.table && target.startsWith("database:"))
+        for (const ent of entitiesForTable(model, op.table, target)) add("entities", ent);
       add("channels", channel);
       add("functions", op.fn);
       add("systems", op.system);

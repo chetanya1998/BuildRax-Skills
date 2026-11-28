@@ -201,6 +201,7 @@ Phase 0 (groundwork):
 
 - 0.1 Data operations: **done** (reads/writes, publish/consume, followed through queues to
   workers; handler-scoped steps in flows).
-- 0.2 Data models (Prisma, SQLAlchemy, Django, TypeORM) as entities and relations (IR v3).
+- 0.2 Data models: **done** (Prisma, TypeORM, Drizzle, Mongoose, Django, SQLAlchemy as `entity`
+  nodes with `relates` edges, IR v3; data operations name the entities they touch).
 - 0.3 Function index (side file): functions, calls, data operations per function.
 - 0.4 Rationale sources: ADRs, docs, "why" comments, local git messages, linked to nodes.

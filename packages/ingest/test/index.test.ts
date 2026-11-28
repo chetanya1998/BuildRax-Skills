@@ -170,7 +170,7 @@ describe("infrastructure detection", () => {
 
   it("finds services from compose, Dockerfiles, Terraform, Kubernetes, platforms, SDKs and env names", async () => {
     const m = await scan(INFRA, { now: NOW });
-    expect(m.schemaVersion).toBe("buildrax-ir/v2");
+    expect(m.schemaVersion).toBe("buildrax-ir/v3");
     expect(validateModel(m)).toMatchObject({ ok: true });
     const infra = m.nodes
       .filter((n) => n.meta?.infra)

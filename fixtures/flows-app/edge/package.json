@@ -1,1 +1,1 @@
-{ "name": "edge", "dependencies": { "hono": "4.0.0", "fastify": "5.0.0" } }
+{ "name": "edge", "dependencies": { "hono": "4.0.0", "fastify": "5.0.0", "drizzle-orm": "0.36.0" } }

@@ -1,5 +1,6 @@
 import type { Node } from "web-tree-sitter";
 import type { RawClient, RawOp } from "../dataops/facts.js";
+import type { RawEntity } from "../entities/facts.js";
 
 /**
  * Per-file facts for endpoint detection, read from the syntax tree (never executed). They are
@@ -49,6 +50,8 @@ export interface FileFacts {
   clients?: Record<string, RawClient>;
   /** Celery task functions defined in this file. */
   tasks?: string[];
+  /** Data models declared in this file (TypeORM, Drizzle, Mongoose, SQLAlchemy, Django). */
+  entities?: RawEntity[];
 }
 
 export const emptyFacts = (): FileFacts => ({

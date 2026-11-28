@@ -16,6 +16,7 @@ const KIND_HUE: Record<string, number> = {
   class: 160,
   function: 140,
   route: 320,
+  entity: 110,
   service: 250,
   database: 100,
   compute: 190,

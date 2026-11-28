@@ -7,6 +7,7 @@ cost features all read it.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `buildrax-ir/v1` | Projects, modules, files, external packages, unresolved imports; `imports` / `depends-on` edges.                                                   |
 | `buildrax-ir/v2` | **Infrastructure**: new node kinds and the `uses` edge. v1 files are still read (they simply have no infrastructure nodes); scans always write v2. |
+| `buildrax-ir/v3` | **Data models**: the `entity` node kind and the `relates` edge. v1 and v2 files are still read; scans always write v3.                             |
 
 ## Nodes
 
@@ -14,7 +15,7 @@ cost features all read it.
 (`<kind>:<key>`), so the same repo always produces the same IDs.
 
 Code kinds: `project`, `module`, `file`, `class`, `function`, `route`, `service`, `external`,
-`unresolved`.
+`unresolved`, and (v3) `entity`.
 
 Infrastructure kinds (v2): `compute`, `hosting`, `database`, `cache`, `queue`, `storage`, `cdn`,
 `email`, `payments`, `llm`, `messaging`, `search`, `auth`. They carry `meta.infra = true` and,
@@ -56,7 +57,27 @@ in the file, a receiver imported from a repo file that holds such a client or us
 infrastructure, or (for an SQL literal) the file importing a database library. Edge `meta`:
 `tables` (tables, models, collections or cache keys when literal), `channels` (queue, topic or
 task names), `functions` (enclosing functions) and `systems`. Evidence is `verified`, or
-`inferred` when the target is only "the one database in the project". No format change.
+`inferred` when the target is only "the one database in the project". When a table or model
+name matches a known data model, `meta.entities` lists those entity IDs.
+
+### Data models (v3)
+
+`entity` nodes, one per declared model: Prisma `model` blocks (`*.prisma`), TypeORM `@Entity`
+classes, Drizzle `pgTable` / `mysqlTable` / `sqliteTable`, Mongoose `mongoose.model("Name")`,
+Django `models.Model` subclasses and SQLAlchemy / SQLModel classes. ID
+`entity:<file>:<Name>`, evidence `verified` at the declaration line. `parent` is the database
+Prisma's datasource points at, else the database the declaring file uses, else the only database
+in the project, else the project. `meta`: `orm`, `table` (when declared: `@@map`,
+`__tablename__`, `@Entity("orders")`, the Drizzle table name), and `fields` (`name`, `type`,
+`pk`; at most 60, with `moreFields` for the rest). Only literal names are read; nothing is
+executed.
+
+`relates` edges join entities: Prisma relation fields, TypeORM `@ManyToOne` / `@OneToMany` /
+`@OneToOne` / `@ManyToMany`, Drizzle `.references(() => t.col)`, Django `ForeignKey` /
+`OneToOneField` / `ManyToManyField`, SQLAlchemy `ForeignKey("table.col")` and `relationship("X")`.
+`meta.fields` names the fields, `meta.many` marks to-many sides. A target is matched in the same
+file first, then among models of the same ORM; a relation with no single match is left out and
+counted, never guessed.
 
 ### Routes (endpoints)
 
@@ -70,7 +91,7 @@ Koa, NestJS, FastAPI and Flask. No format change: `route` was already a node kin
 ## Edges
 
 `{ id: "<from>-><kind>-><to>", from, to, kind, evidence[] }`. Kinds: `imports`, `depends-on`,
-`calls`, `reads`, `writes`, `publishes`, `consumes`, and (v2) `uses`: a file that imports a
+`calls`, `reads`, `writes`, `publishes`, `consumes`, (v3) `relates` between data models, and (v2) `uses`: a file that imports a
 client library uses that service (verified, with the import line), and a compose service that
 `depends_on` another uses it (config).
 

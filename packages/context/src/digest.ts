@@ -80,6 +80,21 @@ function render(model: Model, level: 0 | 1, caps: { lists: number }): string {
     for (const h of hub) lines.push(`${short(h.id)} ${h.fanIn}/${h.fanOut}`);
   }
 
+  const entities = model.nodes.filter((n) => n.kind === "entity");
+  if (entities.length) {
+    lines.push("", "DATA MODELS (name [table] orm file -> related)");
+    for (const n of entities.slice(0, caps.lists * 3)) {
+      const rel = model.edges
+        .filter((e) => e.kind === "relates" && e.from === n.id)
+        .map((e) => `${index.node(e.to)?.name ?? e.to}${e.meta?.["many"] ? "[]" : ""}`);
+      const table = n.meta?.["table"] ? ` [${String(n.meta["table"])}]` : "";
+      lines.push(
+        `${n.name}${table} ${String(n.meta?.["orm"] ?? "")} ${n.path ?? ""} -> ${rel.join(" ") || "-"}`,
+      );
+    }
+    if (entities.length > caps.lists * 3) lines.push(`+${entities.length - caps.lists * 3} more`);
+  }
+
   const unresolved = model.edges.filter((e) => index.node(e.to)?.kind === "unresolved");
   if (unresolved.length) {
     lines.push("", "UNRESOLVED IMPORTS (could not be resolved; do not assume they exist)");

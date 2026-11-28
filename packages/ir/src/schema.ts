@@ -1,9 +1,12 @@
 import { z } from "zod";
 
-/** Current scan format. v2 adds infrastructure node kinds and the `uses` edge. */
-export const IR_SCHEMA_VERSION = "buildrax-ir/v2" as const;
-/** Still accepted when reading: v1 models are a subset of v2 (no infrastructure nodes). */
-export const IR_SCHEMA_VERSIONS = ["buildrax-ir/v1", IR_SCHEMA_VERSION] as const;
+/**
+ * Current scan format. v2 adds infrastructure node kinds and the `uses` edge; v3 adds data-model
+ * `entity` nodes and the `relates` edge between them.
+ */
+export const IR_SCHEMA_VERSION = "buildrax-ir/v3" as const;
+/** Still accepted when reading: older models are subsets of v3. */
+export const IR_SCHEMA_VERSIONS = ["buildrax-ir/v1", "buildrax-ir/v2", IR_SCHEMA_VERSION] as const;
 
 export const NODE_KINDS = [
   "project",
@@ -29,6 +32,8 @@ export const NODE_KINDS = [
   "messaging",
   "search",
   "auth",
+  // Data models (v3): a table / model / collection declared in code (Prisma, SQLAlchemy, Django, …).
+  "entity",
 ] as const;
 
 /** Node kinds that describe infrastructure / paid services rather than code. */
@@ -57,6 +62,8 @@ export const EDGE_KINDS = [
   "consumes",
   // v2: code or a service relies on a piece of infrastructure.
   "uses",
+  // v3: one data-model entity refers to another (foreign key, relation field).
+  "relates",
 ] as const;
 
 /**
