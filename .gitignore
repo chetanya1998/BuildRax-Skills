@@ -4,3 +4,7 @@ coverage
 *.tsbuildinfo
 .buildrax/view.html
 .DS_Store
+
+.buildinpublic/daily/
+.buildinpublic/assets/
+.buildinpublic/posts/
