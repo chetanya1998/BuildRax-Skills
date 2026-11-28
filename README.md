@@ -210,6 +210,15 @@ choice, and the commit messages behind its changes. Each is labelled by where it
 terminal: `buildrax why web/src/lib/db.ts`, and `buildrax decisions` for the decision log.
 Nothing is generated: it is quoted, and tied only by exact names and paths.
 
+### Design view: the system on one page
+
+`buildrax design` turns the scan into a system-design view: C4 context, containers and
+components (`--level 3`), the system-design concepts found in the code with their evidence (an
+HTTP API, a cache used cache-aside, a queue with workers, schema migrations, retries, tracing…),
+and a non-functional scorecard (reliability, scalability, performance, security, observability,
+maintainability, data) that says what is present, absent or risky. Counts, not grades; every line
+says where it came from. See [docs/design.md](docs/design.md).
+
 ### Code view: read the code behind any box or arrow
 
 <img src="docs/images/code-view.webp" alt="Graph view in dark mode with a floating code window for the Amazon RDS database: excerpts of docker-compose.yml showing the services that depend on the database, each marked, with headers saying config, secrets masked; the Inspector lists the evidence" width="920">

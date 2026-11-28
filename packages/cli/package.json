@@ -25,6 +25,7 @@
   "dependencies": {
     "@buildrax/context": "workspace:*",
     "@buildrax/cost": "workspace:*",
+    "@buildrax/design": "workspace:*",
     "@buildrax/graph": "workspace:*",
     "@buildrax/ingest": "workspace:*",
     "@buildrax/ir": "workspace:*",

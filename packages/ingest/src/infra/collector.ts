@@ -28,6 +28,8 @@ export interface InfraFacts {
   storageGb?: number;
   multiAz?: boolean;
   runtime?: string;
+  /** Compose `build` context, repo-relative ("." for the root). */
+  buildContext?: string;
   plan?: string;
   image?: string;
 }

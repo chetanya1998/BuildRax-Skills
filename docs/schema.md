@@ -28,6 +28,7 @@ only when a file declares them, sizing facts:
 | `replicas`, `cpu` (vCPU each), `memoryMb` | from compose `deploy`, ECS tasks, Kubernetes requests                                                                      |
 | `storageGb`, `multiAz`                    | databases                                                                                                                  |
 | `runtime`, `image`, `plan`                | containers and platforms                                                                                                   |
+| `buildContext`                            | compose services built from the repo: the folder (`.` for the root)                                                        |
 | `sources`                                 | which kinds of files mentioned it (`terraform`, `kubernetes`, `platform`, `compose`, `dockerfile`, `prisma`, `sdk`, `env`) |
 | `confidence`                              | `0.4` when the service was seen only through an environment variable **name**                                              |
 

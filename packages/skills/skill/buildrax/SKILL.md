@@ -43,8 +43,12 @@ Run commands as `buildrax <command>` (use `npx buildrax <command>` if it is not 
 8. **Cost** ("what does this cost", "what if it became a product"): follow `references/cost.md`.
    In short: ask the user for the stack before `--mode product`, run `buildrax cost` (no network),
    and only add `--online` (AWS list prices) after the user agrees.
+9. **System design** ("explain the architecture", "what patterns does it use", "how resilient is
+   it", "prepare an overview for leadership"): `buildrax design` (add `--level 3` for components).
+   Quote its provenance labels. "Absent" means a static scan did not see it, not that it is
+   missing; never turn the scorecard into a grade.
 
-Add `--json` to `scan`, `digest`, `context`, `trace`, `routes`, `flow`, `notes`, `research`, `cost` when you need to parse output.
+Add `--json` to `scan`, `digest`, `context`, `trace`, `routes`, `flow`, `notes`, `research`, `cost`, `design` when you need to parse output.
 More detail: `references/commands.md`, `references/answering-questions.md`, `references/limits.md`,
 `references/cost.md`.
 

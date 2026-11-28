@@ -4,6 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  designCommand,
+  formatDesign,
   decisionsCommand,
   formatDecisions,
   formatWhy,
@@ -127,5 +129,20 @@ describe("why and decisions commands (rationale)", () => {
     const list = formatDecisions(await decisionsCommand(tmp));
     expect(list).toMatch(/^3 decision record\(s\)/);
     expect(list).toMatch(/superseded\s+ADR 2: Send emails from a worker/);
+  });
+});
+
+describe("design command", () => {
+  it("prints the C4 levels, concepts and scorecard with provenance", async () => {
+    const d = await designCommand(tmp);
+    expect(d.inputs).toEqual({ functions: true, rationale: true, research: false });
+    const text = formatDesign(d, { level: 3 });
+    expect(text).toContain("web -> PostgreSQL: reads, writes (orders)  (from code)");
+    expect(text).toContain("API clients [person]");
+    expect(text).toContain("    web/src/worker [data access, worker]  1 file(s), 1 function(s)");
+    expect(text).toMatch(/Cache-aside: 1 function .* \(from code\)/);
+    expect(text).toContain("! One service writes to PostgreSQL");
+    expect(text).toContain("counts, not grades");
+    expect(formatDesign(d, { level: 1 })).not.toContain("CONTAINERS");
   });
 });

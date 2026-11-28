@@ -211,3 +211,11 @@ decisions`, a Why section in the inspector: decision records, doc sections, expl
   and local commit messages, tied to nodes by exact names and paths, labelled by provenance).
 
 Phase 0 is complete.
+
+Phase 1 (design model):
+
+- 1.1 C4 projection: **done** (context, containers, components; compose services tied to the
+  folder they build).
+- 1.2 Concept catalogue and NFR scorecard: **done** (`buildrax design`, docs/design.md).
+- 1.3 Agent review: `buildrax design pack` → the user's agent → `buildrax design import`,
+  validated, stored separately, labelled AI inference.

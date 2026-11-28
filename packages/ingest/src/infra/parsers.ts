@@ -104,6 +104,8 @@ export function parseCompose(
           ...facts,
           image: typeof image === "string" ? image : undefined,
           runtime,
+          // Repo folder the service is built from ("." for the root): ties it to the code.
+          buildContext: context ? normDir(file, context) || "." : undefined,
         },
       ),
     );

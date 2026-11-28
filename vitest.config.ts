@@ -17,6 +17,7 @@ export default defineConfig({
       "@buildrax/cost": src("cost"),
       "@buildrax/pricing": src("pricing"),
       "@buildrax/viewer": src("viewer"),
+      "@buildrax/design": src("design"),
     },
   },
   test: { include: ["packages/*/test/**/*.test.ts"] },

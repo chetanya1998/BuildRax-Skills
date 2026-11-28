@@ -1,3 +1,4 @@
+import { designCommand, formatDesign } from "./commands/design.js";
 import { decisionsCommand, formatDecisions, formatWhy, whyCommand } from "./commands/why.js";
 import { formatFunctions, functionsCommand } from "./commands/functions.js";
 import { Command } from "commander";
@@ -48,6 +49,7 @@ export {
   researchPathFor,
 } from "./commands/data.js";
 export { findFunctions, formatFunctions, functionsCommand } from "./commands/functions.js";
+export { designCommand, formatDesign, PROVENANCE_LABEL } from "./commands/design.js";
 export {
   decisionsCommand,
   formatDecisions,
@@ -327,6 +329,20 @@ export function buildProgram(): Command {
       console.log(
         opts.json ? JSON.stringify(flows, null, 2) : await formatFlows(repo, flows, endpoint),
       );
+    });
+
+  program
+    .command("design")
+    .argument("[path]", "repository containing .buildrax/model.json", ".")
+    .option("--level <n>", "1 = context, 2 = containers, 3 = components", "2")
+    .option("--json", "print the design model as JSON")
+    .description(
+      "design view: C4 context/containers/components, system-design concepts and an NFR scorecard",
+    )
+    .action(async (repo: string, opts: { level: string; json?: boolean }) => {
+      const d = await designCommand(repo);
+      const level = opts.level === "1" ? 1 : opts.level === "3" ? 3 : 2;
+      console.log(opts.json ? JSON.stringify(d, null, 2) : formatDesign(d, { level }));
     });
 
   program
